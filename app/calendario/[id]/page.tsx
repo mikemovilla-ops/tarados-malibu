@@ -9,6 +9,8 @@ import ResultadoEditor from "@/components/ResultadoEditor";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
 import EditarDatosPartido from "@/components/EditarDatosPartido";
 import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
+import SeccionEditable from "@/components/SeccionEditable";
+import ListaConvocados from "@/components/ListaConvocados";
 
 export const dynamic = "force-dynamic";
 
@@ -126,14 +128,42 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       {esAdmin && (
         <section className="card p-4 space-y-2">
           <h2 className="font-display text-base">Resultado</h2>
-          <ResultadoEditor
-            partidoId={partido.id}
-            golesFavorInicial={partido.golesFavor}
-            golesContraInicial={partido.golesContra}
-            golesPropiaPuertaInicial={partido.golesPropiaPuerta}
-            notasIniciales={partido.notas}
-          />
-          <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
+          {partido.cerrado ? (
+            <SeccionEditable
+              resumen={
+                <p className="text-chalk/60 text-sm">
+                  Jornada cerrada ✓
+                  {jugado && (
+                    <>
+                      {" — "}
+                      {partido.golesFavor} - {partido.golesContra}
+                      {partido.golesPropiaPuerta > 0 && ` (${partido.golesPropiaPuerta} en propia)`}
+                    </>
+                  )}
+                </p>
+              }
+            >
+              <ResultadoEditor
+                partidoId={partido.id}
+                golesFavorInicial={partido.golesFavor}
+                golesContraInicial={partido.golesContra}
+                golesPropiaPuertaInicial={partido.golesPropiaPuerta}
+                notasIniciales={partido.notas}
+              />
+              <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
+            </SeccionEditable>
+          ) : (
+            <>
+              <ResultadoEditor
+                partidoId={partido.id}
+                golesFavorInicial={partido.golesFavor}
+                golesContraInicial={partido.golesContra}
+                golesPropiaPuertaInicial={partido.golesPropiaPuerta}
+                notasIniciales={partido.notas}
+              />
+              <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
+            </>
+          )}
         </section>
       )}
 
@@ -168,31 +198,17 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       </section>
 
       <section className="card p-4 space-y-3">
-        <h2 className="font-display text-base">Convocatoria {esAdmin ? "" : `(${convocados.length})`}</h2>
+        <h2 className="font-display text-base">Convocatoria {esAdmin && !partido.cerrado ? "" : `(${convocados.length})`}</h2>
         {esAdmin ? (
-          <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
-        ) : convocados.length === 0 ? (
-          <p className="text-chalk/50 text-sm">Todavía no hay convocatoria para este partido.</p>
+          partido.cerrado ? (
+            <SeccionEditable resumen={<ListaConvocados convocados={convocados} />}>
+              <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
+            </SeccionEditable>
+          ) : (
+            <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
+          )
         ) : (
-          <div className="space-y-1.5 text-sm">
-            {convocados.map((c) => (
-              <div key={c.id} className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-chalk/80">
-                  {c.user.dorsal !== null && `#${c.user.dorsal} `}
-                  {nombreMostrado(c.user)}
-                  {c.tarjetaAmarilla && " 🟨"}
-                  {c.tarjetaRoja && " 🟥"}
-                </span>
-                {(c.goles > 0 || c.asistencias > 0) && (
-                  <span className="text-chalk/50 text-xs">
-                    {c.goles > 0 && `${c.goles} gol${c.goles !== 1 ? "es" : ""}`}
-                    {c.goles > 0 && c.asistencias > 0 && " · "}
-                    {c.asistencias > 0 && `${c.asistencias} asist.`}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+          <ListaConvocados convocados={convocados} />
         )}
       </section>
     </div>

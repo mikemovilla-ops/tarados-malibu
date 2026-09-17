@@ -14,8 +14,11 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
+  // Igual que en /calendario: "próximo" se decide por si está cerrado o no,
+  // no por la fecha — así uno ya jugado pero pendiente de cerrar se sigue
+  // mostrando aquí en vez de desaparecer sin más.
   const proximoPartido = await prisma.partido.findFirst({
-    where: { fecha: { gte: new Date() } },
+    where: { cerrado: false },
     orderBy: { fecha: "asc" },
     include: { convocatorias: true },
   });
