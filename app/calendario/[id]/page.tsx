@@ -175,7 +175,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         ) : (
           <div className="space-y-1.5 text-sm">
             {convocados.map((c) => (
-              <div key={c.id} className="flex items-center justify-between">
+              <div key={c.id} className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-chalk/80">
                   {c.user.dorsal !== null && `#${c.user.dorsal} `}
                   {nombreMostrado(c.user)}

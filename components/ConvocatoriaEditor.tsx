@@ -41,49 +41,51 @@ function FilaConvocatoria({
   disponibilidadEditable: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <label className="flex items-center gap-1.5 w-40 shrink-0">
-        <input
-          type="checkbox"
-          checked={fila.convocado}
-          onChange={(e) =>
-            actualizar(jugador.id, {
-              convocado: e.target.checked,
-              ...(e.target.checked ? {} : { titular: false, goles: 0, asistencias: 0 }),
-            })
-          }
-        />
-        <span className="truncate text-chalk/80">
-          {jugador.dorsal !== null && `#${jugador.dorsal} `}
-          {nombreMostrado(jugador)}
-        </span>
-      </label>
-      {disponibilidadEditable ? (
-        <select
-          value={fila.disponibilidad}
-          onChange={(e) =>
-            actualizar(jugador.id, {
-              disponibilidad: e.target.value,
-              ...(e.target.value === "VOY" ? { convocado: true } : {}),
-            })
-          }
-          className={`text-[11px] shrink-0 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 ${CLASE_DISPONIBILIDAD[fila.disponibilidad]}`}
-        >
-          <option value="SIN_RESPONDER">Sin responder</option>
-          <option value="VOY">Voy</option>
-          <option value="DUDA">Duda</option>
-          <option value="NO_VOY">No voy</option>
-        </select>
-      ) : (
-        ETIQUETA_DISPONIBILIDAD[fila.disponibilidad] && (
-          <span className={`text-[11px] shrink-0 ${CLASE_DISPONIBILIDAD[fila.disponibilidad]}`}>
-            {ETIQUETA_DISPONIBILIDAD[fila.disponibilidad]}
+    <div className="rounded-lg bg-pitchdark/50 p-2.5 space-y-2 text-sm">
+      <div className="flex items-center gap-2 flex-wrap">
+        <label className="flex items-center gap-1.5 min-w-0">
+          <input
+            type="checkbox"
+            checked={fila.convocado}
+            onChange={(e) =>
+              actualizar(jugador.id, {
+                convocado: e.target.checked,
+                ...(e.target.checked ? {} : { titular: false, goles: 0, asistencias: 0 }),
+              })
+            }
+          />
+          <span className="text-chalk/80">
+            {jugador.dorsal !== null && `#${jugador.dorsal} `}
+            {nombreMostrado(jugador)}
           </span>
-        )
-      )}
+        </label>
+        {disponibilidadEditable ? (
+          <select
+            value={fila.disponibilidad}
+            onChange={(e) =>
+              actualizar(jugador.id, {
+                disponibilidad: e.target.value,
+                ...(e.target.value === "VOY" ? { convocado: true } : {}),
+              })
+            }
+            className={`text-[11px] shrink-0 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 ${CLASE_DISPONIBILIDAD[fila.disponibilidad]}`}
+          >
+            <option value="SIN_RESPONDER">Sin responder</option>
+            <option value="VOY">Voy</option>
+            <option value="DUDA">Duda</option>
+            <option value="NO_VOY">No voy</option>
+          </select>
+        ) : (
+          ETIQUETA_DISPONIBILIDAD[fila.disponibilidad] && (
+            <span className={`text-[11px] shrink-0 ${CLASE_DISPONIBILIDAD[fila.disponibilidad]}`}>
+              {ETIQUETA_DISPONIBILIDAD[fila.disponibilidad]}
+            </span>
+          )
+        )}
+      </div>
       {fila.convocado && (
-        <>
-          <label className="flex items-center gap-1 text-xs text-chalk/50">
+        <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-xs text-chalk/50 pl-1">
+          <label className="flex items-center gap-1">
             <input
               type="checkbox"
               checked={fila.titular}
@@ -91,7 +93,7 @@ function FilaConvocatoria({
             />
             Titular
           </label>
-          <label className="flex items-center gap-1 text-xs text-chalk/50">
+          <label className="flex items-center gap-1">
             Goles
             <input
               type="number"
@@ -101,7 +103,7 @@ function FilaConvocatoria({
               className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
             />
           </label>
-          <label className="flex items-center gap-1 text-xs text-chalk/50">
+          <label className="flex items-center gap-1">
             Ast.
             <input
               type="number"
@@ -111,7 +113,7 @@ function FilaConvocatoria({
               className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
             />
           </label>
-          <label className="flex items-center gap-1 text-xs text-chalk/50" title="Tarjeta amarilla">
+          <label className="flex items-center gap-1" title="Tarjeta amarilla">
             <input
               type="checkbox"
               checked={fila.tarjetaAmarilla}
@@ -119,7 +121,7 @@ function FilaConvocatoria({
             />
             🟨
           </label>
-          <label className="flex items-center gap-1 text-xs text-chalk/50" title="Tarjeta roja">
+          <label className="flex items-center gap-1" title="Tarjeta roja">
             <input
               type="checkbox"
               checked={fila.tarjetaRoja}
@@ -127,7 +129,7 @@ function FilaConvocatoria({
             />
             🟥
           </label>
-        </>
+        </div>
       )}
     </div>
   );

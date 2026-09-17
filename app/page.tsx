@@ -148,21 +148,6 @@ export default async function HomePage() {
           </p>
         </section>
       )}
-
-      <div className="grid grid-cols-2 gap-3 text-center text-sm">
-        <Link href="/plantilla" className="card p-4 hover:border-amarillo/40 transition">
-          Plantilla
-        </Link>
-        <Link href="/calendario" className="card p-4 hover:border-amarillo/40 transition">
-          Calendario
-        </Link>
-        <Link href="/estadisticas" className="card p-4 hover:border-amarillo/40 transition">
-          Estadísticas
-        </Link>
-        <Link href="/pagos" className="card p-4 hover:border-amarillo/40 transition">
-          Pagos
-        </Link>
-      </div>
     </div>
   );
 }
