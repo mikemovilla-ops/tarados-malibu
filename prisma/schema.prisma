@@ -58,17 +58,21 @@ model User {
   // nombre de Google en el resto de la app (plantilla, convocatorias,
   // estadísticas, pagos...). Para jugadores manuales, que no pueden entrar
   // a poner el suyo, lo puede rellenar el admin desde /plantilla.
-  apodo           String?
-  dorsal          Int?
-  posicion        Posicion?
-  telefono        String?
+  apodo               String?
+  dorsal              Int?
+  posicion            Posicion?
+  telefono            String?
+  // Dónde recibir los avisos por email (p.ej. el aviso a los admins de que
+  // alguien nuevo se ha registrado), si es distinto del email de login. Si
+  // está vacío se usa `email`.
+  emailNotificaciones String?
   // Para la inscripción/seguro del equipo. Solo los ve y edita el propio
   // jugador desde Ajustes — no se muestran en plantilla ni en ningún otro
   // sitio de la app.
-  dni             String?
-  fechaNacimiento DateTime?
-  estado          EstadoJugador @default(AYUDA)
-  fechaAlta       DateTime      @default(now())
+  dni                 String?
+  fechaNacimiento     DateTime?
+  estado              EstadoJugador @default(AYUDA)
+  fechaAlta           DateTime      @default(now())
 
   accounts      Account[]
   sessions      Session[]

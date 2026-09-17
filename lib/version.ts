@@ -24,6 +24,16 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "1.10.0",
+    fecha: "2026-09-17",
+    cambios: [
+      "Al entrar por primera vez con Google, ahora se va directo a Ajustes para rellenar apodo, posición y datos de contacto, en vez de quedarse en la home.",
+      "En /ajustes puedes poner un email distinto para recibir avisos (si lo dejas en blanco, se usa el de tu login).",
+      "Aviso por email a los admins cada vez que entra un jugador nuevo por primera vez (opcional: solo si el admin ha configurado el envío de correos).",
+      "En /calendario, un partido pasa a \"Jugados\" cuando el admin cierra su jornada, no cuando pasa la fecha — así uno ya jugado pero pendiente de cerrar se sigue viendo en \"Próximos\".",
+    ],
+  },
+  {
     version: "1.9.0",
     fecha: "2026-09-17",
     cambios: [

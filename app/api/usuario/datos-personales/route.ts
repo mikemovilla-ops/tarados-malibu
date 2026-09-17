@@ -9,8 +9,9 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  const { telefono, dni, fechaNacimiento } = (await req.json()) as {
+  const { telefono, emailNotificaciones, dni, fechaNacimiento } = (await req.json()) as {
     telefono: string;
+    emailNotificaciones: string;
     dni: string;
     fechaNacimiento: string;
   };
@@ -19,6 +20,7 @@ export async function PATCH(req: Request) {
     where: { id: session.user.id },
     data: {
       telefono: telefono.trim() || null,
+      emailNotificaciones: emailNotificaciones.trim() || null,
       dni: dni.trim() || null,
       fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : null,
     },

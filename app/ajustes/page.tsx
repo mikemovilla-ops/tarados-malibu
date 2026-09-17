@@ -31,6 +31,7 @@ export default async function AjustesPage() {
       dorsal: true,
       posicion: true,
       telefono: true,
+      emailNotificaciones: true,
       estado: true,
       dni: true,
       fechaNacimiento: true,
@@ -68,9 +69,14 @@ export default async function AjustesPage() {
 
       <section className="card p-5 space-y-2">
         <h2 className="font-display text-base">Contacto e inscripción</h2>
-        <p className="text-chalk/50 text-xs">Solo los ves tú — se usan para localizarte y para inscribirte en la liga/seguro del equipo.</p>
+        <p className="text-chalk/50 text-xs">
+          Solo los ves tú — se usan para localizarte, para inscribirte en la liga/seguro del equipo y, el email de
+          avisos, para recibir notificaciones si es distinto del de tu login (si lo dejas en blanco se usa ese).
+        </p>
         <EditarDatosPersonales
           telefonoInicial={usuario.telefono ?? ""}
+          emailLogin={usuario.email ?? ""}
+          emailNotificacionesInicial={usuario.emailNotificaciones ?? ""}
           dniInicial={usuario.dni ?? ""}
           fechaNacimientoInicial={usuario.fechaNacimiento ? usuario.fechaNacimiento.toISOString().slice(0, 10) : ""}
         />

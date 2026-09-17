@@ -18,9 +18,12 @@ export default async function CalendarioPage() {
     orderBy: { fecha: "asc" },
     include: { convocatorias: { select: { disponibilidad: true, user: { select: { estado: true } } } } },
   });
-  const ahora = new Date();
-  const proximos = partidos.filter((p) => p.fecha >= ahora);
-  const pasados = partidos.filter((p) => p.fecha < ahora).reverse();
+  // Un partido pasa a "Jugados" cuando el admin cierra su jornada, no
+  // cuando pasa su fecha — así uno ya jugado pero pendiente de cerrar
+  // (o de corregir algo) se sigue viendo en "Próximos", donde se nota que
+  // falta cerrarlo.
+  const proximos = partidos.filter((p) => !p.cerrado);
+  const pasados = partidos.filter((p) => p.cerrado).reverse();
 
   function FilaPartido({ p, mostrarDisponibilidad }: { p: (typeof partidos)[number]; mostrarDisponibilidad: boolean }) {
     const jugado = p.golesFavor !== null && p.golesContra !== null;

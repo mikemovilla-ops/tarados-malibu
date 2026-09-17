@@ -5,15 +5,20 @@ import { useRouter } from "next/navigation";
 
 export default function EditarDatosPersonales({
   telefonoInicial,
+  emailLogin,
+  emailNotificacionesInicial,
   dniInicial,
   fechaNacimientoInicial,
 }: {
   telefonoInicial: string;
+  emailLogin: string;
+  emailNotificacionesInicial: string;
   dniInicial: string;
   fechaNacimientoInicial: string;
 }) {
   const router = useRouter();
   const [telefono, setTelefono] = useState(telefonoInicial);
+  const [emailNotificaciones, setEmailNotificaciones] = useState(emailNotificacionesInicial);
   const [dni, setDni] = useState(dniInicial);
   const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacimientoInicial);
   const [guardando, startTransition] = useTransition();
@@ -26,7 +31,7 @@ export default function EditarDatosPersonales({
       const res = await fetch("/api/usuario/datos-personales", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefono, dni, fechaNacimiento }),
+        body: JSON.stringify({ telefono, emailNotificaciones, dni, fechaNacimiento }),
       });
       if (res.ok) {
         setGuardado(true);
@@ -44,6 +49,16 @@ export default function EditarDatosPersonales({
             type="tel"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
+            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
+          />
+        </label>
+        <label className="space-y-1 col-span-2">
+          <span className="text-chalk/60 text-xs">Email para avisos (opcional)</span>
+          <input
+            type="email"
+            value={emailNotificaciones}
+            onChange={(e) => setEmailNotificaciones(e.target.value)}
+            placeholder={emailLogin}
             className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
           />
         </label>

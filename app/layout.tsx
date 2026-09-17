@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import VersionPopup from "@/components/VersionPopup";
+import RedireccionPrimerLogin from "@/components/RedireccionPrimerLogin";
 
 const display = Oswald({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
         className={`${display.variable} ${body.variable} font-body bg-pitch text-chalk flex min-h-screen flex-col pitch-pattern`}
       >
         <Providers>
+          <RedireccionPrimerLogin />
           <Navbar />
           {/* flex-1 en vez de min-h-screen: así el footer queda pegado
               abajo del todo cuando el contenido es corto, y sigue

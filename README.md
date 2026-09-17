@@ -103,6 +103,9 @@ Vercel).
    - `ADMIN_EMAILS`: tu email de Google (el admin del equipo). Si en el
      futuro quieres dar permisos de admin a alguien más, añade su email
      separado por coma.
+   - `GMAIL_USER` y `GMAIL_APP_PASSWORD`: opcional (ver sección "Avisos por
+     email" más abajo) — sin ellos la app funciona igual, solo que no manda
+     el aviso de jugador nuevo.
 
 ## 5. Instalar y probar en local
 
@@ -132,6 +135,23 @@ Calendario y Pagos.
 cuenta de Google.
 
 ---
+
+## Avisos por email
+
+Opcional. Con `GMAIL_USER` y `GMAIL_APP_PASSWORD` rellenos, cada vez que un
+jugador entra por primera vez con Google se avisa por email a los admins
+(a `ADMIN_EMAILS`, o al email que cada admin haya puesto en "Email para
+avisos" en Ajustes, si es distinto). Sin esas dos variables, la app
+funciona exactamente igual pero no manda ese aviso.
+
+Para generarlas:
+
+1. Activa la verificación en dos pasos en la cuenta de Gmail desde la que
+   quieras enviar los avisos (es obligatoria para el siguiente paso).
+2. Ve a [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords),
+   genera una contraseña de aplicación para "Correo" y cópiala.
+3. `GMAIL_USER` es esa cuenta de Gmail; `GMAIL_APP_PASSWORD` es la
+   contraseña de 16 caracteres que te ha dado (sin espacios).
 
 ## Notas
 
