@@ -164,7 +164,6 @@ model Convocatoria {
   // desmarca) — ver /api/partidos/[id]/disponibilidad. El admin lo puede
   // corregir a mano en cualquier momento desde el editor de convocatoria.
   convocado       Boolean        @default(false)
-  titular         Boolean        @default(false)
   goles           Int            @default(0)
   asistencias     Int            @default(0)
   tarjetaAmarilla Boolean        @default(false)

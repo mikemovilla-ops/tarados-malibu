@@ -45,7 +45,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     {
       disponibilidad: string;
       convocado: boolean;
-      titular: boolean;
       goles: number;
       asistencias: number;
       tarjetaAmarilla: boolean;
@@ -56,7 +55,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     convocatoriaInicial[c.userId] = {
       disponibilidad: c.disponibilidad,
       convocado: c.convocado,
-      titular: c.titular,
       goles: c.goles,
       asistencias: c.asistencias,
       tarjetaAmarilla: c.tarjetaAmarilla,
@@ -94,7 +92,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         </h1>
         <p className="text-chalk/60 text-sm">
           {formatFechaHora(partido.fecha)} · {partido.competicion}
-          {partido.jornada !== null && ` (jornada ${partido.jornada})`}
+          {partido.jornada !== null && ` · Jornada ${partido.jornada}`}
           {partido.lugar && ` · ${partido.lugar}`}
         </p>
         {jugado && (
@@ -179,7 +177,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 <span className="text-chalk/80">
                   {c.user.dorsal !== null && `#${c.user.dorsal} `}
                   {nombreMostrado(c.user)}
-                  {c.titular && <span className="text-chalk/40 text-xs"> · titular</span>}
                   {c.tarjetaAmarilla && " 🟨"}
                   {c.tarjetaRoja && " 🟥"}
                 </span>

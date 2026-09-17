@@ -39,7 +39,7 @@ export default async function CalendarioPage() {
           </p>
           <p className="text-chalk/50 text-xs">
             {formatFechaHora(p.fecha)} · {p.competicion}
-            {p.jornada !== null && ` (jornada ${p.jornada})`}
+            {p.jornada !== null && ` · Jornada ${p.jornada}`}
           </p>
           {mostrarDisponibilidad && !jugado && (
             <p className="text-chalk/50 text-xs pt-1">

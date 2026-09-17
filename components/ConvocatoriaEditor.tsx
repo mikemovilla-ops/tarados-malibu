@@ -8,7 +8,6 @@ type Jugador = { id: string; name: string | null; apodo: string | null; dorsal: 
 type Fila = {
   disponibilidad: string;
   convocado: boolean;
-  titular: boolean;
   goles: number;
   asistencias: number;
   tarjetaAmarilla: boolean;
@@ -50,7 +49,7 @@ function FilaConvocatoria({
             onChange={(e) =>
               actualizar(jugador.id, {
                 convocado: e.target.checked,
-                ...(e.target.checked ? {} : { titular: false, goles: 0, asistencias: 0 }),
+                ...(e.target.checked ? {} : { goles: 0, asistencias: 0 }),
               })
             }
           />
@@ -85,14 +84,6 @@ function FilaConvocatoria({
       </div>
       {fila.convocado && (
         <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-xs text-chalk/50 pl-1">
-          <label className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={fila.titular}
-              onChange={(e) => actualizar(jugador.id, { titular: e.target.checked })}
-            />
-            Titular
-          </label>
           <label className="flex items-center gap-1">
             Goles
             <input
@@ -151,7 +142,6 @@ export default function ConvocatoriaEditor({
       base[j.id] = convocatoriaInicial[j.id] ?? {
         disponibilidad: "SIN_RESPONDER",
         convocado: false,
-        titular: false,
         goles: 0,
         asistencias: 0,
         tarjetaAmarilla: false,

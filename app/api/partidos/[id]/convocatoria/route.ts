@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 const DISPONIBILIDADES = ["SIN_RESPONDER", "VOY", "NO_VOY", "DUDA"] as const;
 
 // Sustituye de golpe toda la convocatoria de un partido: se manda la lista
-// completa de jugadores con su estado (convocado/titular/goles/asistencias,
+// completa de jugadores con su estado (convocado/goles/asistencias/tarjetas,
 // y su disponibilidad) y aquí se hace upsert de cada fila. Más simple que ir
 // jugador a jugador desde el cliente, y evita dejar filas sueltas si se
 // desconvoca a alguien que antes sí estaba.
@@ -27,7 +27,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       userId: string;
       disponibilidad?: string;
       convocado: boolean;
-      titular: boolean;
       goles: number;
       asistencias: number;
       tarjetaAmarilla: boolean;
@@ -49,7 +48,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         update: {
           ...(j.disponibilidad !== undefined ? { disponibilidad: j.disponibilidad as any } : {}),
           convocado: j.convocado,
-          titular: j.titular,
           goles: j.goles,
           asistencias: j.asistencias,
           tarjetaAmarilla: j.tarjetaAmarilla,
@@ -60,7 +58,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           userId: j.userId,
           disponibilidad: (j.disponibilidad as any) ?? "SIN_RESPONDER",
           convocado: j.convocado,
-          titular: j.titular,
           goles: j.goles,
           asistencias: j.asistencias,
           tarjetaAmarilla: j.tarjetaAmarilla,

@@ -114,7 +114,10 @@ export default async function HomePage() {
                     {p.esLocal ? "vs " : "@ "}
                     {p.rival}
                   </span>{" "}
-                  <span className="text-chalk/50 text-sm">{formatFechaHora(p.fecha)}</span>
+                  <span className="text-chalk/50 text-sm">
+                    {formatFechaHora(p.fecha)} · {p.competicion}
+                    {p.jornada !== null && ` · Jornada ${p.jornada}`}
+                  </span>
                 </Link>
                 <DisponibilidadSelector partidoId={p.id} disponibilidadInicial="SIN_RESPONDER" />
               </div>
