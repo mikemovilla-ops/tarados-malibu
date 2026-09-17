@@ -125,25 +125,30 @@ model VerificationToken {
 // goles/asistencias por jugador se rellenan a toro pasado, normalmente
 // justo después del partido.
 model Partido {
-  id          String   @id @default(cuid())
-  fecha       DateTime
-  rival       String
-  esLocal     Boolean  @default(true)
-  competicion String   @default("Liga") // texto libre: "Liga", "Copa", "Amistoso"...
+  id                String   @id @default(cuid())
+  fecha             DateTime
+  rival             String
+  esLocal           Boolean  @default(true)
+  competicion       String   @default("Liga") // texto libre: "Liga", "Copa", "Amistoso"...
   // Solo tiene sentido cuando competicion = "Liga" (se pide/edita solo en
   // ese caso). El calendario sigue ordenando por `fecha`, no por jornada:
   // un aplazamiento puede hacer que la jornada 2 se juegue antes que la 1.
-  jornada     Int?
-  lugar       String?
-  golesFavor  Int?
-  golesContra Int?
-  notas       String?
+  jornada           Int?
+  lugar             String?
+  golesFavor        Int?
+  golesContra       Int?
+  // Goles que nos marca el rival en su propia puerta — no van a la cuenta
+  // de ningún jugador nuestro, pero sí suman a golesFavor. Se resta aparte
+  // al comprobar que los goles de la convocatoria cuadran con el resultado
+  // (ver /api/partidos/[id]).
+  golesPropiaPuerta Int      @default(0)
+  notas             String?
   // El admin lo marca a mano una vez ha terminado de meter goles,
   // asistencias y tarjetas de este partido. Hasta entonces, aunque ya haya
   // datos cargados, no cuentan en /estadisticas (ver lib/estadisticas.ts) —
   // así nadie ve números a medio meter mientras el admin sigue editando.
-  cerrado     Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  cerrado           Boolean  @default(false)
+  createdAt         DateTime @default(now())
 
   convocatorias Convocatoria[]
 

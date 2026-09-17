@@ -73,12 +73,14 @@ export default async function HomePage() {
         {proximoPartido ? (
           <div className="space-y-1">
             <p className="text-chalk">
-              {proximoPartido.esLocal ? "Tarados Malibú" : proximoPartido.rival} vs{" "}
+              {proximoPartido.esLocal ? "Tarados Malibú" : proximoPartido.rival}
+              <span className="text-chalk/40 text-xs mx-1.5 align-middle">vs</span>
               {proximoPartido.esLocal ? proximoPartido.rival : "Tarados Malibú"}
             </p>
             <p className="text-chalk/60 text-sm">{formatFechaHora(proximoPartido.fecha)}</p>
             <p className="text-chalk/60 text-sm">
               {proximoPartido.competicion}
+              {proximoPartido.jornada !== null && ` · Jornada ${proximoPartido.jornada}`}
               {proximoPartido.lugar && ` · ${proximoPartido.lugar}`}
             </p>
             {session && (

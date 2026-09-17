@@ -22,20 +22,42 @@ export type FilaEstadistica = {
 // Solo se cuentan partidos con `cerrado = true`: mientras el admin todavía
 // está metiendo goles/asistencias/tarjetas, esos números no deben verse en
 // el ranking a medio rellenar.
+//
+// Todos los jugadores activos salen en el ranking aunque lleven 0 partidos
+// (p.ej. si todavía no se ha cerrado ninguna jornada) — no solo quien ya
+// tiene alguna fila de Convocatoria.
 export async function calcularRanking(): Promise<FilaEstadistica[]> {
-  const convocatorias = await prisma.convocatoria.findMany({
-    where: { convocado: true, partido: { cerrado: true } },
-    select: {
-      userId: true,
-      goles: true,
-      asistencias: true,
-      tarjetaAmarilla: true,
-      tarjetaRoja: true,
-      user: { select: { name: true, apodo: true, dorsal: true } },
-    },
-  });
+  const [activos, convocatorias] = await Promise.all([
+    prisma.user.findMany({
+      where: { estado: "ACTIVO" },
+      select: { id: true, name: true, apodo: true, dorsal: true },
+    }),
+    prisma.convocatoria.findMany({
+      where: { convocado: true, partido: { cerrado: true } },
+      select: {
+        userId: true,
+        goles: true,
+        asistencias: true,
+        tarjetaAmarilla: true,
+        tarjetaRoja: true,
+        user: { select: { name: true, apodo: true, dorsal: true } },
+      },
+    }),
+  ]);
 
   const porJugador = new Map<string, FilaEstadistica>();
+  for (const a of activos) {
+    porJugador.set(a.id, {
+      userId: a.id,
+      nombre: nombreMostrado(a),
+      dorsal: a.dorsal,
+      partidosJugados: 0,
+      goles: 0,
+      asistencias: 0,
+      tarjetasAmarillas: 0,
+      tarjetasRojas: 0,
+    });
+  }
   for (const c of convocatorias) {
     const fila = porJugador.get(c.userId) ?? {
       userId: c.userId,
@@ -56,6 +78,10 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
   }
 
   return [...porJugador.values()].sort(
-    (a, b) => b.goles - a.goles || b.asistencias - a.asistencias || a.nombre.localeCompare(b.nombre)
+    (a, b) =>
+      b.partidosJugados - a.partidosJugados ||
+      b.goles - a.goles ||
+      b.asistencias - a.asistencias ||
+      a.nombre.localeCompare(b.nombre)
   );
 }

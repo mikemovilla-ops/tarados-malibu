@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { formatFechaHora } from "@/lib/fechas";
 
 // Envío por Gmail SMTP con la cuenta del admin (contraseña de aplicación,
 // ver README). Si no hay credenciales configuradas (p.ej. en local sin
@@ -53,5 +54,44 @@ export async function enviarAvisoUsuarioNuevo(
     });
   } catch (e) {
     console.error("No se pudo enviar el aviso de jugador nuevo:", e);
+  }
+}
+
+// Aviso a todo el equipo cuando el admin crea un partido nuevo, para que
+// entren a decir si van, no van o dudan. Quién recibe realmente el correo
+// (todo el equipo en producción, o solo el propio admin en local/preview)
+// lo decide quien llama a esta función — ver app/api/partidos/route.ts.
+export async function enviarAvisoNuevoPartido(
+  destinatarios: string[],
+  partido: {
+    id: string;
+    rival: string;
+    esLocal: boolean;
+    fecha: Date;
+    competicion: string;
+    jornada: number | null;
+    lugar: string | null;
+  }
+) {
+  if (!transporter || destinatarios.length === 0) return;
+
+  const url = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const rivalHtml = escapeHtml(partido.rival);
+  const contra = partido.esLocal ? `vs ${partido.rival}` : `@ ${partido.rival}`;
+  const contraHtml = partido.esLocal ? `vs ${rivalHtml}` : `@ ${rivalHtml}`;
+  const detalle = `${partido.competicion}${partido.jornada !== null ? ` · Jornada ${partido.jornada}` : ""}`;
+  const detalleHtml = escapeHtml(detalle);
+  const enlace = `${url}/calendario/${partido.id}`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Tarados Malibú" <${process.env.GMAIL_USER}>`,
+      bcc: destinatarios,
+      subject: `Nuevo partido: ${contra}`,
+      text: `Se ha creado un partido nuevo: ${contra}\n${formatFechaHora(partido.fecha)} · ${detalle}${partido.lugar ? ` · ${partido.lugar}` : ""}\n\nEntra en ${enlace} y di si vas, no vas o dudas.`,
+      html: `<p>Se ha creado un partido nuevo: <strong>${contraHtml}</strong></p><p>${formatFechaHora(partido.fecha)} · ${detalleHtml}${partido.lugar ? ` · ${escapeHtml(partido.lugar)}` : ""}</p><p><a href="${enlace}">Entra aquí</a> y di si vas, no vas o dudas.</p>`,
+    });
+  } catch (e) {
+    console.error("No se pudo enviar el aviso de partido nuevo:", e);
   }
 }

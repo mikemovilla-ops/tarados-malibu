@@ -35,7 +35,9 @@ export default async function CalendarioPage() {
       <Link href={`/calendario/${p.id}`} className="card p-4 flex items-center justify-between gap-3 hover:border-amarillo/40 transition">
         <div className="min-w-0">
           <p className="text-chalk truncate">
-            {p.esLocal ? "Tarados Malibú" : p.rival} vs {p.esLocal ? p.rival : "Tarados Malibú"}
+            {p.esLocal ? "Tarados Malibú" : p.rival}
+            <span className="text-chalk/40 text-xs mx-1.5 align-middle">vs</span>
+            {p.esLocal ? p.rival : "Tarados Malibú"}
           </p>
           <p className="text-chalk/50 text-xs">
             {formatFechaHora(p.fecha)} · {p.competicion}

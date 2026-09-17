@@ -88,7 +88,9 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
       <div>
         <h1 className="font-display text-2xl">
-          {partido.esLocal ? "Tarados Malibú" : partido.rival} vs {partido.esLocal ? partido.rival : "Tarados Malibú"}
+          {partido.esLocal ? "Tarados Malibú" : partido.rival}
+          <span className="text-chalk/40 text-sm mx-1.5 align-middle">vs</span>
+          {partido.esLocal ? partido.rival : "Tarados Malibú"}
         </h1>
         <p className="text-chalk/60 text-sm">
           {formatFechaHora(partido.fecha)} · {partido.competicion}
@@ -128,6 +130,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             partidoId={partido.id}
             golesFavorInicial={partido.golesFavor}
             golesContraInicial={partido.golesContra}
+            golesPropiaPuertaInicial={partido.golesPropiaPuerta}
             notasIniciales={partido.notas}
           />
           <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />

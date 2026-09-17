@@ -7,16 +7,19 @@ export default function ResultadoEditor({
   partidoId,
   golesFavorInicial,
   golesContraInicial,
+  golesPropiaPuertaInicial,
   notasIniciales,
 }: {
   partidoId: string;
   golesFavorInicial: number | null;
   golesContraInicial: number | null;
+  golesPropiaPuertaInicial: number;
   notasIniciales: string | null;
 }) {
   const router = useRouter();
   const [golesFavor, setGolesFavor] = useState(golesFavorInicial?.toString() ?? "");
   const [golesContra, setGolesContra] = useState(golesContraInicial?.toString() ?? "");
+  const [golesPropiaPuerta, setGolesPropiaPuerta] = useState(golesPropiaPuertaInicial.toString());
   const [notas, setNotas] = useState(notasIniciales ?? "");
   const [guardando, startTransition] = useTransition();
   const [eliminando, startEliminar] = useTransition();
@@ -31,6 +34,7 @@ export default function ResultadoEditor({
         body: JSON.stringify({
           golesFavor: golesFavor === "" ? null : Number(golesFavor),
           golesContra: golesContra === "" ? null : Number(golesContra),
+          golesPropiaPuerta: golesPropiaPuerta === "" ? 0 : Number(golesPropiaPuerta),
           notas: notas === "" ? null : notas,
         }),
       });
@@ -75,6 +79,16 @@ export default function ResultadoEditor({
           className="w-20 bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk"
         />
       </div>
+      <label className="flex items-center gap-2 text-xs text-chalk/50">
+        Goles en propia del rival (a nuestro favor)
+        <input
+          type="number"
+          min={0}
+          value={golesPropiaPuerta}
+          onChange={(e) => setGolesPropiaPuerta(e.target.value)}
+          className="w-16 bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk"
+        />
+      </label>
       <textarea
         value={notas}
         onChange={(e) => setNotas(e.target.value)}
