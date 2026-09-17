@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import CamposPartido from "@/components/CamposPartido";
+import Modal from "@/components/Modal";
 
 export default function FormNuevoPartido() {
   const router = useRouter();
@@ -10,6 +12,7 @@ export default function FormNuevoPartido() {
   const [rival, setRival] = useState("");
   const [esLocal, setEsLocal] = useState(true);
   const [competicion, setCompeticion] = useState("Liga");
+  const [jornada, setJornada] = useState("");
   const [lugar, setLugar] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardando, startTransition] = useTransition();
@@ -21,7 +24,14 @@ export default function FormNuevoPartido() {
       const res = await fetch("/api/partidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fecha, rival, esLocal, competicion, lugar }),
+        body: JSON.stringify({
+          fecha,
+          rival,
+          esLocal,
+          competicion,
+          jornada: jornada === "" ? null : Number(jornada),
+          lugar,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -30,75 +40,50 @@ export default function FormNuevoPartido() {
       }
       setFecha("");
       setRival("");
+      setJornada("");
       setLugar("");
       setAbierto(false);
       router.refresh();
     });
   }
 
-  if (!abierto) {
-    return (
+  return (
+    <>
       <button
         onClick={() => setAbierto(true)}
-        className="bg-malibu text-pitchdark font-medium px-3 py-1.5 rounded-md hover:bg-malibubright transition text-sm"
+        className="bg-amarillo text-pitchdark font-medium px-3 py-1.5 rounded-md hover:bg-amarillobrillante transition text-sm"
       >
         + Nuevo partido
       </button>
-    );
-  }
-
-  return (
-    <form onSubmit={crear} className="card p-4 space-y-3 text-sm">
-      <div className="grid grid-cols-2 gap-3">
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">Fecha y hora</span>
-          <input
-            type="datetime-local"
-            required
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">Rival</span>
-          <input
-            required
-            value={rival}
-            onChange={(e) => setRival(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">Competición</span>
-          <input
-            value={competicion}
-            onChange={(e) => setCompeticion(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">Lugar (opcional)</span>
-          <input
-            value={lugar}
-            onChange={(e) => setLugar(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          />
-        </label>
-      </div>
-      <label className="flex items-center gap-1.5 text-chalk/70">
-        <input type="checkbox" checked={esLocal} onChange={(e) => setEsLocal(e.target.checked)} />
-        Jugamos en casa
-      </label>
-      {error && <p className="text-coral">{error}</p>}
-      <div className="flex gap-2">
-        <button type="submit" disabled={guardando} className="bg-malibu text-pitchdark px-3 py-1.5 rounded disabled:opacity-50">
-          Crear partido
-        </button>
-        <button type="button" onClick={() => setAbierto(false)} className="text-chalk/60 px-3 py-1.5">
-          Cancelar
-        </button>
-      </div>
-    </form>
+      {abierto && (
+        <Modal titulo="Nuevo partido" onClose={() => setAbierto(false)}>
+          <form onSubmit={crear} className="space-y-3 text-sm">
+            <CamposPartido
+              fecha={fecha}
+              setFecha={setFecha}
+              rival={rival}
+              setRival={setRival}
+              esLocal={esLocal}
+              setEsLocal={setEsLocal}
+              competicion={competicion}
+              setCompeticion={setCompeticion}
+              jornada={jornada}
+              setJornada={setJornada}
+              lugar={lugar}
+              setLugar={setLugar}
+            />
+            {error && <p className="text-coral">{error}</p>}
+            <div className="flex gap-2">
+              <button type="submit" disabled={guardando} className="bg-amarillo text-pitchdark px-3 py-1.5 rounded disabled:opacity-50">
+                Crear partido
+              </button>
+              <button type="button" onClick={() => setAbierto(false)} className="text-chalk/60 px-3 py-1.5">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   );
 }

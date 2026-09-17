@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora } from "@/lib/fechas";
+import { contarDisponibilidad, contarAyudaVan } from "@/lib/disponibilidad";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
 
 export const dynamic = "force-dynamic";
@@ -11,25 +12,52 @@ export default async function CalendarioPage() {
   const session = await getServerSession(authOptions);
   const esAdmin = !!session?.user?.isAdmin;
 
-  const partidos = await prisma.partido.findMany({ orderBy: { fecha: "asc" } });
+  const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
+
+  const partidos = await prisma.partido.findMany({
+    orderBy: { fecha: "asc" },
+    include: { convocatorias: { select: { disponibilidad: true, user: { select: { estado: true } } } } },
+  });
   const ahora = new Date();
   const proximos = partidos.filter((p) => p.fecha >= ahora);
   const pasados = partidos.filter((p) => p.fecha < ahora).reverse();
 
-  function FilaPartido({ p }: { p: (typeof partidos)[number] }) {
+  function FilaPartido({ p, mostrarDisponibilidad }: { p: (typeof partidos)[number]; mostrarDisponibilidad: boolean }) {
     const jugado = p.golesFavor !== null && p.golesContra !== null;
+    const respuestasActivos = p.convocatorias.filter((c) => c.user.estado === "ACTIVO");
+    const respuestasAyuda = p.convocatorias.filter((c) => c.user.estado === "AYUDA");
+    const conteo = contarDisponibilidad(respuestasActivos, totalActivos);
+    const ayudaVan = contarAyudaVan(respuestasAyuda);
     return (
-      <Link href={`/calendario/${p.id}`} className="card p-4 flex items-center justify-between gap-3 hover:border-malibu/40 transition">
+      <Link href={`/calendario/${p.id}`} className="card p-4 flex items-center justify-between gap-3 hover:border-amarillo/40 transition">
         <div className="min-w-0">
           <p className="text-chalk truncate">
             {p.esLocal ? "Tarados Malibú" : p.rival} vs {p.esLocal ? p.rival : "Tarados Malibú"}
           </p>
           <p className="text-chalk/50 text-xs">
             {formatFechaHora(p.fecha)} · {p.competicion}
+            {p.jornada !== null && ` (jornada ${p.jornada})`}
           </p>
+          {mostrarDisponibilidad && !jugado && (
+            <p className="text-chalk/50 text-xs pt-1">
+              <span className="text-amarillobrillante">
+                {conteo.VOY + ayudaVan} van{ayudaVan > 0 && ` (${ayudaVan} de ayuda)`}
+              </span>
+              {" · "}
+              <span className="text-chalk/60">{conteo.DUDA} dudan</span>
+              {" · "}
+              <span className="text-coral/80">{conteo.NO_VOY} no van</span>
+              {conteo.SIN_RESPONDER > 0 && (
+                <>
+                  {" · "}
+                  <span className="text-chalk/40">{conteo.SIN_RESPONDER} sin responder</span>
+                </>
+              )}
+            </p>
+          )}
         </div>
         {jugado && (
-          <p className="font-display text-lg text-malibubright shrink-0">
+          <p className="font-display text-lg text-amarillobrillante shrink-0">
             {p.esLocal ? p.golesFavor : p.golesContra} - {p.esLocal ? p.golesContra : p.golesFavor}
           </p>
         )}
@@ -51,7 +79,7 @@ export default async function CalendarioPage() {
         ) : (
           <div className="space-y-2">
             {proximos.map((p) => (
-              <FilaPartido key={p.id} p={p} />
+              <FilaPartido key={p.id} p={p} mostrarDisponibilidad />
             ))}
           </div>
         )}
@@ -64,7 +92,7 @@ export default async function CalendarioPage() {
         ) : (
           <div className="space-y-2">
             {pasados.map((p) => (
-              <FilaPartido key={p.id} p={p} />
+              <FilaPartido key={p.id} p={p} mostrarDisponibilidad={false} />
             ))}
           </div>
         )}

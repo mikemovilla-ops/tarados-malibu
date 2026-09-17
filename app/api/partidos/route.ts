@@ -10,11 +10,12 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { fecha, rival, esLocal, competicion, lugar } = body as {
+  const { fecha, rival, esLocal, competicion, jornada, lugar } = body as {
     fecha: string;
     rival: string;
     esLocal: boolean;
     competicion?: string;
+    jornada?: number | null;
     lugar?: string;
   };
 
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
       rival,
       esLocal: !!esLocal,
       competicion: competicion || "Liga",
+      jornada: jornada ?? null,
       lugar: lugar || null,
     },
   });

@@ -2,11 +2,22 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatFechaHora } from "@/lib/fechas";
+import { formatFechaHora, toInputDatetimeLocal } from "@/lib/fechas";
+import { nombreMostrado } from "@/lib/jugadores";
 import ConvocatoriaEditor from "@/components/ConvocatoriaEditor";
 import ResultadoEditor from "@/components/ResultadoEditor";
+import DisponibilidadSelector from "@/components/DisponibilidadSelector";
+import EditarDatosPartido from "@/components/EditarDatosPartido";
+import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
 
 export const dynamic = "force-dynamic";
+
+const ETIQUETA_GRUPO: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", string> = {
+  VOY: "Van",
+  DUDA: "Dudan",
+  NO_VOY: "No van",
+  SIN_RESPONDER: "Sin responder",
+};
 
 export default async function PartidoPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -14,22 +25,62 @@ export default async function PartidoPage({ params }: { params: { id: string } }
 
   const partido = await prisma.partido.findUnique({
     where: { id: params.id },
-    include: { convocatorias: { include: { user: { select: { id: true, name: true, dorsal: true, image: true } } } } },
+    include: {
+      convocatorias: { include: { user: { select: { id: true, name: true, apodo: true, dorsal: true, image: true } } } },
+    },
   });
 
   if (!partido) notFound();
 
-  const jugadores = esAdmin
-    ? await prisma.user.findMany({
-        where: { activo: true },
-        orderBy: [{ dorsal: "asc" }, { name: "asc" }],
-        select: { id: true, name: true, dorsal: true },
-      })
-    : [];
+  // Se pide siempre (activos y ayuda): el admin puede convocar a cualquiera
+  // de los dos grupos, aunque el resumen de disponibilidad de más abajo solo
+  // cuente a los activos.
+  const jugadores = await prisma.user.findMany({
+    orderBy: [{ dorsal: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, apodo: true, dorsal: true, estado: true },
+  });
 
-  const convocatoriaInicial: Record<string, { convocado: boolean; titular: boolean; goles: number; asistencias: number }> = {};
+  const convocatoriaInicial: Record<
+    string,
+    {
+      disponibilidad: string;
+      convocado: boolean;
+      titular: boolean;
+      goles: number;
+      asistencias: number;
+      tarjetaAmarilla: boolean;
+      tarjetaRoja: boolean;
+    }
+  > = {};
   for (const c of partido.convocatorias) {
-    convocatoriaInicial[c.userId] = { convocado: c.convocado, titular: c.titular, goles: c.goles, asistencias: c.asistencias };
+    convocatoriaInicial[c.userId] = {
+      disponibilidad: c.disponibilidad,
+      convocado: c.convocado,
+      titular: c.titular,
+      goles: c.goles,
+      asistencias: c.asistencias,
+      tarjetaAmarilla: c.tarjetaAmarilla,
+      tarjetaRoja: c.tarjetaRoja,
+    };
+  }
+
+  const miDisponibilidad = session ? convocatoriaInicial[session.user.id]?.disponibilidad ?? "SIN_RESPONDER" : null;
+
+  const gruposDisponibilidad: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", typeof jugadores> = {
+    VOY: [],
+    DUDA: [],
+    NO_VOY: [],
+    SIN_RESPONDER: [],
+  };
+  for (const j of jugadores.filter((j) => j.estado === "ACTIVO")) {
+    const estado = (convocatoriaInicial[j.id]?.disponibilidad ?? "SIN_RESPONDER") as keyof typeof gruposDisponibilidad;
+    gruposDisponibilidad[estado].push(j);
+  }
+  // Los de ayuda que el admin ha marcado como "Voy" se suman también al
+  // grupo de "Van" (con etiqueta aparte al mostrarlos) — el resto de grupos
+  // se quedan solo con activos, como pide el resumen de fuera.
+  for (const j of jugadores.filter((j) => j.estado === "AYUDA")) {
+    if (convocatoriaInicial[j.id]?.disponibilidad === "VOY") gruposDisponibilidad.VOY.push(j);
   }
 
   const convocados = partido.convocatorias.filter((c) => c.convocado);
@@ -43,14 +94,33 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         </h1>
         <p className="text-chalk/60 text-sm">
           {formatFechaHora(partido.fecha)} · {partido.competicion}
+          {partido.jornada !== null && ` (jornada ${partido.jornada})`}
           {partido.lugar && ` · ${partido.lugar}`}
         </p>
         {jugado && (
-          <p className="font-display text-3xl text-malibubright pt-2">
+          <p className="font-display text-3xl text-amarillobrillante pt-2">
             {partido.esLocal ? partido.golesFavor : partido.golesContra} - {partido.esLocal ? partido.golesContra : partido.golesFavor}
           </p>
         )}
         {partido.notas && <p className="text-chalk/60 text-sm pt-1">{partido.notas}</p>}
+        {jugado && !partido.cerrado && (
+          <p className="text-chalk/40 text-xs pt-1">
+            Resultado provisional: las estadísticas se actualizarán cuando el admin cierre la jornada.
+          </p>
+        )}
+        {esAdmin && (
+          <div className="pt-2">
+            <EditarDatosPartido
+              partidoId={partido.id}
+              fechaInicial={toInputDatetimeLocal(partido.fecha)}
+              rivalInicial={partido.rival}
+              esLocalInicial={partido.esLocal}
+              competicionInicial={partido.competicion}
+              jornadaInicial={partido.jornada?.toString() ?? ""}
+              lugarInicial={partido.lugar ?? ""}
+            />
+          </div>
+        )}
       </div>
 
       {esAdmin && (
@@ -62,8 +132,39 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             golesContraInicial={partido.golesContra}
             notasIniciales={partido.notas}
           />
+          <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
         </section>
       )}
+
+      <section className="card p-4 space-y-3">
+        <h2 className="font-display text-base">¿Vas?</h2>
+        {partido.cerrado ? (
+          <p className="text-chalk/40 text-sm">Jornada cerrada — ya no se puede cambiar la respuesta.</p>
+        ) : session ? (
+          <DisponibilidadSelector partidoId={partido.id} disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"} />
+        ) : (
+          <p className="text-chalk/50 text-sm">Entra con Google para decir si vas a este partido.</p>
+        )}
+
+        <div className="pt-1 space-y-1.5 text-sm">
+          {(["VOY", "DUDA", "NO_VOY", "SIN_RESPONDER"] as const).map((estado) => {
+            const grupo = gruposDisponibilidad[estado];
+            if (grupo.length === 0) return null;
+            const ayudaEnGrupo = grupo.filter((j) => j.estado === "AYUDA").length;
+            return (
+              <p key={estado} className="text-chalk/60">
+                <span className="text-chalk/40">
+                  {ETIQUETA_GRUPO[estado]} ({grupo.length}
+                  {ayudaEnGrupo > 0 && ` · ${ayudaEnGrupo} de ayuda`}):
+                </span>{" "}
+                {grupo
+                  .map((j) => nombreMostrado(j) + (j.estado === "AYUDA" ? " (ayuda)" : ""))
+                  .join(", ")}
+              </p>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="card p-4 space-y-3">
         <h2 className="font-display text-base">Convocatoria {esAdmin ? "" : `(${convocados.length})`}</h2>
@@ -77,8 +178,10 @@ export default async function PartidoPage({ params }: { params: { id: string } }
               <div key={c.id} className="flex items-center justify-between">
                 <span className="text-chalk/80">
                   {c.user.dorsal !== null && `#${c.user.dorsal} `}
-                  {c.user.name ?? "Sin nombre"}
+                  {nombreMostrado(c.user)}
                   {c.titular && <span className="text-chalk/40 text-xs"> · titular</span>}
+                  {c.tarjetaAmarilla && " 🟨"}
+                  {c.tarjetaRoja && " 🟥"}
                 </span>
                 {(c.goles > 0 || c.asistencias > 0) && (
                   <span className="text-chalk/50 text-xs">

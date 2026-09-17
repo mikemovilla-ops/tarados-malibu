@@ -3,22 +3,31 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { POSICIONES, ETIQUETA_POSICION } from "@/lib/posiciones";
+import { ESTADOS, ETIQUETA_ESTADO } from "@/lib/estados";
+import { nombreMostrado } from "@/lib/jugadores";
+import { formatFechaCorta } from "@/lib/fechas";
+import CamisetaJugador from "@/components/CamisetaJugador";
 
 type Jugador = {
   id: string;
   name: string | null;
-  image: string | null;
+  apodo: string | null;
+  email: string | null;
   dorsal: number | null;
   posicion: string | null;
-  activo: boolean;
+  estado: string;
+  // Solo llegan si quien pide la lista es admin (ver app/plantilla/page.tsx)
+  dni?: string | null;
+  fechaNacimiento?: Date | null;
 };
 
 export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; esAdmin: boolean }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
+  const [apodo, setApodo] = useState(jugador.apodo ?? "");
   const [dorsal, setDorsal] = useState(jugador.dorsal?.toString() ?? "");
   const [posicion, setPosicion] = useState(jugador.posicion ?? "");
-  const [activo, setActivo] = useState(jugador.activo);
+  const [estado, setEstado] = useState(jugador.estado);
   const [guardando, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -29,9 +38,10 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          apodo: apodo.trim() || null,
           dorsal: dorsal === "" ? null : Number(dorsal),
           posicion: posicion === "" ? null : posicion,
-          activo,
+          estado,
         }),
       });
       if (!res.ok) {
@@ -45,30 +55,40 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
   }
 
   return (
-    <div className={`card p-4 flex items-center gap-3 ${!jugador.activo ? "opacity-50" : ""}`}>
-      {jugador.image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={jugador.image} alt={jugador.name ?? "Jugador"} width={40} height={40} className="rounded-full" />
-      )}
+    <div className="card p-4 flex items-center gap-3">
+      <CamisetaJugador dorsal={jugador.dorsal} nombre={nombreMostrado(jugador)} size={72} />
       <div className="flex-1 min-w-0">
         <p className="text-chalk truncate">
-          {jugador.dorsal !== null && <span className="text-malibubright font-display">#{jugador.dorsal} </span>}
-          {jugador.name ?? "Sin nombre"}
+          {jugador.dorsal !== null && <span className="text-amarillobrillante font-display">#{jugador.dorsal} </span>}
+          {nombreMostrado(jugador)}
         </p>
         <p className="text-chalk/50 text-xs">
           {jugador.posicion ? ETIQUETA_POSICION[jugador.posicion as keyof typeof ETIQUETA_POSICION] : "Sin posición"}
-          {!jugador.activo && " · Baja"}
+          {!jugador.email && " · Manual"}
         </p>
+        {esAdmin && (jugador.dni || jugador.fechaNacimiento) && (
+          <p className="text-chalk/40 text-[11px]">
+            {jugador.dni && `DNI: ${jugador.dni}`}
+            {jugador.dni && jugador.fechaNacimiento && " · "}
+            {jugador.fechaNacimiento && `Nacimiento: ${formatFechaCorta(jugador.fechaNacimiento)}`}
+          </p>
+        )}
       </div>
 
       {esAdmin && !editando && (
-        <button onClick={() => setEditando(true)} className="text-malibubright text-xs hover:underline shrink-0">
+        <button onClick={() => setEditando(true)} className="text-amarillobrillante text-xs hover:underline shrink-0">
           Editar
         </button>
       )}
 
       {esAdmin && editando && (
-        <div className="flex flex-col gap-2 text-xs shrink-0">
+        <div className="flex flex-col gap-2 text-xs shrink-0 w-48">
+          <input
+            value={apodo}
+            onChange={(e) => setApodo(e.target.value)}
+            placeholder="Apodo"
+            className="bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk"
+          />
           <div className="flex gap-2">
             <input
               type="number"
@@ -80,7 +100,7 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
             <select
               value={posicion}
               onChange={(e) => setPosicion(e.target.value)}
-              className="bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk"
+              className="flex-1 bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk"
             >
               <option value="">Sin posición</option>
               {POSICIONES.map((p) => (
@@ -90,16 +110,23 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
               ))}
             </select>
           </div>
-          <label className="flex items-center gap-1.5 text-chalk/70">
-            <input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} />
-            Activo en la plantilla
-          </label>
+          <select
+            value={estado}
+            onChange={(e) => setEstado(e.target.value)}
+            className="bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk"
+          >
+            {ESTADOS.map((e) => (
+              <option key={e} value={e}>
+                {ETIQUETA_ESTADO[e]}
+              </option>
+            ))}
+          </select>
           {error && <p className="text-coral">{error}</p>}
           <div className="flex gap-2">
             <button
               onClick={guardar}
               disabled={guardando}
-              className="bg-malibu text-pitchdark px-2 py-1 rounded disabled:opacity-50"
+              className="bg-amarillo text-pitchdark px-2 py-1 rounded disabled:opacity-50"
             >
               Guardar
             </button>

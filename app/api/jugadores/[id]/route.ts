@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { POSICIONES } from "@/lib/posiciones";
+import { ESTADOS } from "@/lib/estados";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -11,14 +12,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const body = await req.json();
-  const { dorsal, posicion, activo } = body as {
+  const { dorsal, posicion, estado, apodo } = body as {
     dorsal?: number | null;
     posicion?: string | null;
-    activo?: boolean;
+    estado?: string;
+    apodo?: string | null;
   };
 
   if (posicion !== undefined && posicion !== null && !POSICIONES.includes(posicion as any)) {
     return NextResponse.json({ error: "Posición no válida." }, { status: 400 });
+  }
+  if (estado !== undefined && !ESTADOS.includes(estado as any)) {
+    return NextResponse.json({ error: "Estado no válido." }, { status: 400 });
   }
 
   const jugador = await prisma.user.update({
@@ -26,7 +31,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data: {
       ...(dorsal !== undefined ? { dorsal } : {}),
       ...(posicion !== undefined ? { posicion: posicion as any } : {}),
-      ...(activo !== undefined ? { activo } : {}),
+      ...(estado !== undefined ? { estado: estado as any } : {}),
+      ...(apodo !== undefined ? { apodo } : {}),
     },
   });
 

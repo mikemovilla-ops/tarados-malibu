@@ -141,7 +141,7 @@ export default function BottomNav() {
                 href={href}
                 onClick={(e) => navegar(e, href)}
                 className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] transition ${
-                  activo ? "text-malibubright" : "text-chalk/50"
+                  activo ? "text-amarillobrillante" : "text-chalk/50"
                 }`}
               >
                 <Icono activo={activo} />
@@ -152,7 +152,7 @@ export default function BottomNav() {
           <button
             onClick={() => (status === "authenticated" ? setMenuAbierto((v) => !v) : signIn("google"))}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] transition ${
-              menuAbierto ? "text-malibubright" : "text-chalk/50"
+              menuAbierto ? "text-amarillobrillante" : "text-chalk/50"
             }`}
           >
             {status === "authenticated" && session.user?.image ? (
@@ -161,7 +161,7 @@ export default function BottomNav() {
                 alt={session.user.name ?? "Tú"}
                 width={22}
                 height={22}
-                className={`rounded-full border ${menuAbierto ? "border-malibubright" : "border-chalk/30"}`}
+                className={`rounded-full border ${menuAbierto ? "border-amarillobrillante" : "border-chalk/30"}`}
               />
             ) : (
               <IconoPerfil activo={menuAbierto} />

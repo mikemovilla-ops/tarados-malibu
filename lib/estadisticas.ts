@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { nombreMostrado } from "@/lib/jugadores";
 
 export type FilaEstadistica = {
   userId: string;
@@ -7,6 +8,8 @@ export type FilaEstadistica = {
   partidosJugados: number;
   goles: number;
   asistencias: number;
+  tarjetasAmarillas: number;
+  tarjetasRojas: number;
 };
 
 // Ranking de la plantilla: partidos jugados (convocado=true, aunque no
@@ -15,14 +18,20 @@ export type FilaEstadistica = {
 // contadores aparte: con el volumen de partidos de un equipo de fútbol 7
 // (unas 25-30 jornadas de liga al año) la consulta es trivial, y así no hay
 // que mantener sincronizados dos sitios distintos con el mismo dato.
+//
+// Solo se cuentan partidos con `cerrado = true`: mientras el admin todavía
+// está metiendo goles/asistencias/tarjetas, esos números no deben verse en
+// el ranking a medio rellenar.
 export async function calcularRanking(): Promise<FilaEstadistica[]> {
   const convocatorias = await prisma.convocatoria.findMany({
-    where: { convocado: true },
+    where: { convocado: true, partido: { cerrado: true } },
     select: {
       userId: true,
       goles: true,
       asistencias: true,
-      user: { select: { name: true, dorsal: true } },
+      tarjetaAmarilla: true,
+      tarjetaRoja: true,
+      user: { select: { name: true, apodo: true, dorsal: true } },
     },
   });
 
@@ -30,15 +39,19 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
   for (const c of convocatorias) {
     const fila = porJugador.get(c.userId) ?? {
       userId: c.userId,
-      nombre: c.user.name ?? "Sin nombre",
+      nombre: nombreMostrado(c.user),
       dorsal: c.user.dorsal,
       partidosJugados: 0,
       goles: 0,
       asistencias: 0,
+      tarjetasAmarillas: 0,
+      tarjetasRojas: 0,
     };
     fila.partidosJugados += 1;
     fila.goles += c.goles;
     fila.asistencias += c.asistencias;
+    if (c.tarjetaAmarilla) fila.tarjetasAmarillas += 1;
+    if (c.tarjetaRoja) fila.tarjetasRojas += 1;
     porJugador.set(c.userId, fila);
   }
 

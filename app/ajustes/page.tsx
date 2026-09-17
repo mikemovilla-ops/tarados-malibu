@@ -2,7 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ETIQUETA_POSICION } from "@/lib/posiciones";
-import EditarTelefono from "@/components/EditarTelefono";
+import { ETIQUETA_ESTADO } from "@/lib/estados";
+import EditarApodo from "@/components/EditarApodo";
+import EditarDatosPersonales from "@/components/EditarDatosPersonales";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 
 export const dynamic = "force-dynamic";
@@ -15,14 +17,24 @@ export default async function AjustesPage() {
       <div className="max-w-2xl mx-auto px-4 py-10 text-center space-y-3">
         <h1 className="font-display text-2xl">Ajustes</h1>
         <p className="text-chalk/60">Entra con Google para ver y editar tus datos.</p>
-        <BotonEntrarGoogle className="bg-malibu text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-malibubright transition inline-block" />
+        <BotonEntrarGoogle className="bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition inline-block" />
       </div>
     );
   }
 
   const usuario = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
-    select: { name: true, email: true, dorsal: true, posicion: true, telefono: true },
+    select: {
+      name: true,
+      apodo: true,
+      email: true,
+      dorsal: true,
+      posicion: true,
+      telefono: true,
+      estado: true,
+      dni: true,
+      fechaNacimiento: true,
+    },
   });
 
   return (
@@ -36,15 +48,32 @@ export default async function AjustesPage() {
           {usuario.dorsal !== null ? `Dorsal #${usuario.dorsal}` : "Sin dorsal asignado"}
           {" · "}
           {usuario.posicion ? ETIQUETA_POSICION[usuario.posicion] : "Sin posición"}
+          {" · "}
+          {ETIQUETA_ESTADO[usuario.estado]}
         </p>
         <p className="text-chalk/40 text-xs pt-1">
-          El dorsal y la posición los gestiona el admin desde Plantilla.
+          El dorsal y si estás activo o de ayuda los gestiona el admin desde Plantilla.
         </p>
       </section>
 
       <section className="card p-5 space-y-2">
-        <h2 className="font-display text-base">Teléfono de contacto</h2>
-        <EditarTelefono telefonoInicial={usuario.telefono ?? ""} />
+        <h2 className="font-display text-base">Apodo y posición</h2>
+        <p className="text-chalk/50 text-xs">
+          El apodo es cómo te ve el resto del equipo en la plantilla, el calendario, las estadísticas y los pagos
+          (déjalo en blanco para usar tu nombre de Google). El admin también puede corregir tu posición desde
+          Plantilla si hace falta.
+        </p>
+        <EditarApodo apodoInicial={usuario.apodo ?? ""} posicionInicial={usuario.posicion ?? ""} />
+      </section>
+
+      <section className="card p-5 space-y-2">
+        <h2 className="font-display text-base">Contacto e inscripción</h2>
+        <p className="text-chalk/50 text-xs">Solo los ves tú — se usan para localizarte y para inscribirte en la liga/seguro del equipo.</p>
+        <EditarDatosPersonales
+          telefonoInicial={usuario.telefono ?? ""}
+          dniInicial={usuario.dni ?? ""}
+          fechaNacimientoInicial={usuario.fechaNacimiento ? usuario.fechaNacimiento.toISOString().slice(0, 10) : ""}
+        />
       </section>
     </div>
   );

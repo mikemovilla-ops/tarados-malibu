@@ -8,7 +8,7 @@ export default function BotonEntrarGoogle({ className }: { className?: string })
       onClick={() => signIn("google")}
       className={
         className ??
-        "bg-malibu text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-malibubright transition"
+        "bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition"
       }
     >
       Entrar con Google

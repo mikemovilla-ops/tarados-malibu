@@ -5,6 +5,7 @@ import Providers from "./providers";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import VersionPopup from "@/components/VersionPopup";
 
 const display = Oswald({
   subsets: ["latin"],
@@ -20,6 +21,7 @@ const body = Inter({
 export const metadata: Metadata = {
   title: "Tarados Malibú",
   description: "Plantilla, calendario y pagos del Tarados Malibú (fútbol 7)",
+  icons: { icon: "/favicon.png" },
 };
 
 export default function RootLayout({
@@ -42,6 +44,7 @@ export default function RootLayout({
               pone el propio Footer, que es lo último de la página. */}
           <main className="flex-1">{children}</main>
           <Footer />
+          <VersionPopup />
           <BottomNav />
         </Providers>
       </body>

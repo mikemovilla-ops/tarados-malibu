@@ -84,7 +84,7 @@ export default function ResultadoEditor({
       />
       {error && <p className="text-coral">{error}</p>}
       <div className="flex items-center justify-between">
-        <button onClick={guardar} disabled={guardando} className="bg-malibu text-pitchdark px-3 py-1.5 rounded disabled:opacity-50">
+        <button onClick={guardar} disabled={guardando} className="bg-amarillo text-pitchdark px-3 py-1.5 rounded disabled:opacity-50">
           Guardar resultado
         </button>
         <button onClick={eliminar} disabled={eliminando} className="text-coral/80 hover:text-coral text-xs">

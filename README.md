@@ -1,20 +1,26 @@
 # Tarados Malibú
 
 App para llevar el equipo de fútbol 7 Tarados Malibú: plantilla, calendario
-(convocatorias, goles y asistencias) y pagos (cuota mensual).
+(disponibilidad, convocatorias, goles y asistencias) y pagos (inscripción,
+equipación, material).
 
 - **👥 Plantilla**: cada jugador entra con su cuenta de Google y aparece
-  aquí automáticamente. El admin le asigna dorsal y posición, y puede darlo
-  de baja si deja el equipo (sin perder su histórico).
+  aquí automáticamente (como "Ayuda" hasta que el admin lo mueva a
+  "Activo"). El admin le asigna dorsal, posición y grupo, y también puede
+  añadir jugadores a mano sin que tengan que loguearse. Cada jugador elige
+  su propio apodo desde Ajustes, que es el nombre que ve el resto del
+  equipo.
 - **📅 Calendario**: el admin crea los partidos (fecha, rival, competición,
-  local/visitante). Para cada partido gestiona la convocatoria y, después
-  del partido, el resultado y los goles/asistencias de cada jugador
-  convocado. Todo el mundo ve el calendario y el detalle de cada partido.
+  local/visitante). Antes del partido, cada jugador responde si va, no va o
+  duda, y en la lista de partidos se ve el resumen (de los activos). El
+  admin gestiona la convocatoria oficial (activos y ayuda) y, después del
+  partido, el resultado y los goles/asistencias de cada convocado.
 - **📊 Estadísticas**: ranking de partidos jugados, goles y asistencias,
   calculado automáticamente a partir del calendario.
-- **💳 Pagos**: el admin fija la cuota mensual y la genera cada mes para
-  todos los jugadores activos, y va marcando quién ha pagado. Cada jugador
-  ve solo el estado de sus propias cuotas.
+- **💳 Pagos**: tres secciones fijas — inscripción, equipación y material.
+  El admin fija el importe de cada una y va marcando quién de los
+  jugadores activos la tiene pagada. Cada jugador ve solo su propio
+  estado.
 
 Este documento asume que **no tienes ninguna cuenta creada todavía**. Sigue
 los pasos en orden — en total son unos 20-30 minutos la primera vez (menos
@@ -129,13 +135,16 @@ cuenta de Google.
 
 ## Notas
 
-- No hace falta "dar de alta" a un jugador a mano: en cuanto entra por
-  primera vez con Google, aparece en Plantilla. Desde ahí, el admin le
-  asigna dorsal y posición.
+- No hace falta "dar de alta" a un jugador a mano para que entre él mismo:
+  en cuanto entra por primera vez con Google, aparece en Plantilla como
+  "Ayuda". Desde ahí, el admin le asigna dorsal, posición y lo pasa a
+  "Activo" si corresponde. El admin también puede añadir jugadores
+  manualmente (sin cuenta de Google) para convocarlos y llevar sus
+  estadísticas.
 - Solo quien esté en `ADMIN_EMAILS` puede crear/editar partidos, gestionar
   convocatorias y resultados, editar la plantilla y gestionar pagos. El
   resto de jugadores tiene acceso de solo lectura a esas secciones, y
-  gestiona sus propios datos de contacto en Ajustes.
+  gestiona su apodo y sus datos de contacto en Ajustes.
 - Las estadísticas (goles, asistencias, partidos jugados) se calculan al
   vuelo a partir de las convocatorias — no hay que llevarlas a mano en
   ningún otro sitio.

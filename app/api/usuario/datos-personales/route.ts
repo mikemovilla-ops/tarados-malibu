@@ -9,11 +9,19 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  const { telefono } = (await req.json()) as { telefono: string };
+  const { telefono, dni, fechaNacimiento } = (await req.json()) as {
+    telefono: string;
+    dni: string;
+    fechaNacimiento: string;
+  };
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { telefono: telefono || null },
+    data: {
+      telefono: telefono.trim() || null,
+      dni: dni.trim() || null,
+      fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : null,
+    },
   });
 
   return NextResponse.json({ ok: true });

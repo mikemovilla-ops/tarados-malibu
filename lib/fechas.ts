@@ -15,13 +15,21 @@ export function formatFechaHora(fecha: Date): string {
   return `${formatFecha(fecha)}, ${hora}:${min}`;
 }
 
-// "YYYY-MM" del mes actual, para generar/filtrar cuotas.
-export function mesActual(): string {
-  const ahora = new Date();
-  return `${ahora.getFullYear()}-${(ahora.getMonth() + 1).toString().padStart(2, "0")}`;
+// Formato que espera el valor de un <input type="datetime-local">
+// ("YYYY-MM-DDTHH:mm"), en hora local — no usar toISOString() aquí, que da
+// la hora en UTC y descuadraría con lo que ve el admin al editar.
+export function toInputDatetimeLocal(fecha: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}T${pad(fecha.getHours())}:${pad(fecha.getMinutes())}`;
 }
 
-export function formatMes(mes: string): string {
-  const [anio, m] = mes.split("-").map(Number);
-  return `${MESES[m - 1]} ${anio}`;
+// DD/MM/YYYY, para fechas sin hora asociada (p.ej. fecha de nacimiento) que
+// no pintan bien con el formato "jueves 17 de septiembre" de formatFecha.
+// Usa los getters en UTC (no locales): estas fechas se guardan como
+// medianoche UTC a partir de un <input type="date">, y leerlas con
+// getDate()/getMonth() locales podría desplazar el día según la zona
+// horaria del servidor.
+export function formatFechaCorta(fecha: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${pad(fecha.getUTCDate())}/${pad(fecha.getUTCMonth() + 1)}/${fecha.getUTCFullYear()}`;
 }

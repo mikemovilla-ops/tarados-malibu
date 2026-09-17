@@ -1,15 +1,15 @@
 export default function SeccionAdmin({
   eyebrow,
   titulo,
-  color = "malibubright",
+  color = "amarillobrillante",
   children,
 }: {
   eyebrow: string;
   titulo: string;
-  color?: "malibubright" | "chalk" | "coral";
+  color?: "amarillobrillante" | "chalk" | "coral";
   children: React.ReactNode;
 }) {
-  const colorClass = { malibubright: "text-malibubright", chalk: "text-chalk", coral: "text-coral" }[color];
+  const colorClass = { amarillobrillante: "text-amarillobrillante", chalk: "text-chalk", coral: "text-coral" }[color];
   return (
     <section className="card p-4 space-y-3">
       <div>

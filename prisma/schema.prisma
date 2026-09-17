@@ -1,5 +1,6 @@
-// Esquema de Tarados Malibú: plantilla, calendario (convocatorias, goles,
-// asistencias) y pagos (cuota mensual) de un equipo de fútbol 7.
+// Esquema de Tarados Malibú: plantilla (activos/ayuda), calendario
+// (disponibilidad, convocatorias, goles, asistencias) y pagos (inscripción,
+// equipación, material) de un equipo de fútbol 7.
 // Modelos de NextAuth (User, Account, Session, VerificationToken) + modelos
 // propios del equipo.
 
@@ -20,27 +21,59 @@ enum Posicion {
   DELANTERO
 }
 
+// ACTIVO: plantilla habitual (entra en cuotas/pagos y en el resumen de
+// disponibilidad del calendario). AYUDA: jugadores puntuales a los que
+// llamar si un partido va justo de gente — siguen pudiendo ser convocados,
+// pero no generan pagos ni cuentan en esos resúmenes. Por defecto, un
+// jugador que entra por primera vez con Google queda en AYUDA hasta que el
+// admin lo mueva a ACTIVO desde /plantilla.
+enum EstadoJugador {
+  ACTIVO
+  AYUDA
+}
+
+// Respuesta de disponibilidad de un jugador para un partido, antes de que
+// el admin decida la convocatoria oficial (campo `convocado` más abajo).
+enum Disponibilidad {
+  SIN_RESPONDER
+  VOY
+  NO_VOY
+  DUDA
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
+  // Solo se rellena vía login con Google. Los jugadores creados a mano por
+  // el admin (ver /plantilla, "Añadir jugador") no tienen email ni cuenta:
+  // son solo un registro para convocar/estadísticas, no pueden entrar en la
+  // app. Varios jugadores manuales pueden tener email null a la vez (NULL
+  // no choca con @unique en Postgres).
   email         String?   @unique
   emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
 
-  dorsal    Int?
-  posicion  Posicion?
-  telefono  String?
-  // Si sigue actualmente en la plantilla. Los jugadores dados de baja no
-  // desaparecen (para no perder su histórico de partidos/goles) pero dejan
-  // de salir en "convocar" y de generárseles cuota nueva cada mes.
-  activo    Boolean   @default(true)
-  fechaAlta DateTime  @default(now())
+  // Nombre elegido por el propio jugador en Ajustes, que sustituye a su
+  // nombre de Google en el resto de la app (plantilla, convocatorias,
+  // estadísticas, pagos...). Para jugadores manuales, que no pueden entrar
+  // a poner el suyo, lo puede rellenar el admin desde /plantilla.
+  apodo           String?
+  dorsal          Int?
+  posicion        Posicion?
+  telefono        String?
+  // Para la inscripción/seguro del equipo. Solo los ve y edita el propio
+  // jugador desde Ajustes — no se muestran en plantilla ni en ningún otro
+  // sitio de la app.
+  dni             String?
+  fechaNacimiento DateTime?
+  estado          EstadoJugador @default(AYUDA)
+  fechaAlta       DateTime      @default(now())
 
   accounts      Account[]
   sessions      Session[]
   convocatorias Convocatoria[]
-  cuotas        Cuota[]
+  pagos         Pago[]
 
   @@map("users")
 }
@@ -93,10 +126,19 @@ model Partido {
   rival       String
   esLocal     Boolean  @default(true)
   competicion String   @default("Liga") // texto libre: "Liga", "Copa", "Amistoso"...
+  // Solo tiene sentido cuando competicion = "Liga" (se pide/edita solo en
+  // ese caso). El calendario sigue ordenando por `fecha`, no por jornada:
+  // un aplazamiento puede hacer que la jornada 2 se juegue antes que la 1.
+  jornada     Int?
   lugar       String?
-  golesFavor    Int?
-  golesContra   Int?
+  golesFavor  Int?
+  golesContra Int?
   notas       String?
+  // El admin lo marca a mano una vez ha terminado de meter goles,
+  // asistencias y tarjetas de este partido. Hasta entonces, aunque ya haya
+  // datos cargados, no cuentan en /estadisticas (ver lib/estadisticas.ts) —
+  // así nadie ve números a medio meter mientras el admin sigue editando.
+  cerrado     Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   convocatorias Convocatoria[]
@@ -104,18 +146,25 @@ model Partido {
   @@map("partidos")
 }
 
-// Fila por (partido, jugador): si fue convocado, si jugó de titular, y sus
-// goles/asistencias en ese partido en concreto. Sirve a la vez como lista de
-// convocatoria y como base de las estadísticas (se suman todas las filas de
-// un jugador para su ranking en /estadisticas).
+// Fila por (partido, jugador): la disponibilidad que ha respondido el propio
+// jugador (voy/no voy/duda, antes del partido) y la convocatoria/resultado
+// (normalmente después). Una sola fila para las dos cosas porque van del
+// mismo (partido, jugador). También sirve de base de las estadísticas (se
+// suman todas las filas de un jugador para su ranking en /estadisticas).
 model Convocatoria {
-  id          String  @id @default(cuid())
-  partidoId   String
-  userId      String
-  convocado   Boolean @default(true)
-  titular     Boolean @default(false)
-  goles       Int     @default(0)
-  asistencias Int     @default(0)
+  id              String         @id @default(cuid())
+  partidoId       String
+  userId          String
+  disponibilidad  Disponibilidad @default(SIN_RESPONDER)
+  // Responder "Voy" marca esto a true automáticamente (y "No voy" lo
+  // desmarca) — ver /api/partidos/[id]/disponibilidad. El admin lo puede
+  // corregir a mano en cualquier momento desde el editor de convocatoria.
+  convocado       Boolean        @default(false)
+  titular         Boolean        @default(false)
+  goles           Int            @default(0)
+  asistencias     Int            @default(0)
+  tarjetaAmarilla Boolean        @default(false)
+  tarjetaRoja     Boolean        @default(false)
 
   partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -124,13 +173,23 @@ model Convocatoria {
   @@map("convocatorias")
 }
 
-// Cuota mensual de un jugador. `mes` en formato "YYYY-MM". El admin genera
-// las cuotas de un mes de golpe para todos los jugadores activos (ver
-// lib/pagos.ts) y luego va marcando quién ha pagado.
-model Cuota {
+// Los tres conceptos de pago del equipo, cada uno con su propio importe fijo
+// (no recurrente: se paga una vez, no por mes). "Material" es lo compartido
+// (balones, conos...); no confundir con la cuota de un jugador concreto.
+enum TipoPago {
+  INSCRIPCION
+  EQUIPACION
+  MATERIAL
+}
+
+// Una fila por (jugador, tipo de pago): si lo tiene pagado o no. Se crea
+// (upsert) la primera vez que el admin toca el estado de ese jugador en esa
+// sección desde /pagos — no hace falta "generar" nada de antemano, al
+// contrario que la cuota mensual que sustituye.
+model Pago {
   id        String    @id @default(cuid())
   userId    String
-  mes       String
+  tipo      TipoPago
   importe   Float
   pagado    Boolean   @default(false)
   fechaPago DateTime?
@@ -138,15 +197,15 @@ model Cuota {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, mes])
-  @@map("cuotas")
+  @@unique([userId, tipo])
+  @@map("pagos")
 }
 
-// Fila única (id fijo = 1) con el importe actual de la cuota mensual, para
-// poder cambiarlo desde /pagos sin tocar código.
-model ConfiguracionPagos {
-  id           Int   @id @default(1)
-  cuotaMensual Float @default(20)
+// Una fila por TipoPago con el importe actual de esa sección, para poder
+// cambiarlo desde /pagos sin tocar código.
+model ConfiguracionPago {
+  tipo    TipoPago @id
+  importe Float    @default(0)
 
   @@map("configuracion_pagos")
 }

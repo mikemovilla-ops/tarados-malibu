@@ -5,6 +5,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { APP_VERSION } from "@/lib/version";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -35,16 +36,25 @@ export default function Navbar() {
   return (
     <header className="relative border-b border-chalk/10 bg-pitchdark/60">
       {navegando && (
-        <div className="absolute inset-x-0 top-0 h-0.5 bg-malibubright animate-pulse" />
+        <div className="absolute inset-x-0 top-0 h-0.5 bg-amarillobrillante animate-pulse" />
       )}
       <div className="max-w-4xl mx-auto flex items-center justify-between px-4 py-3">
-        <Link
-          href="/"
-          onClick={(e) => navegar(e, "/")}
-          className="font-display text-lg tracking-wide text-chalk whitespace-nowrap"
-        >
-          Tarados <span className="text-malibubright">Malibú</span>
-        </Link>
+        <div className="flex items-baseline gap-2 whitespace-nowrap">
+          <Link
+            href="/"
+            onClick={(e) => navegar(e, "/")}
+            className="flex items-center gap-2 font-display text-lg tracking-wide text-chalk"
+          >
+            <Image src="/escudo.png" alt="Escudo Tarados Malibú" width={32} height={32} className="shrink-0" />
+            Tarados <span className="text-amarillobrillante">Malibú</span>
+          </Link>
+          <Link
+            href="/novedades"
+            className="text-[10px] font-body tracking-normal text-chalk/40 hover:text-chalk/70 hover:underline"
+          >
+            {APP_VERSION}
+          </Link>
+        </div>
 
         {/* Escritorio: enlaces en fila. Se oculta en móvil (la BottomNav de
             abajo hace lo contrario) para no partir el título en varias
@@ -88,7 +98,7 @@ export default function Navbar() {
           ) : (
             <button
               onClick={() => signIn("google")}
-              className="bg-malibu text-pitchdark font-medium px-3 py-1.5 rounded-md hover:bg-malibubright transition"
+              className="bg-amarillo text-pitchdark font-medium px-3 py-1.5 rounded-md hover:bg-amarillobrillante transition"
             >
               Entrar con Google
             </button>
