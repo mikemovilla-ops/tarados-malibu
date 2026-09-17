@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0b3d2e;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background: #29b6d8;
+    color: #072a20;
+  }
+
+  :focus-visible {
+    outline: 2px solid #5fd8f0;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-navy/70 border border-chalk/10 rounded-xl backdrop-blur-sm;
+  }
+
+  /* Pizarra táctica: líneas de campo "de tiza" sobre un rayado de fondo,
+     como en la pizarra de un entrenador — reutilizable con distintos
+     colores de fondo (el verde de césped por defecto en <body>, el navy de
+     secciones de admin) para que se note el cambio de zona sin perder el
+     estilo. */
+  .pitch-pattern {
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.035) 0px,
+        rgba(255, 255, 255, 0.035) 40px,
+        transparent 40px,
+        transparent 80px
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 1600'%3E%3Crect x='50' y='50' width='900' height='1500' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Cline x1='50' y1='800' x2='950' y2='800' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Ccircle cx='500' cy='800' r='130' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Ccircle cx='500' cy='800' r='7' fill='%23F5F2E8' fill-opacity='0.16'/%3E%3Crect x='260' y='50' width='480' height='230' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Crect x='390' y='50' width='220' height='90' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Ccircle cx='500' cy='220' r='7' fill='%23F5F2E8' fill-opacity='0.16'/%3E%3Cpath d='M 400 280 A 130 130 0 0 0 600 280' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Crect x='260' y='1320' width='480' height='230' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Crect x='390' y='1460' width='220' height='90' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Ccircle cx='500' cy='1380' r='7' fill='%23F5F2E8' fill-opacity='0.16'/%3E%3Cpath d='M 400 1320 A 130 130 0 0 1 600 1320' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Cpath d='M 50 90 A 40 40 0 0 1 90 50' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Cpath d='M 910 50 A 40 40 0 0 1 950 90' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Cpath d='M 950 1510 A 40 40 0 0 1 910 1550' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3Cpath d='M 90 1550 A 40 40 0 0 1 50 1510' fill='none' stroke='%23F5F2E8' stroke-width='5' stroke-opacity='0.16'/%3E%3C/svg%3E");
+    background-position:
+      center top,
+      center center;
+    background-size:
+      80px 80px,
+      min(760px, 96vw) auto;
+    background-repeat: repeat, no-repeat;
+    background-attachment: scroll, fixed;
+  }
+}

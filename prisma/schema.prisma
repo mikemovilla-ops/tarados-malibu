@@ -1,0 +1,152 @@
+// Esquema de Tarados Malibú: plantilla, calendario (convocatorias, goles,
+// asistencias) y pagos (cuota mensual) de un equipo de fútbol 7.
+// Modelos de NextAuth (User, Account, Session, VerificationToken) + modelos
+// propios del equipo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Posicion {
+  PORTERO
+  DEFENSA
+  CENTROCAMPISTA
+  DELANTERO
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  dorsal    Int?
+  posicion  Posicion?
+  telefono  String?
+  // Si sigue actualmente en la plantilla. Los jugadores dados de baja no
+  // desaparecen (para no perder su histórico de partidos/goles) pero dejan
+  // de salir en "convocar" y de generárseles cuota nueva cada mes.
+  activo    Boolean   @default(true)
+  fechaAlta DateTime  @default(now())
+
+  accounts      Account[]
+  sessions      Session[]
+  convocatorias Convocatoria[]
+  cuotas        Cuota[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Un partido del calendario (liga, copa o amistoso). El resultado y los
+// goles/asistencias por jugador se rellenan a toro pasado, normalmente
+// justo después del partido.
+model Partido {
+  id          String   @id @default(cuid())
+  fecha       DateTime
+  rival       String
+  esLocal     Boolean  @default(true)
+  competicion String   @default("Liga") // texto libre: "Liga", "Copa", "Amistoso"...
+  lugar       String?
+  golesFavor    Int?
+  golesContra   Int?
+  notas       String?
+  createdAt   DateTime @default(now())
+
+  convocatorias Convocatoria[]
+
+  @@map("partidos")
+}
+
+// Fila por (partido, jugador): si fue convocado, si jugó de titular, y sus
+// goles/asistencias en ese partido en concreto. Sirve a la vez como lista de
+// convocatoria y como base de las estadísticas (se suman todas las filas de
+// un jugador para su ranking en /estadisticas).
+model Convocatoria {
+  id          String  @id @default(cuid())
+  partidoId   String
+  userId      String
+  convocado   Boolean @default(true)
+  titular     Boolean @default(false)
+  goles       Int     @default(0)
+  asistencias Int     @default(0)
+
+  partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([partidoId, userId])
+  @@map("convocatorias")
+}
+
+// Cuota mensual de un jugador. `mes` en formato "YYYY-MM". El admin genera
+// las cuotas de un mes de golpe para todos los jugadores activos (ver
+// lib/pagos.ts) y luego va marcando quién ha pagado.
+model Cuota {
+  id        String    @id @default(cuid())
+  userId    String
+  mes       String
+  importe   Float
+  pagado    Boolean   @default(false)
+  fechaPago DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mes])
+  @@map("cuotas")
+}
+
+// Fila única (id fijo = 1) con el importe actual de la cuota mensual, para
+// poder cambiarlo desde /pagos sin tocar código.
+model ConfiguracionPagos {
+  id           Int   @id @default(1)
+  cuotaMensual Float @default(20)
+
+  @@map("configuracion_pagos")
+}
