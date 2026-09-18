@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora } from "@/lib/fechas";
-import { TIPOS_PAGO, ETIQUETA_TIPO_PAGO } from "@/lib/pagos";
+import { getSecciones } from "@/lib/pagos";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
 
@@ -49,10 +49,8 @@ export default async function HomePage() {
 
   const miUsuario = userId ? await prisma.user.findUnique({ where: { id: userId }, select: { estado: true } }) : null;
   const misPagos = userId && miUsuario?.estado === "ACTIVO" ? await prisma.pago.findMany({ where: { userId } }) : [];
-  const tiposPendientes =
-    miUsuario?.estado === "ACTIVO"
-      ? TIPOS_PAGO.filter((tipo) => !misPagos.find((p) => p.tipo === tipo)?.pagado)
-      : [];
+  const secciones = miUsuario?.estado === "ACTIVO" ? await getSecciones() : [];
+  const seccionesPendientes = secciones.filter((s) => !misPagos.find((p) => p.seccionId === s.id)?.pagado);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
@@ -146,10 +144,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      {tiposPendientes.length > 0 && (
+      {seccionesPendientes.length > 0 && (
         <section className="card p-5 border-coral/40">
           <p className="text-coral text-sm">
-            Tienes pendiente: {tiposPendientes.map((t) => ETIQUETA_TIPO_PAGO[t]).join(", ")}.{" "}
+            Tienes pendiente: {seccionesPendientes.map((s) => s.nombre).join(", ")}.{" "}
             <Link href="/pagos" className="underline">
               Ver pagos
             </Link>

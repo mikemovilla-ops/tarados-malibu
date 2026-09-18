@@ -1,23 +1,18 @@
-import type { TipoPago } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-export const TIPOS_PAGO: TipoPago[] = ["INSCRIPCION", "EQUIPACION", "MATERIAL"];
+export type Seccion = { id: string; nombre: string; importe: number; orden: number };
 
-export const ETIQUETA_TIPO_PAGO: Record<TipoPago, string> = {
-  INSCRIPCION: "Inscripción",
-  EQUIPACION: "Equipación",
-  MATERIAL: "Material",
-};
-
-export async function getImportePago(tipo: TipoPago): Promise<number> {
-  const config = await prisma.configuracionPago.findUnique({ where: { tipo } });
-  return config?.importe ?? 0;
+export async function getSecciones(): Promise<Seccion[]> {
+  return prisma.seccionPago.findMany({ orderBy: { orden: "asc" } });
 }
 
-export async function setImportePago(tipo: TipoPago, importe: number): Promise<void> {
-  await prisma.configuracionPago.upsert({
-    where: { tipo },
-    update: { importe },
-    create: { tipo, importe },
+export async function crearSeccion(nombre: string, importe: number): Promise<Seccion> {
+  const ultima = await prisma.seccionPago.findFirst({ orderBy: { orden: "desc" } });
+  return prisma.seccionPago.create({
+    data: { nombre, importe, orden: (ultima?.orden ?? -1) + 1 },
   });
+}
+
+export async function actualizarImporteSeccion(seccionId: string, importe: number): Promise<void> {
+  await prisma.seccionPago.update({ where: { id: seccionId }, data: { importe } });
 }

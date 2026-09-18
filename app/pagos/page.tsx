@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { TIPOS_PAGO, ETIQUETA_TIPO_PAGO, getImportePago } from "@/lib/pagos";
+import { getSecciones } from "@/lib/pagos";
 import { nombreMostrado } from "@/lib/jugadores";
 import SeccionAdmin from "@/components/SeccionAdmin";
-import { FormImportePago, TogglePago } from "@/components/PagosAdmin";
+import { FormImportePago, TogglePago, FormNuevaSeccion } from "@/components/PagosAdmin";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +23,7 @@ export default async function PagosPage() {
   }
 
   const esAdmin = !!session.user.isAdmin;
-  const importes: Record<string, number> = {};
-  for (const tipo of TIPOS_PAGO) importes[tipo] = await getImportePago(tipo);
+  const secciones = await getSecciones();
 
   if (!esAdmin) {
     const usuario = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id }, select: { estado: true } });
@@ -44,13 +43,13 @@ export default async function PagosPage() {
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-4">
         <h1 className="font-display text-2xl">Tus pagos</h1>
         <div className="space-y-2">
-          {TIPOS_PAGO.map((tipo) => {
-            const pago = misPagos.find((p) => p.tipo === tipo);
+          {secciones.map((seccion) => {
+            const pago = misPagos.find((p) => p.seccionId === seccion.id);
             const pagado = pago?.pagado ?? false;
-            const importe = pago?.importe ?? importes[tipo];
+            const importe = pago?.importe ?? seccion.importe;
             return (
-              <div key={tipo} className="card p-4 flex items-center justify-between">
-                <span className="text-chalk">{ETIQUETA_TIPO_PAGO[tipo]}</span>
+              <div key={seccion.id} className="card p-4 flex items-center justify-between">
+                <span className="text-chalk">{seccion.nombre}</span>
                 <span className={pagado ? "text-amarillobrillante text-sm" : "text-coral text-sm"}>
                   {pagado ? "Pagado" : `Pendiente (${importe.toFixed(2)} €)`}
                 </span>
@@ -72,25 +71,34 @@ export default async function PagosPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
-      <h1 className="font-display text-2xl">Pagos</h1>
-      <p className="text-chalk/60 text-sm">{activos.length} jugadores activos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl">Pagos</h1>
+          <p className="text-chalk/60 text-sm">{activos.length} jugadores activos</p>
+        </div>
+        <FormNuevaSeccion />
+      </div>
 
-      {TIPOS_PAGO.map((tipo) => (
-        <SeccionAdmin key={tipo} eyebrow="Sección" titulo={ETIQUETA_TIPO_PAGO[tipo]}>
-          <FormImportePago tipo={tipo} importeInicial={importes[tipo]} />
+      {secciones.length === 0 && (
+        <p className="text-chalk/50 text-sm">Todavía no hay ninguna sección de pago creada.</p>
+      )}
+
+      {secciones.map((seccion) => (
+        <SeccionAdmin key={seccion.id} eyebrow="Sección" titulo={seccion.nombre}>
+          <FormImportePago seccionId={seccion.id} importeInicial={seccion.importe} />
           {activos.length === 0 ? (
             <p className="text-chalk/50 text-sm">No hay jugadores activos todavía.</p>
           ) : (
             <div className="space-y-2 pt-2">
               {activos.map((j) => {
-                const pago = pagos.find((p) => p.userId === j.id && p.tipo === tipo);
+                const pago = pagos.find((p) => p.userId === j.id && p.seccionId === seccion.id);
                 return (
                   <div key={j.id} className="flex items-center justify-between gap-3">
                     <span className="text-chalk text-sm truncate">
                       {j.dorsal !== null && <span className="text-amarillobrillante font-display">#{j.dorsal} </span>}
                       {nombreMostrado(j)}
                     </span>
-                    <TogglePago userId={j.id} tipo={tipo} pagadoInicial={pago?.pagado ?? false} />
+                    <TogglePago userId={j.id} seccionId={seccion.id} pagadoInicial={pago?.pagado ?? false} />
                   </div>
                 );
               })}

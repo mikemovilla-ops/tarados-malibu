@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { actualizarImporteSeccion } from "@/lib/pagos";
+import { crearSeccion } from "@/lib/pagos";
 
-export async function PATCH(req: Request) {
+export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 
-  const { seccionId, importe } = (await req.json()) as { seccionId: string; importe: number };
-  if (!seccionId) {
-    return NextResponse.json({ error: "Falta la sección." }, { status: 400 });
+  const { nombre, importe } = (await req.json()) as { nombre: string; importe: number };
+  if (!nombre || !nombre.trim()) {
+    return NextResponse.json({ error: "Falta el nombre de la sección." }, { status: 400 });
   }
   if (typeof importe !== "number" || importe < 0) {
     return NextResponse.json({ error: "Importe no válido." }, { status: 400 });
   }
 
-  await actualizarImporteSeccion(seccionId, importe);
-  return NextResponse.json({ ok: true });
+  const seccion = await crearSeccion(nombre.trim(), importe);
+  return NextResponse.json({ ok: true, seccion });
 }

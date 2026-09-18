@@ -116,22 +116,20 @@ export default function BottomNav() {
 
   return (
     <>
-      {/* La Navbar de escritorio ya tiene su propia barra de progreso, pero
-          usa su propio estado `navegando` — en móvil se navega desde aquí
-          (BottomNav), así que hace falta la suya propia. Fija arriba del
-          todo para que se vea aunque la página esté desplazada hacia abajo,
-          y evitar así que, al no ver ningún indicio de que el click ha
-          funcionado, alguien acabe dándole varias veces seguidas al mismo
-          enlace. */}
-      {navegando && (
-        <div className="md:hidden fixed inset-x-0 top-0 z-50 h-0.5 bg-amarillobrillante animate-pulse" />
-      )}
       {menuAbierto && (
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMenuAbierto(false)} />
       )}
       {/* "Flotante": no toca los bordes de la pantalla, con sombra para que
-          se note que va por delante del contenido. */}
-      <nav className="md:hidden fixed inset-x-4 bottom-4 z-50 rounded-2xl border border-chalk/10 bg-pitchdark/95 backdrop-blur-sm shadow-lg shadow-black/40 overflow-hidden">
+          se note que va por delante del contenido. Mientras navega, se
+          atenúa entera (justo donde está el dedo, a diferencia de una barra
+          de progreso arriba del todo que en móvil pasa desapercibida) para
+          que quede claro que el toque ha funcionado y evitar que alguien le
+          dé varias veces seguidas al mismo enlace. */}
+      <nav
+        className={`md:hidden fixed inset-x-4 bottom-4 z-50 rounded-2xl border border-chalk/10 bg-pitchdark/95 backdrop-blur-sm shadow-lg shadow-black/40 overflow-hidden transition-opacity ${
+          navegando ? "opacity-50" : "opacity-100"
+        }`}
+      >
         {menuAbierto && (
           <MenuPerfil
             autenticado={status === "authenticated"}

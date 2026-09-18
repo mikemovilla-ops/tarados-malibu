@@ -181,39 +181,36 @@ model Convocatoria {
   @@map("convocatorias")
 }
 
-// Los tres conceptos de pago del equipo, cada uno con su propio importe fijo
-// (no recurrente: se paga una vez, no por mes). "Material" es lo compartido
-// (balones, conos...); no confundir con la cuota de un jugador concreto.
-enum TipoPago {
-  INSCRIPCION
-  EQUIPACION
-  MATERIAL
+// Sección de pago del equipo (antes tres fijas — Inscripción/Equipación/
+// Material —, ahora el admin puede añadir las que quiera desde /pagos).
+// `orden` decide en qué orden se muestran.
+model SeccionPago {
+  id        String   @id @default(cuid())
+  nombre    String
+  importe   Float    @default(0)
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  pagos Pago[]
+
+  @@map("secciones_pago")
 }
 
-// Una fila por (jugador, tipo de pago): si lo tiene pagado o no. Se crea
+// Una fila por (jugador, sección de pago): si lo tiene pagado o no. Se crea
 // (upsert) la primera vez que el admin toca el estado de ese jugador en esa
-// sección desde /pagos — no hace falta "generar" nada de antemano, al
-// contrario que la cuota mensual que sustituye.
+// sección desde /pagos — no hace falta "generar" nada de antemano.
 model Pago {
   id        String    @id @default(cuid())
   userId    String
-  tipo      TipoPago
+  seccionId String
   importe   Float
   pagado    Boolean   @default(false)
   fechaPago DateTime?
   createdAt DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seccion SeccionPago @relation(fields: [seccionId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, tipo])
+  @@unique([userId, seccionId])
   @@map("pagos")
-}
-
-// Una fila por TipoPago con el importe actual de esa sección, para poder
-// cambiarlo desde /pagos sin tocar código.
-model ConfiguracionPago {
-  tipo    TipoPago @id
-  importe Float    @default(0)
-
-  @@map("configuracion_pagos")
 }
