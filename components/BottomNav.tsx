@@ -116,6 +116,16 @@ export default function BottomNav() {
 
   return (
     <>
+      {/* La Navbar de escritorio ya tiene su propia barra de progreso, pero
+          usa su propio estado `navegando` — en móvil se navega desde aquí
+          (BottomNav), así que hace falta la suya propia. Fija arriba del
+          todo para que se vea aunque la página esté desplazada hacia abajo,
+          y evitar así que, al no ver ningún indicio de que el click ha
+          funcionado, alguien acabe dándole varias veces seguidas al mismo
+          enlace. */}
+      {navegando && (
+        <div className="md:hidden fixed inset-x-0 top-0 z-50 h-0.5 bg-amarillobrillante animate-pulse" />
+      )}
       {menuAbierto && (
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMenuAbierto(false)} />
       )}
