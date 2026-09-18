@@ -31,6 +31,13 @@ export default function Navbar() {
     });
   }
 
+  function actualizar() {
+    if (navegando) return;
+    startTransition(() => {
+      router.refresh();
+    });
+  }
+
   const enlaceClass = "text-chalk/70 hover:text-chalk transition";
 
   return (
@@ -104,6 +111,34 @@ export default function Navbar() {
             </button>
           )}
         </nav>
+
+        {/* En escritorio ya se ve la barra de progreso al navegar por los
+            enlaces de arriba; en móvil esos enlaces viven en BottomNav, así
+            que este hueco de la derecha queda libre para un botón directo
+            de refrescar la página en la que estás. */}
+        <button
+          onClick={actualizar}
+          disabled={navegando}
+          aria-label="Actualizar página"
+          className="md:hidden text-chalk/60 hover:text-chalk transition p-1.5 -mr-1.5 disabled:opacity-50"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={navegando ? "animate-spin" : ""}
+          >
+            <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+            <path d="M3 21v-5h5" />
+          </svg>
+        </button>
       </div>
     </header>
   );
