@@ -54,9 +54,15 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
     });
   }
 
+  // Mientras se edita, la camiseta refleja lo que se va escribiendo (sin
+  // guardar aún) para poder probar cómo queda el apodo/dorsal antes de
+  // confirmar el cambio.
+  const dorsalCamiseta = editando ? (dorsal === "" ? null : Number(dorsal)) : jugador.dorsal;
+  const nombreCamiseta = editando ? apodo.trim() || jugador.name || "Sin nombre" : nombreMostrado(jugador);
+
   return (
     <div className="card p-4 flex items-center gap-3">
-      <CamisetaJugador dorsal={jugador.dorsal} nombre={nombreMostrado(jugador)} size={72} />
+      <CamisetaJugador dorsal={dorsalCamiseta} nombre={nombreCamiseta} size={72} />
       <div className="flex-1 min-w-0">
         <p className="text-chalk truncate">
           {jugador.dorsal !== null && <span className="text-amarillobrillante font-display">#{jugador.dorsal} </span>}

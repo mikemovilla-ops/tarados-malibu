@@ -46,21 +46,29 @@ export default function Navbar() {
         <div className="absolute inset-x-0 top-0 h-0.5 bg-amarillobrillante animate-pulse" />
       )}
       <div className="max-w-4xl mx-auto flex items-center justify-between px-4 py-3">
-        <div className="flex items-baseline gap-2 whitespace-nowrap">
-          <Link
-            href="/"
-            onClick={(e) => navegar(e, "/")}
-            className="flex items-center gap-2 font-display text-lg tracking-wide text-chalk"
-          >
-            <Image src="/escudo.png" alt="Escudo Tarados Malibú" width={32} height={32} className="shrink-0" />
-            Tarados <span className="text-amarillobrillante">Malibú</span>
+        {/* El escudo (imagen) y el bloque de texto se centran entre sí por
+            altura; dentro del bloque de texto, título y versión comparten
+            baseline de verdad (sin la imagen de por medio, que descuadraba
+            ese cálculo). */}
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <Link href="/" onClick={(e) => navegar(e, "/")} className="shrink-0">
+            <Image src="/escudo.png" alt="Escudo Tarados Malibú" width={32} height={32} />
           </Link>
-          <Link
-            href="/novedades"
-            className="text-[10px] font-body tracking-normal text-chalk/40 hover:text-chalk/70 hover:underline"
-          >
-            {APP_VERSION}
-          </Link>
+          <div className="flex items-baseline gap-2">
+            <Link
+              href="/"
+              onClick={(e) => navegar(e, "/")}
+              className="font-display text-lg tracking-wide text-chalk"
+            >
+              Tarados <span className="text-amarillobrillante">Malibú</span>
+            </Link>
+            <Link
+              href="/novedades"
+              className="text-[10px] font-body tracking-normal text-chalk/40 hover:text-chalk/70 hover:underline"
+            >
+              {APP_VERSION}
+            </Link>
+          </div>
         </div>
 
         {/* Escritorio: enlaces en fila. Se oculta en móvil (la BottomNav de
