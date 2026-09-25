@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, toInputDatetimeLocal } from "@/lib/fechas";
 import { nombreMostrado } from "@/lib/jugadores";
+import { getViewer } from "@/lib/viewer";
 import ConvocatoriaEditor from "@/components/ConvocatoriaEditor";
 import ResultadoEditor from "@/components/ResultadoEditor";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
@@ -22,8 +21,10 @@ const ETIQUETA_GRUPO: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", string
 };
 
 export default async function PartidoPage({ params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  const esAdmin = !!session?.user?.isAdmin;
+  const { session, esAdmin, rol } = await getViewer();
+  // Un socio ve el resultado del partido pero no quién va ni responde
+  // disponibilidad — eso es solo entre jugadores.
+  const esSocio = rol === "SOCIO";
 
   const partido = await prisma.partido.findUnique({
     where: { id: params.id },
@@ -38,6 +39,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   // de los dos grupos, aunque el resumen de disponibilidad de más abajo solo
   // cuente a los activos.
   const jugadores = await prisma.user.findMany({
+    where: { rol: "JUGADOR" },
     orderBy: [{ dorsal: "asc" }, { name: "asc" }],
     select: { id: true, name: true, apodo: true, dorsal: true, estado: true },
   });
@@ -167,6 +169,8 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         </section>
       )}
 
+      {!esSocio && (
+      <>
       <section className="card p-4 space-y-3">
         <h2 className="font-display text-base">¿Vas?</h2>
         {partido.cerrado ? (
@@ -211,6 +215,8 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           <ListaConvocados convocados={convocados} />
         )}
       </section>
+      </>
+      )}
     </div>
   );
 }

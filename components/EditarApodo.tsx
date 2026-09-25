@@ -7,9 +7,11 @@ import { POSICIONES, ETIQUETA_POSICION } from "@/lib/posiciones";
 export default function EditarApodo({
   apodoInicial,
   posicionInicial,
+  esSocio = false,
 }: {
   apodoInicial: string;
   posicionInicial: string;
+  esSocio?: boolean;
 }) {
   const router = useRouter();
   const [apodo, setApodo] = useState(apodoInicial);
@@ -35,7 +37,7 @@ export default function EditarApodo({
 
   return (
     <form onSubmit={guardar} className="space-y-2 text-sm">
-      <div className="grid grid-cols-2 gap-2">
+      <div className={esSocio ? "" : "grid grid-cols-2 gap-2"}>
         <label className="space-y-1">
           <span className="text-chalk/60 text-xs">Apodo</span>
           <input
@@ -45,21 +47,23 @@ export default function EditarApodo({
             className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
           />
         </label>
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">Posición</span>
-          <select
-            value={posicion}
-            onChange={(e) => setPosicion(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          >
-            <option value="">Sin posición</option>
-            {POSICIONES.map((p) => (
-              <option key={p} value={p}>
-                {ETIQUETA_POSICION[p]}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!esSocio && (
+          <label className="space-y-1">
+            <span className="text-chalk/60 text-xs">Posición</span>
+            <select
+              value={posicion}
+              onChange={(e) => setPosicion(e.target.value)}
+              className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
+            >
+              <option value="">Sin posición</option>
+              {POSICIONES.map((p) => (
+                <option key={p} value={p}>
+                  {ETIQUETA_POSICION[p]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <button type="submit" disabled={guardando} className="bg-amarillo text-pitchdark px-3 py-1.5 rounded disabled:opacity-50">

@@ -2,32 +2,24 @@
 
 import { useState } from "react";
 
-export default function SeccionAdmin({
-  eyebrow,
+export default function SeccionDesplegable({
   titulo,
-  color = "amarillobrillante",
   abiertoInicial = true,
   children,
 }: {
-  eyebrow: string;
   titulo: string;
-  color?: "amarillobrillante" | "chalk" | "coral";
   abiertoInicial?: boolean;
   children: React.ReactNode;
 }) {
   const [abierto, setAbierto] = useState(abiertoInicial);
-  const colorClass = { amarillobrillante: "text-amarillobrillante", chalk: "text-chalk", coral: "text-coral" }[color];
   return (
-    <section className="card p-4 space-y-3">
-      <button onClick={() => setAbierto((v) => !v)} className="w-full flex items-center justify-between text-left">
-        <div>
-          <p className={`text-[10px] uppercase tracking-[0.15em] ${colorClass}`}>{eyebrow}</p>
-          <h2 className="font-display text-lg">{titulo}</h2>
-        </div>
+    <section className="space-y-2">
+      <button onClick={() => setAbierto((v) => !v)} className="w-full flex items-center justify-between gap-2">
+        <h2 className="text-chalk/60 text-sm uppercase tracking-wide">{titulo}</h2>
         <svg
           viewBox="0 0 24 24"
-          width="18"
-          height="18"
+          width="16"
+          height="16"
           fill="none"
           stroke="currentColor"
           strokeWidth={2}

@@ -41,6 +41,17 @@ enum Disponibilidad {
   DUDA
 }
 
+// JUGADOR: cualquiera que entra con Google, por defecto (ver EstadoJugador
+// para Activo/Ayuda dentro de este grupo). SOCIO: forma parte del club pero
+// no juega — no aparece en plantilla como Activo/Ayuda, no responde
+// disponibilidad, no sale en estadísticas y tiene su propia cuota en Pagos
+// (ver `SeccionPago.destinatario`). El admin pasa a alguien a SOCIO desde
+// /plantilla, igual que ya mueve a alguien entre Activo y Ayuda.
+enum Rol {
+  JUGADOR
+  SOCIO
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -72,12 +83,23 @@ model User {
   dni                 String?
   fechaNacimiento     DateTime?
   estado              EstadoJugador @default(AYUDA)
+  // Ver enum Rol. Solo tiene sentido `estado`/`dorsal`/`posicion` cuando
+  // rol = JUGADOR; para un SOCIO esos campos se ignoran en toda la app.
+  rol                 Rol           @default(JUGADOR)
+  // Si el propio usuario ya ha contestado "¿vienes a jugar o eres socio?"
+  // en Ajustes (ver ElegirRolInicial), o si el admin ya lo ha clasificado a
+  // mano desde Plantilla — en ambos casos no hace falta volver a
+  // preguntárselo. Los usuarios que ya existían antes de este campo se
+  // marcaron como respondido con un script aparte al desplegarlo, para no
+  // preguntárselo de golpe a toda la plantilla ya clasificada.
+  rolElegido          Boolean       @default(false)
   fechaAlta           DateTime      @default(now())
 
-  accounts      Account[]
-  sessions      Session[]
-  convocatorias Convocatoria[]
-  pagos         Pago[]
+  accounts       Account[]
+  sessions       Session[]
+  convocatorias  Convocatoria[]
+  pagos          Pago[]
+  mensajesTablon MensajeTablon[]
 
   @@map("users")
 }
@@ -183,13 +205,16 @@ model Convocatoria {
 
 // Sección de pago del equipo (antes tres fijas — Inscripción/Equipación/
 // Material —, ahora el admin puede añadir las que quiera desde /pagos).
-// `orden` decide en qué orden se muestran.
+// `orden` decide en qué orden se muestran. `destinatario` separa las
+// cuotas de jugador de las cuotas de socio: cada sección es para uno de
+// los dos grupos, nunca para ambos.
 model SeccionPago {
-  id        String   @id @default(cuid())
-  nombre    String
-  importe   Float    @default(0)
-  orden     Int      @default(0)
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  nombre        String
+  importe       Float    @default(0)
+  orden         Int      @default(0)
+  destinatario  Rol      @default(JUGADOR)
+  createdAt     DateTime @default(now())
 
   pagos Pago[]
 
@@ -213,4 +238,33 @@ model Pago {
 
   @@unique([userId, seccionId])
   @@map("pagos")
+}
+
+// Fila única (id fijo "actual", se actualiza con upsert) con el anuncio que
+// el admin quiere fijar arriba de la home. Sin historial: al cambiarlo se
+// pierde el anterior, como se pidió.
+model Anuncio {
+  id        String   @id @default("actual")
+  texto     String   @default("")
+  activo    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("anuncios")
+}
+
+// Tablón tipo comentarios: temas (padreId null) y respuestas planas (un
+// solo nivel, sin sub-hilos). Cualquiera logueado —jugador o socio, sin
+// distinción— puede abrir un tema o responder a uno.
+model MensajeTablon {
+  id        String   @id @default(cuid())
+  autorId   String
+  texto     String
+  padreId   String?
+  createdAt DateTime @default(now())
+
+  autor      User            @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  padre      MensajeTablon?  @relation("Respuestas", fields: [padreId], references: [id], onDelete: Cascade)
+  respuestas MensajeTablon[] @relation("Respuestas")
+
+  @@map("mensajes_tablon")
 }

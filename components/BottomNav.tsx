@@ -43,6 +43,14 @@ function IconoEstadisticas({ activo }: { activo: boolean }) {
   );
 }
 
+function IconoTablon({ activo }: { activo: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={activo ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 5.5h16v10H9l-4 3.5v-3.5H4z" />
+    </svg>
+  );
+}
+
 function IconoPerfil({ activo }: { activo: boolean }) {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={activo ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -112,6 +120,7 @@ export default function BottomNav() {
     { href: "/plantilla", label: "Plantilla", Icono: IconoPlantilla },
     { href: "/calendario", label: "Calendario", Icono: IconoCalendario },
     { href: "/estadisticas", label: "Stats", Icono: IconoEstadisticas },
+    { href: "/tablon", label: "Tablón", Icono: IconoTablon },
   ];
 
   return (

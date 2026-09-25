@@ -1,18 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora } from "@/lib/fechas";
 import { getSecciones } from "@/lib/pagos";
+import { getViewer } from "@/lib/viewer";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
+import SeccionEditable from "@/components/SeccionEditable";
+import AnuncioAdmin from "@/components/AnuncioAdmin";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+  const viewer = await getViewer();
+  const { session, userId, esAdmin } = viewer;
+  const esSocio = viewer.rol === "SOCIO";
+
+  const anuncio = await prisma.anuncio.findUnique({ where: { id: "actual" } });
 
   // Igual que en /calendario: "próximo" se decide por si está cerrado o no,
   // no por la fecha — así uno ya jugado pero pendiente de cerrar se sigue
@@ -35,21 +39,25 @@ export default async function HomePage() {
 
   // Partidos futuros a los que este jugador todavía no ha respondido
   // (voy/no voy/duda) — sin fila de convocatoria, o con fila pero
-  // disponibilidad todavía "sin responder".
-  const partidosSinResponder = userId
-    ? await prisma.partido.findMany({
-        where: {
-          fecha: { gte: new Date() },
-          cerrado: false,
-          convocatorias: { none: { userId, disponibilidad: { not: "SIN_RESPONDER" } } },
-        },
-        orderBy: { fecha: "asc" },
-      })
-    : [];
+  // disponibilidad todavía "sin responder". Un socio no responde
+  // disponibilidad, así que no le sale nada aquí.
+  const partidosSinResponder =
+    userId && !esSocio
+      ? await prisma.partido.findMany({
+          where: {
+            fecha: { gte: new Date() },
+            cerrado: false,
+            convocatorias: { none: { userId, disponibilidad: { not: "SIN_RESPONDER" } } },
+          },
+          orderBy: { fecha: "asc" },
+        })
+      : [];
 
-  const miUsuario = userId ? await prisma.user.findUnique({ where: { id: userId }, select: { estado: true } }) : null;
-  const misPagos = userId && miUsuario?.estado === "ACTIVO" ? await prisma.pago.findMany({ where: { userId } }) : [];
-  const secciones = miUsuario?.estado === "ACTIVO" ? await getSecciones() : [];
+  // Un jugador activo tiene cuota de jugador; un socio tiene la suya propia
+  // (secciones con destinatario distinto, ver lib/pagos.ts).
+  const tienePagosPendientesPosibles = viewer.rol === "JUGADOR" ? viewer.estado === "ACTIVO" : esSocio;
+  const misPagos = userId && tienePagosPendientesPosibles ? await prisma.pago.findMany({ where: { userId } }) : [];
+  const secciones = tienePagosPendientesPosibles ? await getSecciones(esSocio ? "SOCIO" : "JUGADOR") : [];
   const seccionesPendientes = secciones.filter((s) => !misPagos.find((p) => p.seccionId === s.id)?.pagado);
 
   return (
@@ -59,6 +67,29 @@ export default async function HomePage() {
         <h1 className="font-display text-3xl">Tarados Malibú</h1>
         <p className="text-chalk/60 text-sm">Fútbol 7</p>
       </div>
+
+      {esAdmin ? (
+        <SeccionEditable
+          resumen={
+            anuncio?.activo && anuncio.texto ? (
+              <div className="card p-4 border-amarillo/40 bg-amarillo/5">
+                <p className="text-chalk whitespace-pre-wrap">{anuncio.texto}</p>
+              </div>
+            ) : (
+              <p className="text-chalk/40 text-sm">Sin anuncio activo en la home.</p>
+            )
+          }
+        >
+          <AnuncioAdmin textoInicial={anuncio?.texto ?? ""} activoInicial={anuncio?.activo ?? false} />
+        </SeccionEditable>
+      ) : (
+        anuncio?.activo &&
+        anuncio.texto && (
+          <div className="card p-4 border-amarillo/40 bg-amarillo/5">
+            <p className="text-chalk whitespace-pre-wrap">{anuncio.texto}</p>
+          </div>
+        )
+      )}
 
       {!session && (
         <div className="card p-6 text-center space-y-3">
@@ -84,7 +115,7 @@ export default async function HomePage() {
               {proximoPartido.jornada !== null && ` · Jornada ${proximoPartido.jornada}`}
               {proximoPartido.lugar && ` · ${proximoPartido.lugar}`}
             </p>
-            {session && (
+            {session && !esSocio && (
               <p className="text-sm pt-2">
                 {miConvocatoria === undefined || miConvocatoria === null ? (
                   <span className="text-chalk/40">Convocatoria todavía sin decidir</span>

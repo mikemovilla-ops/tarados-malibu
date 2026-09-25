@@ -9,12 +9,14 @@ export default function EditarDatosPersonales({
   emailNotificacionesInicial,
   dniInicial,
   fechaNacimientoInicial,
+  esSocio = false,
 }: {
   telefonoInicial: string;
   emailLogin: string;
   emailNotificacionesInicial: string;
   dniInicial: string;
   fechaNacimientoInicial: string;
+  esSocio?: boolean;
 }) {
   const router = useRouter();
   const [telefono, setTelefono] = useState(telefonoInicial);
@@ -62,23 +64,27 @@ export default function EditarDatosPersonales({
             className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
           />
         </label>
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">DNI</span>
-          <input
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-chalk/60 text-xs">Fecha de nacimiento</span>
-          <input
-            type="date"
-            value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
-            className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
-          />
-        </label>
+        {!esSocio && (
+          <>
+            <label className="space-y-1">
+              <span className="text-chalk/60 text-xs">DNI</span>
+              <input
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
+                className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-chalk/60 text-xs">Fecha de nacimiento</span>
+              <input
+                type="date"
+                value={fechaNacimiento}
+                onChange={(e) => setFechaNacimiento(e.target.value)}
+                className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1.5 text-chalk"
+              />
+            </label>
+          </>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <button type="submit" disabled={guardando} className="bg-amarillo text-pitchdark px-3 py-1.5 rounded disabled:opacity-50">

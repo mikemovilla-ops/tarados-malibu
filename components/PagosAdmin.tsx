@@ -80,7 +80,11 @@ export function TogglePago({ userId, seccionId, pagadoInicial }: { userId: strin
   );
 }
 
-export function FormNuevaSeccion() {
+// `destinatario` decide para quién es la sección que se crea — el botón
+// vive dentro del bloque de Pagos (jugadores o socios) correspondiente,
+// así que ya viene implícito por dónde se pulsa, sin necesidad de
+// elegirlo de nuevo en el formulario.
+export function FormNuevaSeccion({ destinatario }: { destinatario: "JUGADOR" | "SOCIO" }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [nombre, setNombre] = useState("");
@@ -95,7 +99,7 @@ export function FormNuevaSeccion() {
       const res = await fetch("/api/pagos/secciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, importe: Number(importe) }),
+        body: JSON.stringify({ nombre, importe: Number(importe), destinatario }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -118,7 +122,10 @@ export function FormNuevaSeccion() {
         + Nueva sección
       </button>
       {abierto && (
-        <Modal titulo="Nueva sección de pago" onClose={() => setAbierto(false)}>
+        <Modal
+          titulo={`Nueva sección de pago (${destinatario === "SOCIO" ? "socios" : "jugadores"})`}
+          onClose={() => setAbierto(false)}
+        >
           <form onSubmit={crear} className="space-y-3 text-sm">
             <label className="space-y-1 block">
               <span className="text-chalk/60 text-xs">Nombre</span>

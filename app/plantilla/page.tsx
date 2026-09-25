@@ -1,19 +1,18 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getViewer } from "@/lib/viewer";
 import FilaJugador from "@/components/FilaJugador";
 import FormNuevoJugadorManual from "@/components/FormNuevoJugadorManual";
+import SeccionDesplegable from "@/components/SeccionDesplegable";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlantillaPage() {
-  const session = await getServerSession(authOptions);
-  const esAdmin = !!session?.user?.isAdmin;
+  const { esAdmin } = await getViewer();
 
   // dni/fechaNacimiento solo se piden (y por tanto solo llegan al HTML) si
   // quien mira la página es admin — para cualquier otro jugador ni siquiera
   // viajan en la respuesta, aunque la UI no los fuera a pintar.
-  const jugadores = await prisma.user.findMany({
+  const usuarios = await prisma.user.findMany({
     orderBy: [{ dorsal: "asc" }, { name: "asc" }],
     select: {
       id: true,
@@ -23,31 +22,36 @@ export default async function PlantillaPage() {
       dorsal: true,
       posicion: true,
       estado: true,
+      rol: true,
       ...(esAdmin ? { dni: true, fechaNacimiento: true } : {}),
     },
   });
 
+  const jugadores = usuarios.filter((j) => j.rol === "JUGADOR");
   const activos = jugadores.filter((j) => j.estado === "ACTIVO");
   const ayudas = jugadores.filter((j) => j.estado === "AYUDA");
+  const socios = usuarios.filter((j) => j.rol === "SOCIO");
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl">Plantilla</h1>
-          <p className="text-chalk/60 text-sm">{activos.length} activos · {ayudas.length} de ayuda</p>
+          <p className="text-chalk/60 text-sm">
+            {activos.length} activos · {ayudas.length} de ayuda
+            {socios.length > 0 && ` · ${socios.length} socios`}
+          </p>
         </div>
         {esAdmin && <FormNuevoJugadorManual />}
       </div>
 
-      {jugadores.length === 0 && (
+      {usuarios.length === 0 && (
         <p className="text-chalk/50 text-sm">
           Todavía no ha entrado nadie con Google. Los jugadores aparecen aquí en cuanto se registran.
         </p>
       )}
 
-      <section className="space-y-2">
-        <h2 className="text-chalk/60 text-sm uppercase tracking-wide">Activos</h2>
+      <SeccionDesplegable titulo="Activos">
         {activos.length === 0 ? (
           <p className="text-chalk/50 text-sm">Todavía no hay jugadores activos.</p>
         ) : (
@@ -57,10 +61,9 @@ export default async function PlantillaPage() {
             ))}
           </div>
         )}
-      </section>
+      </SeccionDesplegable>
 
-      <section className="space-y-2">
-        <h2 className="text-chalk/60 text-sm uppercase tracking-wide">Ayuda</h2>
+      <SeccionDesplegable titulo="Ayuda">
         {ayudas.length === 0 ? (
           <p className="text-chalk/50 text-sm">No hay jugadores de ayuda apuntados.</p>
         ) : (
@@ -70,7 +73,17 @@ export default async function PlantillaPage() {
             ))}
           </div>
         )}
-      </section>
+      </SeccionDesplegable>
+
+      {socios.length > 0 && (
+        <SeccionDesplegable titulo="Socios">
+          <div className="space-y-2">
+            {socios.map((j) => (
+              <FilaJugador key={j.id} jugador={j} esAdmin={esAdmin} />
+            ))}
+          </div>
+        </SeccionDesplegable>
+      )}
     </div>
   );
 }

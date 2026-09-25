@@ -24,6 +24,20 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.0.0",
+    fecha: "2026-09-25",
+    hito: true,
+    cambios: [
+      "Nuevo perfil de Socio: acceso de solo lectura a plantilla, calendario y estadísticas, sin convocatorias ni disponibilidad, con su propia cuota en Pagos.",
+      "Al entrar por primera vez, se pregunta \"¿vienes a jugar o eres socio?\" para clasificarte tú mismo (el admin siempre puede corregirlo desde Plantilla).",
+      "Anuncio fijable en la home, gestionado por el admin.",
+      "El admin puede borrar del todo a un jugador o socio, con confirmación.",
+      "Tablón de mensajes: cualquiera abre temas y responde; un socio con la cuota pendiente puede leerlo pero no escribir.",
+      "Vista previa local (solo admin, solo fuera de producción) para ver la app como jugador activo, de ayuda, o socio con la cuota pagada o pendiente.",
+      "Plantilla y Pagos: las distintas secciones ahora se pliegan y despliegan.",
+    ],
+  },
+  {
     version: "1.1.0",
     fecha: "2026-09-25",
     cambios: [

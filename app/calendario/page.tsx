@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora } from "@/lib/fechas";
 import { contarDisponibilidad, contarAyudaVan } from "@/lib/disponibilidad";
+import { getViewer } from "@/lib/viewer";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
 
 export const dynamic = "force-dynamic";
 
 export default async function CalendarioPage() {
-  const session = await getServerSession(authOptions);
-  const esAdmin = !!session?.user?.isAdmin;
+  const { esAdmin, rol } = await getViewer();
+  // Un socio ve el calendario (rival, fecha, resultado) pero no quién va a
+  // cada partido — eso es solo entre jugadores.
+  const esSocio = rol === "SOCIO";
 
   const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
 
@@ -84,7 +85,7 @@ export default async function CalendarioPage() {
         ) : (
           <div className="space-y-2">
             {proximos.map((p) => (
-              <FilaPartido key={p.id} p={p} mostrarDisponibilidad />
+              <FilaPartido key={p.id} p={p} mostrarDisponibilidad={!esSocio} />
             ))}
           </div>
         )}

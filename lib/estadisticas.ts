@@ -29,7 +29,7 @@ export type FilaEstadistica = {
 export async function calcularRanking(): Promise<FilaEstadistica[]> {
   const [activos, convocatorias] = await Promise.all([
     prisma.user.findMany({
-      where: { estado: "ACTIVO" },
+      where: { estado: "ACTIVO", rol: "JUGADOR" },
       select: { id: true, name: true, apodo: true, dorsal: true },
     }),
     prisma.convocatoria.findMany({
