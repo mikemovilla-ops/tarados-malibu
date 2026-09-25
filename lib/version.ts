@@ -24,6 +24,19 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "1.1.0",
+    fecha: "2026-09-25",
+    cambios: [
+      "Quitado \"titular\" de la convocatoria; en calendario ahora se ve Competición + Jornada, y el escudo va sin fondo.",
+      "Gestión de goles en propia puerta y aviso por email cuando se crea un partido nuevo.",
+      "El admin ve la jornada cerrada como un jugador más, con opción de seguir editando cada sección.",
+      "Indicador de carga al navegar en móvil, para evitar toques repetidos mientras carga la página.",
+      "El admin puede crear nuevas secciones de pago (ya no son solo Inscripción, Equipación y Material).",
+      "Botón para refrescar la página actual en la barra de arriba, en móvil.",
+      "Camisetas de la plantilla más cuidadas (mangas y cuello redondeados, degradado) y con vista previa en vivo al editar apodo/dorsal.",
+    ],
+  },
+  {
     version: "1.0.0",
     fecha: "2026-09-17",
     hito: true,
