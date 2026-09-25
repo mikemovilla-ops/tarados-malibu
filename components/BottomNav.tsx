@@ -120,7 +120,10 @@ export default function BottomNav() {
     { href: "/plantilla", label: "Plantilla", Icono: IconoPlantilla },
     { href: "/calendario", label: "Calendario", Icono: IconoCalendario },
     { href: "/estadisticas", label: "Stats", Icono: IconoEstadisticas },
-    { href: "/tablon", label: "Tablón", Icono: IconoTablon },
+    // El tablón, a diferencia del resto, requiere haber entrado con Google
+    // (ver app/tablon/page.tsx), así que solo se enseña la pestaña si hay
+    // sesión.
+    ...(status === "authenticated" ? [{ href: "/tablon", label: "Tablón", Icono: IconoTablon }] : []),
   ];
 
   return (
