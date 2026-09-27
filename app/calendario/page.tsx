@@ -4,20 +4,25 @@ import { formatFechaHora } from "@/lib/fechas";
 import { contarDisponibilidad, contarAyudaVan } from "@/lib/disponibilidad";
 import { getViewer } from "@/lib/viewer";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
+import DisponibilidadSelector from "@/components/DisponibilidadSelector";
+import SeccionDesplegable from "@/components/SeccionDesplegable";
 
 export const dynamic = "force-dynamic";
 
 export default async function CalendarioPage() {
-  const { esAdmin, rol } = await getViewer();
+  const { session, userId, esAdmin, rol, estado, necesitaElegirRol } = await getViewer();
   // Un socio o "no jugador" ve el calendario (rival, fecha, resultado)
   // pero no quién va a cada partido — eso es solo entre jugadores.
   const noJuega = rol === "SOCIO" || rol === "NO_JUGADOR";
+  const puedeResponder = !!session && !noJuega && !necesitaElegirRol;
 
   const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
 
   const partidos = await prisma.partido.findMany({
     orderBy: { fecha: "asc" },
-    include: { convocatorias: { select: { disponibilidad: true, user: { select: { estado: true } } } } },
+    include: {
+      convocatorias: { select: { userId: true, disponibilidad: true, user: { select: { estado: true } } } },
+    },
   });
   // Un partido pasa a "Jugados" cuando el admin cierra su jornada, no
   // cuando pasa su fecha — así uno ya jugado pero pendiente de cerrar
@@ -32,42 +37,50 @@ export default async function CalendarioPage() {
     const respuestasAyuda = p.convocatorias.filter((c) => c.user.estado === "AYUDA");
     const conteo = contarDisponibilidad(respuestasActivos, totalActivos);
     const ayudaVan = contarAyudaVan(respuestasAyuda);
+    const miDisponibilidad = userId
+      ? p.convocatorias.find((c) => c.userId === userId)?.disponibilidad ?? "SIN_RESPONDER"
+      : "SIN_RESPONDER";
     return (
-      <Link href={`/calendario/${p.id}`} className="card p-4 flex items-center justify-between gap-3 hover:border-amarillo/40 transition">
-        <div className="min-w-0">
-          <p className="text-chalk truncate">
-            {p.esLocal ? "Tarados Malibú" : p.rival}
-            <span className="text-chalk/40 text-xs mx-1.5 align-middle">vs</span>
-            {p.esLocal ? p.rival : "Tarados Malibú"}
-          </p>
-          <p className="text-chalk/50 text-xs">
-            {formatFechaHora(p.fecha)} · {p.competicion}
-            {p.jornada !== null && ` · Jornada ${p.jornada}`}
-          </p>
-          {mostrarDisponibilidad && !jugado && (
-            <p className="text-chalk/50 text-xs pt-1">
-              <span className="text-amarillobrillante">
-                {conteo.VOY + ayudaVan} van{ayudaVan > 0 && ` (${ayudaVan} de ayuda)`}
-              </span>
-              {" · "}
-              <span className="text-chalk/60">{conteo.DUDA} dudan</span>
-              {" · "}
-              <span className="text-coral/80">{conteo.NO_VOY} no van</span>
-              {conteo.SIN_RESPONDER > 0 && (
-                <>
-                  {" · "}
-                  <span className="text-chalk/40">{conteo.SIN_RESPONDER} sin responder</span>
-                </>
-              )}
+      <div className="card p-4 space-y-2">
+        <Link href={`/calendario/${p.id}`} className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-chalk truncate hover:underline">
+              {p.esLocal ? "Tarados Malibú" : p.rival}
+              <span className="text-chalk/40 text-xs mx-1.5 align-middle">vs</span>
+              {p.esLocal ? p.rival : "Tarados Malibú"}
+            </p>
+            <p className="text-chalk/50 text-xs">
+              {formatFechaHora(p.fecha)} · {p.competicion}
+              {p.jornada !== null && ` · Jornada ${p.jornada}`}
+            </p>
+            {mostrarDisponibilidad && !jugado && (
+              <p className="text-chalk/50 text-xs pt-1">
+                <span className="text-amarillobrillante">
+                  {conteo.VOY + ayudaVan} van{ayudaVan > 0 && ` (${ayudaVan} de ayuda)`}
+                </span>
+                {" · "}
+                <span className="text-chalk/60">{conteo.DUDA} dudan</span>
+                {" · "}
+                <span className="text-coral/80">{conteo.NO_VOY} no van</span>
+                {conteo.SIN_RESPONDER > 0 && (
+                  <>
+                    {" · "}
+                    <span className="text-chalk/40">{conteo.SIN_RESPONDER} sin responder</span>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+          {jugado && (
+            <p className="font-display text-lg text-amarillobrillante shrink-0">
+              {p.esLocal ? p.golesFavor : p.golesContra} - {p.esLocal ? p.golesContra : p.golesFavor}
             </p>
           )}
-        </div>
-        {jugado && (
-          <p className="font-display text-lg text-amarillobrillante shrink-0">
-            {p.esLocal ? p.golesFavor : p.golesContra} - {p.esLocal ? p.golesContra : p.golesFavor}
-          </p>
+        </Link>
+        {mostrarDisponibilidad && !jugado && puedeResponder && (
+          <DisponibilidadSelector partidoId={p.id} disponibilidadInicial={miDisponibilidad} esAyuda={estado === "AYUDA"} />
         )}
-      </Link>
+      </div>
     );
   }
 
@@ -78,8 +91,7 @@ export default async function CalendarioPage() {
         {esAdmin && <FormNuevoPartido />}
       </div>
 
-      <section className="space-y-2">
-        <h2 className="text-chalk/60 text-sm uppercase tracking-wide">Próximos</h2>
+      <SeccionDesplegable titulo="Próximos" abiertoInicial={true}>
         {proximos.length === 0 ? (
           <p className="text-chalk/50 text-sm">No hay partidos programados.</p>
         ) : (
@@ -89,10 +101,9 @@ export default async function CalendarioPage() {
             ))}
           </div>
         )}
-      </section>
+      </SeccionDesplegable>
 
-      <section className="space-y-2">
-        <h2 className="text-chalk/60 text-sm uppercase tracking-wide">Jugados</h2>
+      <SeccionDesplegable titulo="Jugados" abiertoInicial={false}>
         {pasados.length === 0 ? (
           <p className="text-chalk/50 text-sm">Todavía no hay partidos jugados.</p>
         ) : (
@@ -102,7 +113,7 @@ export default async function CalendarioPage() {
             ))}
           </div>
         )}
-      </section>
+      </SeccionDesplegable>
     </div>
   );
 }
