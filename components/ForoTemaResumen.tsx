@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { nombreMostrado } from "@/lib/jugadores";
 import { formatFechaHora } from "@/lib/fechas";
+import BotonBorrarMensajeForo from "@/components/BotonBorrarMensajeForo";
 
 type Autor = { name: string | null; apodo: string | null };
 
@@ -14,6 +15,7 @@ export default function ForoTemaResumen({
   ultimaActividad,
   autor,
   numRespuestas,
+  puedeBorrar,
 }: {
   id: string;
   // Puede faltar en temas creados antes de añadir el título.
@@ -23,6 +25,8 @@ export default function ForoTemaResumen({
   ultimaActividad: Date;
   autor: Autor;
   numRespuestas: number;
+  // Admin siempre; el propio autor solo si nadie ha respondido todavía.
+  puedeBorrar: boolean;
 }) {
   return (
     <Link href={`/foro/${id}`} className="card p-4 block space-y-1 hover:border-amarillo/40 transition">
@@ -32,11 +36,14 @@ export default function ForoTemaResumen({
         <span className="text-chalk/40 text-xs shrink-0">{formatFechaHora(createdAt)}</span>
       </div>
       {titulo && <p className="text-chalk/70 text-sm line-clamp-2">{texto}</p>}
-      <p className="text-chalk/40 text-xs">
-        {numRespuestas === 0
-          ? "Sin respuestas"
-          : `${numRespuestas} respuesta${numRespuestas === 1 ? "" : "s"} · última ${formatFechaHora(ultimaActividad)}`}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-chalk/40 text-xs">
+          {numRespuestas === 0
+            ? "Sin respuestas"
+            : `${numRespuestas} respuesta${numRespuestas === 1 ? "" : "s"} · última ${formatFechaHora(ultimaActividad)}`}
+        </p>
+        {puedeBorrar && <BotonBorrarMensajeForo id={id} esTema />}
+      </div>
     </Link>
   );
 }

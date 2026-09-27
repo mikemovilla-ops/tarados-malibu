@@ -125,7 +125,11 @@ export default async function HomePage() {
             </p>
             {session && !noJuega && !viewer.necesitaElegirRol && (
               <div className="pt-2 space-y-2">
-                <DisponibilidadSelector partidoId={proximoPartido.id} disponibilidadInicial={miDisponibilidadProximo} />
+                <DisponibilidadSelector
+                  partidoId={proximoPartido.id}
+                  disponibilidadInicial={miDisponibilidadProximo}
+                  esAyuda={viewer.estado === "AYUDA"}
+                />
                 {miConvocatoria?.convocado && <p className="text-sm text-amarillobrillante">✓ Estás convocado</p>}
               </div>
             )}
@@ -170,7 +174,7 @@ export default async function HomePage() {
                     {p.jornada !== null && ` · Jornada ${p.jornada}`}
                   </span>
                 </Link>
-                <DisponibilidadSelector partidoId={p.id} disponibilidadInicial="SIN_RESPONDER" />
+                <DisponibilidadSelector partidoId={p.id} disponibilidadInicial="SIN_RESPONDER" esAyuda={viewer.estado === "AYUDA"} />
               </div>
             ))}
           </div>
@@ -189,6 +193,11 @@ export default async function HomePage() {
             {ultimoPartido.esLocal ? ultimoPartido.rival : "Tarados Malibú"}
           </p>
           <p className="text-chalk/60 text-sm">{formatFechaHora(ultimoPartido.fecha)}</p>
+          {(session || ultimoPartido.cerrado) && (
+            <Link href={`/calendario/${ultimoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
+              Ver detalle →
+            </Link>
+          )}
         </section>
       )}
 

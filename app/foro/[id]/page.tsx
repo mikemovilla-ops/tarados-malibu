@@ -8,6 +8,7 @@ import { nombreMostrado } from "@/lib/jugadores";
 import { formatFechaHora } from "@/lib/fechas";
 import FormNuevoMensajeForo from "@/components/FormNuevoMensajeForo";
 import BotonBorrarMensajeForo from "@/components/BotonBorrarMensajeForo";
+import EditarTemaForo from "@/components/EditarTemaForo";
 import ForoAcceso from "@/components/ForoAcceso";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,13 @@ export default async function TemaForoPage({ params }: { params: { id: string } 
     viewer.alDiaDePago ?? (viewer.rol === "SOCIO" ? await estaAlDiaDePago(viewer.userId!, "SOCIO") : true);
   const puedeEscribir = puedeEscribirForo({ logueado: true, rol: viewer.rol, alDiaDePago });
 
+  // Quien abrió el tema puede editarlo siempre, y borrarlo mientras nadie
+  // le haya respondido; el admin puede borrar cualquier tema en cualquier
+  // momento (ver la misma regla en app/api/foro/[id]/route.ts).
+  const esAutorTema = viewer.userId === tema.autorId;
+  const puedeEditarTema = esAutorTema;
+  const puedeBorrarTema = viewer.esAdmin || (esAutorTema && tema.respuestas.length === 0);
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
       <Link href="/foro" className="text-chalk/50 text-sm hover:underline">
@@ -61,7 +69,12 @@ export default async function TemaForoPage({ params }: { params: { id: string } 
           <span className="text-chalk/40 text-xs shrink-0">{formatFechaHora(tema.createdAt)}</span>
         </div>
         {tema.titulo && <p className="text-chalk/90 text-sm whitespace-pre-wrap">{tema.texto}</p>}
-        {viewer.esAdmin && <BotonBorrarMensajeForo id={tema.id} esTema />}
+        <div className="flex items-center gap-3">
+          {puedeEditarTema && (
+            <EditarTemaForo id={tema.id} tituloInicial={tema.titulo ?? ""} textoInicial={tema.texto} />
+          )}
+          {puedeBorrarTema && <BotonBorrarMensajeForo id={tema.id} esTema />}
+        </div>
       </div>
 
       <section className="space-y-3">

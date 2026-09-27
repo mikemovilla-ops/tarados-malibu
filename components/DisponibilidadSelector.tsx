@@ -3,18 +3,23 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+// Los mismos tres valores para todos (VOY/DUDA/NO_VOY) — solo cambia el
+// texto para un jugador de ayuda, al que no se le convoca por defecto: no
+// tiene sentido que diga "Voy" tan tajante como un activo.
 const OPCIONES = [
-  { valor: "VOY", label: "Voy", claseActivo: "bg-amarillo text-pitchdark" },
-  { valor: "DUDA", label: "Duda", claseActivo: "bg-chalk/80 text-pitchdark" },
-  { valor: "NO_VOY", label: "No voy", claseActivo: "bg-coral text-pitchdark" },
+  { valor: "VOY", label: "Voy", labelAyuda: "Podría ir", claseActivo: "bg-amarillo text-pitchdark" },
+  { valor: "DUDA", label: "Duda", labelAyuda: "Duda", claseActivo: "bg-chalk/80 text-pitchdark" },
+  { valor: "NO_VOY", label: "No voy", labelAyuda: "No puedo ir", claseActivo: "bg-coral text-pitchdark" },
 ] as const;
 
 export default function DisponibilidadSelector({
   partidoId,
   disponibilidadInicial,
+  esAyuda = false,
 }: {
   partidoId: string;
   disponibilidadInicial: string;
+  esAyuda?: boolean;
 }) {
   const router = useRouter();
   const [disponibilidad, setDisponibilidad] = useState(disponibilidadInicial);
@@ -53,7 +58,7 @@ export default function DisponibilidadSelector({
               disponibilidad === o.valor ? o.claseActivo : "bg-pitchdark border border-chalk/20 text-chalk/60"
             }`}
           >
-            {o.label}
+            {esAyuda ? o.labelAyuda : o.label}
           </button>
         ))}
       </div>

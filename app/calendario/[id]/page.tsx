@@ -23,7 +23,7 @@ const ETIQUETA_GRUPO: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", string
 };
 
 export default async function PartidoPage({ params }: { params: { id: string } }) {
-  const { session, esAdmin, rol, necesitaElegirRol } = await getViewer();
+  const { session, esAdmin, rol, estado, necesitaElegirRol } = await getViewer();
   // Un socio o "no jugador" ve el resultado del partido pero no quién va ni
   // responde disponibilidad — eso es solo entre jugadores.
   const noJuega = rol === "SOCIO" || rol === "NO_JUGADOR";
@@ -105,6 +105,12 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   }
 
   const convocados = partido.convocatorias.filter((c) => c.convocado);
+  // Una vez cerrada la jornada, ya no importa quién dijo que iba o no —
+  // solo quién entró finalmente en la convocatoria. Se calcula solo sobre
+  // activos, como el resto de resúmenes de disponibilidad.
+  const activosNoConvocados = jugadores.filter(
+    (j) => j.estado === "ACTIVO" && !convocatoriaInicial[j.id]?.convocado
+  );
   const jugado = partido.golesFavor !== null && partido.golesContra !== null;
 
   return (
@@ -190,11 +196,10 @@ export default async function PartidoPage({ params }: { params: { id: string } }
 
       {!noJuega && (
       <>
+      {!partido.cerrado && (
       <section className="card p-4 space-y-3">
         <h2 className="font-display text-base">¿Vas?</h2>
-        {partido.cerrado ? (
-          <p className="text-chalk/40 text-sm">Jornada cerrada — ya no se puede cambiar la respuesta.</p>
-        ) : !session ? (
+        {!session ? (
           <p className="text-chalk/50 text-sm">Entra con Google para decir si vas a este partido.</p>
         ) : necesitaElegirRol ? (
           <p className="text-chalk/50 text-sm">
@@ -205,7 +210,11 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             si eres jugador.
           </p>
         ) : (
-          <DisponibilidadSelector partidoId={partido.id} disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"} />
+          <DisponibilidadSelector
+            partidoId={partido.id}
+            disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"}
+            esAyuda={estado === "AYUDA"}
+          />
         )}
 
         <div className="pt-1 space-y-1.5 text-sm">
@@ -227,19 +236,40 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           })}
         </div>
       </section>
+      )}
 
       <section className="card p-4 space-y-3">
         <h2 className="font-display text-base">Convocatoria {esAdmin && !partido.cerrado ? "" : `(${convocados.length})`}</h2>
         {esAdmin ? (
           partido.cerrado ? (
-            <SeccionEditable resumen={<ListaConvocados convocados={convocados} />}>
+            <SeccionEditable
+              resumen={
+                <>
+                  <ListaConvocados convocados={convocados} />
+                  {activosNoConvocados.length > 0 && (
+                    <p className="text-chalk/50 text-sm pt-2">
+                      <span className="text-chalk/40">No convocados ({activosNoConvocados.length}):</span>{" "}
+                      {activosNoConvocados.map((j) => nombreMostrado(j)).join(", ")}
+                    </p>
+                  )}
+                </>
+              }
+            >
               <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
             </SeccionEditable>
           ) : (
             <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
           )
         ) : (
-          <ListaConvocados convocados={convocados} />
+          <>
+            <ListaConvocados convocados={convocados} />
+            {partido.cerrado && activosNoConvocados.length > 0 && (
+              <p className="text-chalk/50 text-sm pt-2">
+                <span className="text-chalk/40">No convocados ({activosNoConvocados.length}):</span>{" "}
+                {activosNoConvocados.map((j) => nombreMostrado(j)).join(", ")}
+              </p>
+            )}
+          </>
         )}
       </section>
       </>

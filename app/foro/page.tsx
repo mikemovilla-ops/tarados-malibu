@@ -95,6 +95,9 @@ export default async function ForoPage() {
               ultimaActividad={tema.ultimaActividad}
               autor={tema.autor}
               numRespuestas={tema._count.respuestas}
+              puedeBorrar={
+                viewer.esAdmin || (viewer.userId === tema.autorId && tema._count.respuestas === 0)
+              }
             />
           ))}
         </div>
