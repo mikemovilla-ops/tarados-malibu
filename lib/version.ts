@@ -37,7 +37,11 @@ export const HISTORIAL_VERSIONES: EntradaVersion[] = [
       "Vista previa local (solo admin, solo fuera de producción) para ver la app como jugador activo, de ayuda, no jugador o socio.",
       "Plantilla y Pagos: las secciones se pliegan y despliegan; en Plantilla, el admin ve avisos de \"Sin clasificar\" y una sección aparte para quien no ha pagado la cuota de socio.",
       "En Plantilla y en Estadísticas, al pinchar en un jugador se abre su ficha con sus estadísticas y el partido a partido.",
-      "En la home, el próximo partido y el aviso de \"responde si vas\" están unidos en una sola sección. \"Ver detalle\", las estadísticas (globales y de cada jugador) y el detalle de una jornada todavía abierta ahora piden haber entrado con Google.",
+      "En la home, el próximo partido y el aviso de \"responde si vas\" están unidos en una sola sección. \"Ver detalle\" (también del último resultado), las estadísticas (globales y de cada jugador) y el detalle de una jornada todavía abierta ahora piden haber entrado con Google.",
+      "En el Foro, se puede borrar un tema directamente desde la lista, sin entrar en él; quien abre un tema puede editarlo (título y mensaje) cuando quiera, y borrarlo él mismo solo mientras nadie le haya respondido.",
+      "Con la jornada cerrada ya no sale \"¿Vas?\" (deja de ser relevante); en su lugar, junto a la convocatoria se ven los \"No convocados\".",
+      "Un jugador de ayuda ve \"Podría ir\" / \"Duda\" / \"No puedo ir\" en vez de \"Voy\" / \"Duda\" / \"No voy\".",
+      "En Calendario, cada próximo partido enseña ya los botones de disponibilidad sin tener que entrar en el detalle, y \"Próximos\"/\"Jugados\" pasan a ser desplegables (Próximos abierto, Jugados plegado).",
     ],
   },
   {
