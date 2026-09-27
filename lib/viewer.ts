@@ -14,6 +14,11 @@ export type Viewer = {
   // lib/pagos.ts: estaAlDiaDePago) si hace falta para lo que se esté
   // mostrando (p.ej. quién puede escribir en /tablon).
   alDiaDePago: boolean | null;
+  // true si el usuario real (nunca afectado por la vista previa) todavía no
+  // ha contestado "¿vienes a jugar o eres socio?" — ver ElegirRolInicial.
+  // Páginas como /tablon deben mandarlo a /ajustes en vez de dejarlo
+  // participar con el rol JUGADOR que trae por defecto.
+  necesitaElegirRol: boolean;
 };
 
 export type PerfilReal = { esAdmin: boolean; rol: Viewer["rol"]; estado: Viewer["estado"] };
@@ -56,11 +61,16 @@ export async function getViewer(): Promise<Viewer> {
   const esAdminReal = !!session?.user?.isAdmin;
   let rol: Viewer["rol"] = null;
   let estado: Viewer["estado"] = null;
+  let necesitaElegirRol = false;
 
   if (userId) {
-    const usuario = await prisma.user.findUnique({ where: { id: userId }, select: { rol: true, estado: true } });
+    const usuario = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { rol: true, estado: true, rolElegido: true },
+    });
     rol = usuario?.rol ?? null;
     estado = usuario?.estado ?? null;
+    necesitaElegirRol = !usuario?.rolElegido;
   }
 
   const cookieValor = cookies().get(COOKIE_VISTA_PREVIA)?.value;
@@ -70,5 +80,5 @@ export async function getViewer(): Promise<Viewer> {
     process.env.VERCEL_ENV === "production"
   );
 
-  return { session, userId, ...resultado };
+  return { session, userId, necesitaElegirRol, ...resultado };
 }

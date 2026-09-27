@@ -36,13 +36,16 @@ export default async function HomePage() {
     userId && proximoPartido
       ? proximoPartido.convocatorias.find((c) => c.userId === userId)
       : null;
+  const miDisponibilidadProximo = miConvocatoria?.disponibilidad ?? "SIN_RESPONDER";
 
   // Partidos futuros a los que este jugador todavía no ha respondido
   // (voy/no voy/duda) — sin fila de convocatoria, o con fila pero
   // disponibilidad todavía "sin responder". Un socio no responde
-  // disponibilidad, así que no le sale nada aquí.
+  // disponibilidad, así que no le sale nada aquí; tampoco a quien no ha
+  // contestado aún si es jugador o socio (el servidor también lo rechaza,
+  // ver /api/partidos/[id]/disponibilidad).
   const partidosSinResponder =
-    userId && !esSocio
+    userId && !esSocio && !viewer.necesitaElegirRol
       ? await prisma.partido.findMany({
           where: {
             fecha: { gte: new Date() },
@@ -52,6 +55,9 @@ export default async function HomePage() {
           orderBy: { fecha: "asc" },
         })
       : [];
+  // El próximo partido ya se responde desde su propia sección (más arriba),
+  // así que aquí solo van los demás.
+  const otrosPartidosSinResponder = partidosSinResponder.filter((p) => p.id !== proximoPartido?.id);
 
   // Un jugador activo tiene cuota de jugador; un socio tiene la suya propia
   // (secciones con destinatario distinto, ver lib/pagos.ts).
@@ -115,15 +121,19 @@ export default async function HomePage() {
               {proximoPartido.jornada !== null && ` · Jornada ${proximoPartido.jornada}`}
               {proximoPartido.lugar && ` · ${proximoPartido.lugar}`}
             </p>
-            {session && !esSocio && (
-              <p className="text-sm pt-2">
-                {miConvocatoria === undefined || miConvocatoria === null ? (
-                  <span className="text-chalk/40">Convocatoria todavía sin decidir</span>
-                ) : miConvocatoria.convocado ? (
-                  <span className="text-amarillobrillante">✓ Estás convocado</span>
-                ) : (
-                  <span className="text-chalk/40">No convocado para este partido</span>
-                )}
+            {session && !esSocio && !viewer.necesitaElegirRol && (
+              <div className="pt-2 space-y-2">
+                <DisponibilidadSelector partidoId={proximoPartido.id} disponibilidadInicial={miDisponibilidadProximo} />
+                {miConvocatoria?.convocado && <p className="text-sm text-amarillobrillante">✓ Estás convocado</p>}
+              </div>
+            )}
+            {session && !esSocio && viewer.necesitaElegirRol && (
+              <p className="text-chalk/50 text-sm pt-2">
+                Antes contesta en{" "}
+                <Link href="/ajustes" className="underline">
+                  Ajustes
+                </Link>{" "}
+                si vienes a jugar o eres socio.
               </p>
             )}
             <Link href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
@@ -135,13 +145,16 @@ export default async function HomePage() {
         )}
       </section>
 
-      {partidosSinResponder.length > 0 && (
+      {/* El próximo partido ya tiene su propio selector de disponibilidad
+          arriba — aquí solo van los demás partidos abiertos pendientes de
+          respuesta, para no repetir el mismo partido dos veces. */}
+      {otrosPartidosSinResponder.length > 0 && (
         <section className="card p-5 space-y-4 border-amarillo/30">
           <h2 className="font-display text-lg">
-            Partidos por responder <span className="text-amarillobrillante">({partidosSinResponder.length})</span>
+            Partidos por responder <span className="text-amarillobrillante">({otrosPartidosSinResponder.length})</span>
           </h2>
           <div className="space-y-4">
-            {partidosSinResponder.map((p) => (
+            {otrosPartidosSinResponder.map((p) => (
               <div key={p.id} className="space-y-2">
                 <Link href={`/calendario/${p.id}`} className="block hover:underline">
                   <span className="text-chalk">

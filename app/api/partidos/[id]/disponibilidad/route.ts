@@ -18,6 +18,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
+  const autor = await prisma.user.findUnique({ where: { id: session.user.id }, select: { rolElegido: true } });
+  if (!autor?.rolElegido) {
+    return NextResponse.json(
+      { error: "Antes de responder, contesta en Ajustes si vienes a jugar o eres socio." },
+      { status: 403 }
+    );
+  }
+
   const { disponibilidad } = (await req.json()) as { disponibilidad: string };
   if (!VALORES.includes(disponibilidad as any)) {
     return NextResponse.json({ error: "Respuesta no válida." }, { status: 400 });

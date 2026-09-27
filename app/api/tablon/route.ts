@@ -17,9 +17,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  const autor = await prisma.user.findUnique({ where: { id: session.user.id }, select: { rol: true } });
-  const alDiaDePago = autor?.rol === "SOCIO" ? await estaAlDiaDePago(session.user.id, "SOCIO") : true;
-  if (!puedeEscribirTablon({ logueado: true, rol: autor?.rol ?? null, alDiaDePago })) {
+  const autor = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { rol: true, rolElegido: true },
+  });
+  if (!autor?.rolElegido) {
+    return NextResponse.json(
+      { error: "Antes de escribir en el tablón, contesta en Ajustes si vienes a jugar o eres socio." },
+      { status: 403 }
+    );
+  }
+
+  const alDiaDePago = autor.rol === "SOCIO" ? await estaAlDiaDePago(session.user.id, "SOCIO") : true;
+  if (!puedeEscribirTablon({ logueado: true, rol: autor.rol, alDiaDePago })) {
     return NextResponse.json(
       { error: "Tienes alguna cuota de socio pendiente. Ponte al día para poder escribir en el tablón." },
       { status: 403 }

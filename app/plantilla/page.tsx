@@ -23,7 +23,7 @@ export default async function PlantillaPage() {
       posicion: true,
       estado: true,
       rol: true,
-      ...(esAdmin ? { dni: true, fechaNacimiento: true } : {}),
+      ...(esAdmin ? { dni: true, fechaNacimiento: true, rolElegido: true } : {}),
     },
   });
 

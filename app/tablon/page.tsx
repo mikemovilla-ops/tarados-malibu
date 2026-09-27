@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getViewer } from "@/lib/viewer";
 import { estaAlDiaDePago } from "@/lib/pagos";
@@ -20,6 +21,15 @@ export default async function TablonPage() {
         <BotonEntrarGoogle className="bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition inline-block" />
       </div>
     );
+  }
+
+  // No dejamos entrar a nadie que todavía no haya dicho si es jugador o
+  // socio: por defecto trae rol JUGADOR, y le dejaría escribir como tal
+  // antes de haberlo confirmado. RedireccionPrimerLogin ya intenta mandarlo
+  // a Ajustes en el cliente, pero esto lo cierra también en el servidor
+  // (entrando directo por URL, o si el JS aún no ha corrido).
+  if (viewer.necesitaElegirRol) {
+    redirect("/ajustes");
   }
 
   // viewer.alDiaDePago solo viene forzado durante una vista previa de

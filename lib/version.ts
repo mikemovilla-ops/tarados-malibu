@@ -24,6 +24,17 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.1.0",
+    fecha: "2026-09-27",
+    cambios: [
+      "El tablón exige haber entrado con Google para verlo, no solo para escribir.",
+      "Mientras no contestas \"¿jugador o socio?\", no puedes responder disponibilidad ni escribir en el tablón, y se te sigue mandando a Ajustes cada vez que entras (no solo la primera vez).",
+      "El admin ve en Plantilla un aviso de \"Sin clasificar\" para quien todavía no ha contestado esa pregunta.",
+      "En Plantilla, al pinchar en un jugador se abre su ficha con sus estadísticas y el partido a partido.",
+      "En la home, el próximo partido y el aviso de \"responde si vas\" se han unido en una sola sección.",
+    ],
+  },
+  {
     version: "2.0.0",
     fecha: "2026-09-25",
     hito: true,

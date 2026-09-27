@@ -85,3 +85,63 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
       a.nombre.localeCompare(b.nombre)
   );
 }
+
+export type PartidoJugado = {
+  partidoId: string;
+  fecha: Date;
+  rival: string;
+  esLocal: boolean;
+  competicion: string;
+  jornada: number | null;
+  golesFavor: number | null;
+  golesContra: number | null;
+  goles: number;
+  asistencias: number;
+  tarjetaAmarilla: boolean;
+  tarjetaRoja: boolean;
+};
+
+export type EstadisticasJugador = {
+  partidosJugados: number;
+  goles: number;
+  asistencias: number;
+  tarjetasAmarillas: number;
+  tarjetasRojas: number;
+  partidos: PartidoJugado[];
+};
+
+// Detalle de un jugador para su ficha en /plantilla/[id]: el mismo resumen
+// que sale en el ranking, más el partido a partido que lo compone (más
+// recientes primero). Mismo filtro que calcularRanking: solo jornadas ya
+// cerradas por el admin.
+export async function calcularEstadisticasJugador(userId: string): Promise<EstadisticasJugador> {
+  const convocatorias = await prisma.convocatoria.findMany({
+    where: { userId, convocado: true, partido: { cerrado: true } },
+    include: { partido: true },
+    orderBy: { partido: { fecha: "desc" } },
+  });
+
+  const partidos: PartidoJugado[] = convocatorias.map((c) => ({
+    partidoId: c.partido.id,
+    fecha: c.partido.fecha,
+    rival: c.partido.rival,
+    esLocal: c.partido.esLocal,
+    competicion: c.partido.competicion,
+    jornada: c.partido.jornada,
+    golesFavor: c.partido.golesFavor,
+    golesContra: c.partido.golesContra,
+    goles: c.goles,
+    asistencias: c.asistencias,
+    tarjetaAmarilla: c.tarjetaAmarilla,
+    tarjetaRoja: c.tarjetaRoja,
+  }));
+
+  return {
+    partidosJugados: partidos.length,
+    goles: partidos.reduce((suma, p) => suma + p.goles, 0),
+    asistencias: partidos.reduce((suma, p) => suma + p.asistencias, 0),
+    tarjetasAmarillas: partidos.filter((p) => p.tarjetaAmarilla).length,
+    tarjetasRojas: partidos.filter((p) => p.tarjetaRoja).length,
+    partidos,
+  };
+}

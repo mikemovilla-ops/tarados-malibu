@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { POSICIONES, ETIQUETA_POSICION } from "@/lib/posiciones";
 import { ESTADOS, ETIQUETA_ESTADO } from "@/lib/estados";
 import { ROLES, ETIQUETA_ROL } from "@/lib/roles";
@@ -21,6 +22,7 @@ type Jugador = {
   // Solo llegan si quien pide la lista es admin (ver app/plantilla/page.tsx)
   dni?: string | null;
   fechaNacimiento?: Date | null;
+  rolElegido?: boolean;
 };
 
 // Avatar de un socio (no tiene dorsal, así que no tiene sentido pintarle
@@ -90,8 +92,8 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
   const dorsalCamiseta = editando ? (dorsal === "" ? null : Number(dorsal)) : jugador.dorsal;
   const nombreCamiseta = editando ? apodo.trim() || jugador.name || "Sin nombre" : nombreMostrado(jugador);
 
-  return (
-    <div className="card p-4 flex items-center gap-3">
+  const contenido = (
+    <>
       {rolMostrado === "SOCIO" ? (
         <AvatarSocio nombre={nombreCamiseta} />
       ) : (
@@ -112,6 +114,9 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
               : "Sin posición"}
           {!jugador.email && " · Manual"}
         </p>
+        {esAdmin && jugador.rolElegido === false && (
+          <p className="text-coral/80 text-[11px]">Sin clasificar — no ha dicho si es jugador o socio</p>
+        )}
         {esAdmin && (jugador.dni || jugador.fechaNacimiento) && (
           <p className="text-chalk/40 text-[11px]">
             {jugador.dni && `DNI: ${jugador.dni}`}
@@ -120,6 +125,21 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
           </p>
         )}
       </div>
+    </>
+  );
+
+  return (
+    <div className="card p-4 flex items-center gap-3">
+      {/* Solo los jugadores tienen ficha de estadísticas — los socios no
+          juegan, así que su fila no es clicable. Tampoco mientras se edita,
+          para no navegar sin querer al tocar los campos. */}
+      {!editando && jugador.rol === "JUGADOR" ? (
+        <Link href={`/plantilla/${jugador.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+          {contenido}
+        </Link>
+      ) : (
+        <div className="flex items-center gap-3 flex-1 min-w-0">{contenido}</div>
+      )}
 
       {esAdmin && !editando && (
         <button onClick={() => setEditando(true)} className="text-amarillobrillante text-xs hover:underline shrink-0">

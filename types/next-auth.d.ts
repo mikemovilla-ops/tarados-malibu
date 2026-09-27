@@ -6,6 +6,7 @@ declare module "next-auth" {
       id: string;
       isAdmin: boolean;
       esNuevo: boolean;
+      necesitaElegirRol: boolean;
       name?: string | null;
       email?: string | null;
       image?: string | null;

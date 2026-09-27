@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, toInputDatetimeLocal } from "@/lib/fechas";
 import { nombreMostrado } from "@/lib/jugadores";
@@ -21,7 +22,7 @@ const ETIQUETA_GRUPO: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", string
 };
 
 export default async function PartidoPage({ params }: { params: { id: string } }) {
-  const { session, esAdmin, rol } = await getViewer();
+  const { session, esAdmin, rol, necesitaElegirRol } = await getViewer();
   // Un socio ve el resultado del partido pero no quién va ni responde
   // disponibilidad — eso es solo entre jugadores.
   const esSocio = rol === "SOCIO";
@@ -175,10 +176,18 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         <h2 className="font-display text-base">¿Vas?</h2>
         {partido.cerrado ? (
           <p className="text-chalk/40 text-sm">Jornada cerrada — ya no se puede cambiar la respuesta.</p>
-        ) : session ? (
-          <DisponibilidadSelector partidoId={partido.id} disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"} />
-        ) : (
+        ) : !session ? (
           <p className="text-chalk/50 text-sm">Entra con Google para decir si vas a este partido.</p>
+        ) : necesitaElegirRol ? (
+          <p className="text-chalk/50 text-sm">
+            Antes contesta en{" "}
+            <Link href="/ajustes" className="underline">
+              Ajustes
+            </Link>{" "}
+            si vienes a jugar o eres socio.
+          </p>
+        ) : (
+          <DisponibilidadSelector partidoId={partido.id} disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"} />
         )}
 
         <div className="pt-1 space-y-1.5 text-sm">

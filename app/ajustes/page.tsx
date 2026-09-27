@@ -50,55 +50,62 @@ export default async function AjustesPage() {
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
       <h1 className="font-display text-2xl">Ajustes</h1>
 
-      {!usuario.rolElegido && <ElegirRolInicial />}
+      {!usuario.rolElegido ? (
+        // Hasta que no contesta esto, no tiene sentido enseñarle apodo,
+        // posición ni contacto: no sabemos ni qué campos le corresponden.
+        <ElegirRolInicial />
+      ) : (
+        <>
+          <section className="card p-5 space-y-1">
+            <p className="text-chalk">{usuario.name}</p>
+            <p className="text-chalk/50 text-sm">{usuario.email}</p>
+            {esSocio ? (
+              <p className="text-chalk/50 text-sm">Socio</p>
+            ) : (
+              <>
+                <p className="text-chalk/50 text-sm">
+                  {usuario.dorsal !== null ? `Dorsal #${usuario.dorsal}` : "Sin dorsal asignado"}
+                  {" · "}
+                  {usuario.posicion ? ETIQUETA_POSICION[usuario.posicion] : "Sin posición"}
+                  {" · "}
+                  {ETIQUETA_ESTADO[usuario.estado]}
+                </p>
+                <p className="text-chalk/40 text-xs pt-1">
+                  El dorsal y si estás activo o de ayuda los gestiona el admin desde Plantilla.
+                </p>
+              </>
+            )}
+          </section>
 
-      <section className="card p-5 space-y-1">
-        <p className="text-chalk">{usuario.name}</p>
-        <p className="text-chalk/50 text-sm">{usuario.email}</p>
-        {esSocio ? (
-          <p className="text-chalk/50 text-sm">Socio</p>
-        ) : (
-          <>
-            <p className="text-chalk/50 text-sm">
-              {usuario.dorsal !== null ? `Dorsal #${usuario.dorsal}` : "Sin dorsal asignado"}
-              {" · "}
-              {usuario.posicion ? ETIQUETA_POSICION[usuario.posicion] : "Sin posición"}
-              {" · "}
-              {ETIQUETA_ESTADO[usuario.estado]}
+          <section className="card p-5 space-y-2">
+            <h2 className="font-display text-base">{esSocio ? "Apodo" : "Apodo y posición"}</h2>
+            <p className="text-chalk/50 text-xs">
+              El apodo es cómo te ve el resto del equipo en la plantilla, el calendario
+              {esSocio ? "" : ", las estadísticas"}
+              {" y los pagos"} (déjalo en blanco para usar tu nombre de Google).
+              {!esSocio && " El admin también puede corregir tu posición desde Plantilla si hace falta."}
             </p>
-            <p className="text-chalk/40 text-xs pt-1">
-              El dorsal y si estás activo o de ayuda los gestiona el admin desde Plantilla.
+            <EditarApodo apodoInicial={usuario.apodo ?? ""} posicionInicial={usuario.posicion ?? ""} esSocio={esSocio} />
+          </section>
+
+          <section className="card p-5 space-y-2">
+            <h2 className="font-display text-base">Contacto{!esSocio && " e inscripción"}</h2>
+            <p className="text-chalk/50 text-xs">
+              Solo los ves tú — se usan para localizarte{!esSocio && ", para inscribirte en la liga/seguro del equipo"} y,
+              el email de avisos, para recibir notificaciones si es distinto del de tu login (si lo dejas en blanco se
+              usa ese).
             </p>
-          </>
-        )}
-      </section>
-
-      <section className="card p-5 space-y-2">
-        <h2 className="font-display text-base">{esSocio ? "Apodo" : "Apodo y posición"}</h2>
-        <p className="text-chalk/50 text-xs">
-          El apodo es cómo te ve el resto del equipo en la plantilla, el calendario{esSocio ? "" : ", las estadísticas"}
-          {" y los pagos"} (déjalo en blanco para usar tu nombre de Google).
-          {!esSocio && " El admin también puede corregir tu posición desde Plantilla si hace falta."}
-        </p>
-        <EditarApodo apodoInicial={usuario.apodo ?? ""} posicionInicial={usuario.posicion ?? ""} esSocio={esSocio} />
-      </section>
-
-      <section className="card p-5 space-y-2">
-        <h2 className="font-display text-base">Contacto{!esSocio && " e inscripción"}</h2>
-        <p className="text-chalk/50 text-xs">
-          Solo los ves tú — se usan para localizarte{!esSocio && ", para inscribirte en la liga/seguro del equipo"} y,
-          el email de avisos, para recibir notificaciones si es distinto del de tu login (si lo dejas en blanco se
-          usa ese).
-        </p>
-        <EditarDatosPersonales
-          telefonoInicial={usuario.telefono ?? ""}
-          emailLogin={usuario.email ?? ""}
-          emailNotificacionesInicial={usuario.emailNotificaciones ?? ""}
-          dniInicial={usuario.dni ?? ""}
-          fechaNacimientoInicial={usuario.fechaNacimiento ? usuario.fechaNacimiento.toISOString().slice(0, 10) : ""}
-          esSocio={esSocio}
-        />
-      </section>
+            <EditarDatosPersonales
+              telefonoInicial={usuario.telefono ?? ""}
+              emailLogin={usuario.email ?? ""}
+              emailNotificacionesInicial={usuario.emailNotificaciones ?? ""}
+              dniInicial={usuario.dni ?? ""}
+              fechaNacimientoInicial={usuario.fechaNacimiento ? usuario.fechaNacimiento.toISOString().slice(0, 10) : ""}
+              esSocio={esSocio}
+            />
+          </section>
+        </>
+      )}
 
       {session.user.isAdmin && process.env.VERCEL_ENV !== "production" && (
         <section className="card p-5 space-y-2">
