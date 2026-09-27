@@ -81,12 +81,14 @@ export default function Navbar() {
           <Link href="/calendario" onClick={(e) => navegar(e, "/calendario")} className={enlaceClass}>
             Calendario
           </Link>
-          <Link href="/estadisticas" onClick={(e) => navegar(e, "/estadisticas")} className={enlaceClass}>
-            Estadísticas
-          </Link>
           {status === "authenticated" && (
-            <Link href="/tablon" onClick={(e) => navegar(e, "/tablon")} className={enlaceClass}>
-              Tablón
+            <Link href="/estadisticas" onClick={(e) => navegar(e, "/estadisticas")} className={enlaceClass}>
+              Estadísticas
+            </Link>
+          )}
+          {status === "authenticated" && (
+            <Link href="/foro" onClick={(e) => navegar(e, "/foro")} className={enlaceClass}>
+              Foro
             </Link>
           )}
           {status === "authenticated" && (

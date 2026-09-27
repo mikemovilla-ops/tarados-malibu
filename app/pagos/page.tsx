@@ -8,7 +8,7 @@ import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 
 export const dynamic = "force-dynamic";
 
-type Persona = { id: string; name: string | null; apodo: string | null; dorsal: number | null };
+type Persona = { id: string; name: string | null; apodo: string | null; dorsal: number | null; rol?: string };
 type Pago = { userId: string; seccionId: string; pagado: boolean };
 
 export default async function PagosPage() {
@@ -34,13 +34,16 @@ export default async function PagosPage() {
       );
     }
 
-    const secciones = await getSecciones(rol ?? "JUGADOR");
+    // Un socio y un "no jugador" (todavía sin cuota pagada) pagan dentro de
+    // la misma sección de socio.
+    const destinoSecciones = rol === "JUGADOR" ? "JUGADOR" : "SOCIO";
+    const secciones = await getSecciones(destinoSecciones);
     const misPagos = await prisma.pago.findMany({ where: { userId: userId! } });
 
     return (
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-4">
         <h1 className="font-display text-2xl">Tus pagos</h1>
-        {secciones.length === 0 && rol === "SOCIO" && (
+        {secciones.length === 0 && rol !== "JUGADOR" && (
           <p className="text-chalk/50 text-sm">Todavía no hay ninguna cuota de socio configurada.</p>
         )}
         <div className="space-y-2">
@@ -69,6 +72,7 @@ export default async function PagosPage() {
     personas,
     pagos,
     sinPersonasTexto,
+    nota,
   }: {
     titulo: string;
     destinatario: "JUGADOR" | "SOCIO";
@@ -76,6 +80,7 @@ export default async function PagosPage() {
     personas: Persona[];
     pagos: Pago[];
     sinPersonasTexto: string;
+    nota?: string;
   }) {
     return (
       <section className="space-y-4">
@@ -85,6 +90,7 @@ export default async function PagosPage() {
           </h2>
           <FormNuevaSeccion destinatario={destinatario} />
         </div>
+        {nota && <p className="text-chalk/40 text-xs -mt-2">{nota}</p>}
 
         {secciones.length === 0 && <p className="text-chalk/50 text-sm">Todavía no hay ninguna sección creada.</p>}
 
@@ -102,6 +108,9 @@ export default async function PagosPage() {
                       <span className="text-chalk text-sm truncate">
                         {p.dorsal !== null && <span className="text-amarillobrillante font-display">#{p.dorsal} </span>}
                         {nombreMostrado(p)}
+                        {p.rol === "NO_JUGADOR" && (
+                          <span className="text-chalk/40 text-xs"> (no jugador, sin cuota todavía)</span>
+                        )}
                       </span>
                       <TogglePago userId={p.id} seccionId={seccion.id} pagadoInicial={pago?.pagado ?? false} />
                     </div>
@@ -123,9 +132,9 @@ export default async function PagosPage() {
       select: { id: true, name: true, apodo: true, dorsal: true },
     }),
     prisma.user.findMany({
-      where: { rol: "SOCIO" },
+      where: { rol: { in: ["SOCIO", "NO_JUGADOR"] } },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, apodo: true, dorsal: true },
+      select: { id: true, name: true, apodo: true, dorsal: true, rol: true },
     }),
   ]);
 
@@ -156,6 +165,7 @@ export default async function PagosPage() {
         personas={socios}
         pagos={pagos}
         sinPersonasTexto="No hay socios todavía."
+        nota="Incluye a quien todavía no juega pero ha dicho que no es jugador (sin cuota pagada) — al marcarle aquí toda su cuota como pagada, pasa a ser Socio solo."
       />
     </div>
   );

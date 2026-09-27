@@ -24,28 +24,19 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
-    version: "2.1.0",
-    fecha: "2026-09-27",
-    cambios: [
-      "El tablón exige haber entrado con Google para verlo, no solo para escribir.",
-      "Mientras no contestas \"¿jugador o socio?\", no puedes responder disponibilidad ni escribir en el tablón, y se te sigue mandando a Ajustes cada vez que entras (no solo la primera vez).",
-      "El admin ve en Plantilla un aviso de \"Sin clasificar\" para quien todavía no ha contestado esa pregunta.",
-      "En Plantilla, al pinchar en un jugador se abre su ficha con sus estadísticas y el partido a partido.",
-      "En la home, el próximo partido y el aviso de \"responde si vas\" se han unido en una sola sección.",
-    ],
-  },
-  {
     version: "2.0.0",
-    fecha: "2026-09-25",
+    fecha: "2026-09-28",
     hito: true,
     cambios: [
-      "Nuevo perfil de Socio: acceso de solo lectura a plantilla, calendario y estadísticas, sin convocatorias ni disponibilidad, con su propia cuota en Pagos.",
-      "Al entrar por primera vez, se pregunta \"¿vienes a jugar o eres socio?\" para clasificarte tú mismo (el admin siempre puede corregirlo desde Plantilla).",
+      "Nuevo perfil de Socio: acceso de solo lectura a plantilla, calendario y estadísticas, con su propia cuota en Pagos.",
+      "Al entrar por primera vez, se pregunta si eres jugador para clasificarte tú mismo (el admin siempre puede corregirlo desde Plantilla); mientras no contestes, no puedes responder disponibilidad ni participar en el Foro, y se te sigue llevando a Ajustes cada vez que entras.",
       "Anuncio fijable en la home, gestionado por el admin.",
       "El admin puede borrar del todo a un jugador o socio, con confirmación.",
-      "Tablón de mensajes: cualquiera abre temas y responde; un socio con la cuota pendiente puede leerlo pero no escribir.",
+      "Foro: pueden abrir temas y responder los jugadores (activos o de ayuda) y los socios al día de su cuota; el resto solo puede leerlo, y hace falta haber entrado con Google incluso para eso.",
       "Vista previa local (solo admin, solo fuera de producción) para ver la app como jugador activo, de ayuda, o socio con la cuota pagada o pendiente.",
-      "Plantilla y Pagos: las distintas secciones ahora se pliegan y despliegan.",
+      "Plantilla y Pagos: las distintas secciones se pliegan y despliegan; en Plantilla, el admin ve un aviso de \"Sin clasificar\" para quien no ha contestado si es jugador.",
+      "En Plantilla, al pinchar en un jugador se abre su ficha con sus estadísticas y el partido a partido.",
+      "En la home, el próximo partido y el aviso de \"responde si vas\" están unidos en una sola sección.",
     ],
   },
   {

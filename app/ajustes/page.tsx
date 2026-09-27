@@ -44,7 +44,7 @@ export default async function AjustesPage() {
     },
   });
 
-  const esSocio = usuario.rol === "SOCIO";
+  const noJuega = usuario.rol !== "JUGADOR";
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
@@ -59,8 +59,10 @@ export default async function AjustesPage() {
           <section className="card p-5 space-y-1">
             <p className="text-chalk">{usuario.name}</p>
             <p className="text-chalk/50 text-sm">{usuario.email}</p>
-            {esSocio ? (
-              <p className="text-chalk/50 text-sm">Socio</p>
+            {noJuega ? (
+              <p className="text-chalk/50 text-sm">
+                {usuario.rol === "SOCIO" ? "Socio" : "No jugador — cuota de socio pendiente"}
+              </p>
             ) : (
               <>
                 <p className="text-chalk/50 text-sm">
@@ -78,20 +80,20 @@ export default async function AjustesPage() {
           </section>
 
           <section className="card p-5 space-y-2">
-            <h2 className="font-display text-base">{esSocio ? "Apodo" : "Apodo y posición"}</h2>
+            <h2 className="font-display text-base">{noJuega ? "Apodo" : "Apodo y posición"}</h2>
             <p className="text-chalk/50 text-xs">
               El apodo es cómo te ve el resto del equipo en la plantilla, el calendario
-              {esSocio ? "" : ", las estadísticas"}
+              {noJuega ? "" : ", las estadísticas"}
               {" y los pagos"} (déjalo en blanco para usar tu nombre de Google).
-              {!esSocio && " El admin también puede corregir tu posición desde Plantilla si hace falta."}
+              {!noJuega && " El admin también puede corregir tu posición desde Plantilla si hace falta."}
             </p>
-            <EditarApodo apodoInicial={usuario.apodo ?? ""} posicionInicial={usuario.posicion ?? ""} esSocio={esSocio} />
+            <EditarApodo apodoInicial={usuario.apodo ?? ""} posicionInicial={usuario.posicion ?? ""} esSocio={noJuega} />
           </section>
 
           <section className="card p-5 space-y-2">
-            <h2 className="font-display text-base">Contacto{!esSocio && " e inscripción"}</h2>
+            <h2 className="font-display text-base">Contacto{!noJuega && " e inscripción"}</h2>
             <p className="text-chalk/50 text-xs">
-              Solo los ves tú — se usan para localizarte{!esSocio && ", para inscribirte en la liga/seguro del equipo"} y,
+              Solo los ves tú — se usan para localizarte{!noJuega && ", para inscribirte en la liga/seguro del equipo"} y,
               el email de avisos, para recibir notificaciones si es distinto del de tu login (si lo dejas en blanco se
               usa ese).
             </p>
@@ -101,7 +103,7 @@ export default async function AjustesPage() {
               emailNotificacionesInicial={usuario.emailNotificaciones ?? ""}
               dniInicial={usuario.dni ?? ""}
               fechaNacimientoInicial={usuario.fechaNacimiento ? usuario.fechaNacimiento.toISOString().slice(0, 10) : ""}
-              esSocio={esSocio}
+              esSocio={noJuega}
             />
           </section>
         </>

@@ -3,11 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { estaAlDiaDePago } from "@/lib/pagos";
-import { puedeEscribirTablon } from "@/lib/tablon";
+import { puedeEscribirForo } from "@/lib/foro";
 
-// Cualquiera logueado —jugador o socio— puede abrir un tema nuevo (sin
-// padreId) o responder a uno existente (con padreId), salvo un socio con
-// alguna cuota de socio pendiente: ese solo puede leer el tablón. Esta
+// Puede abrir un tema nuevo (sin padreId) o responder a uno existente (con
+// padreId) cualquier jugador (activo o ayuda) y cualquier socio al día de
+// su cuota; un socio con la cuota pendiente solo puede leer el foro. Esta
 // comprobación siempre mira el rol/pago real en la BD (nunca la vista
 // previa del admin, ver lib/viewer.ts): la vista previa solo cambia qué se
 // pinta, no permisos reales de servidor.
@@ -23,15 +23,15 @@ export async function POST(req: Request) {
   });
   if (!autor?.rolElegido) {
     return NextResponse.json(
-      { error: "Antes de escribir en el tablón, contesta en Ajustes si vienes a jugar o eres socio." },
+      { error: "Antes de escribir en el foro, contesta en Ajustes si eres jugador." },
       { status: 403 }
     );
   }
 
   const alDiaDePago = autor.rol === "SOCIO" ? await estaAlDiaDePago(session.user.id, "SOCIO") : true;
-  if (!puedeEscribirTablon({ logueado: true, rol: autor.rol, alDiaDePago })) {
+  if (!puedeEscribirForo({ logueado: true, rol: autor.rol, alDiaDePago })) {
     return NextResponse.json(
-      { error: "Tienes alguna cuota de socio pendiente. Ponte al día para poder escribir en el tablón." },
+      { error: "Tienes alguna cuota de socio pendiente. Ponte al día para poder escribir en el foro." },
       { status: 403 }
     );
   }
@@ -42,13 +42,13 @@ export async function POST(req: Request) {
   }
 
   if (padreId) {
-    const padre = await prisma.mensajeTablon.findUnique({ where: { id: padreId } });
+    const padre = await prisma.mensajeForo.findUnique({ where: { id: padreId } });
     if (!padre) {
       return NextResponse.json({ error: "El mensaje al que respondes ya no existe." }, { status: 404 });
     }
   }
 
-  const mensaje = await prisma.mensajeTablon.create({
+  const mensaje = await prisma.mensajeForo.create({
     data: { texto: texto.trim(), autorId: session.user.id, padreId: padreId ?? null },
   });
 

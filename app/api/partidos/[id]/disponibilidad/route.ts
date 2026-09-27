@@ -21,7 +21,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   const autor = await prisma.user.findUnique({ where: { id: session.user.id }, select: { rolElegido: true } });
   if (!autor?.rolElegido) {
     return NextResponse.json(
-      { error: "Antes de responder, contesta en Ajustes si vienes a jugar o eres socio." },
+      { error: "Antes de responder, contesta en Ajustes si eres jugador." },
       { status: 403 }
     );
   }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { POSICIONES, ETIQUETA_POSICION } from "@/lib/posiciones";
 import { ESTADOS, ETIQUETA_ESTADO } from "@/lib/estados";
@@ -37,6 +38,7 @@ function AvatarSocio({ nombre }: { nombre: string }) {
 
 export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; esAdmin: boolean }) {
   const router = useRouter();
+  const { status } = useSession();
   const [editando, setEditando] = useState(false);
   const [apodo, setApodo] = useState(jugador.apodo ?? "");
   const [dorsal, setDorsal] = useState(jugador.dorsal?.toString() ?? "");
@@ -94,7 +96,7 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
 
   const contenido = (
     <>
-      {rolMostrado === "SOCIO" ? (
+      {rolMostrado !== "JUGADOR" ? (
         <AvatarSocio nombre={nombreCamiseta} />
       ) : (
         <CamisetaJugador dorsal={dorsalCamiseta} nombre={nombreCamiseta} size={72} />
@@ -109,13 +111,15 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
         <p className="text-chalk/50 text-xs">
           {jugador.rol === "SOCIO"
             ? "Socio"
-            : jugador.posicion
-              ? ETIQUETA_POSICION[jugador.posicion as keyof typeof ETIQUETA_POSICION]
-              : "Sin posición"}
+            : jugador.rol === "NO_JUGADOR"
+              ? "No jugador — cuota pendiente"
+              : jugador.posicion
+                ? ETIQUETA_POSICION[jugador.posicion as keyof typeof ETIQUETA_POSICION]
+                : "Sin posición"}
           {!jugador.email && " · Manual"}
         </p>
         {esAdmin && jugador.rolElegido === false && (
-          <p className="text-coral/80 text-[11px]">Sin clasificar — no ha dicho si es jugador o socio</p>
+          <p className="text-coral/80 text-[11px]">Sin clasificar — no ha dicho si es jugador</p>
         )}
         {esAdmin && (jugador.dni || jugador.fechaNacimiento) && (
           <p className="text-chalk/40 text-[11px]">
@@ -131,9 +135,10 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
   return (
     <div className="card p-4 flex items-center gap-3">
       {/* Solo los jugadores tienen ficha de estadísticas — los socios no
-          juegan, así que su fila no es clicable. Tampoco mientras se edita,
-          para no navegar sin querer al tocar los campos. */}
-      {!editando && jugador.rol === "JUGADOR" ? (
+          juegan, así que su fila no es clicable. Tampoco mientras se edita
+          (para no navegar sin querer al tocar los campos), ni sin sesión
+          (la ficha exige haber entrado con Google). */}
+      {!editando && jugador.rol === "JUGADOR" && status === "authenticated" ? (
         <Link href={`/plantilla/${jugador.id}`} className="flex items-center gap-3 flex-1 min-w-0">
           {contenido}
         </Link>

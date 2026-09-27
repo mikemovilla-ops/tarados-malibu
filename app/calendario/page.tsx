@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 
 export default async function CalendarioPage() {
   const { esAdmin, rol } = await getViewer();
-  // Un socio ve el calendario (rival, fecha, resultado) pero no quién va a
-  // cada partido — eso es solo entre jugadores.
-  const esSocio = rol === "SOCIO";
+  // Un socio o "no jugador" ve el calendario (rival, fecha, resultado)
+  // pero no quién va a cada partido — eso es solo entre jugadores.
+  const noJuega = rol === "SOCIO" || rol === "NO_JUGADOR";
 
   const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
 
@@ -85,7 +85,7 @@ export default async function CalendarioPage() {
         ) : (
           <div className="space-y-2">
             {proximos.map((p) => (
-              <FilaPartido key={p.id} p={p} mostrarDisponibilidad={!esSocio} />
+              <FilaPartido key={p.id} p={p} mostrarDisponibilidad={!noJuega} />
             ))}
           </div>
         )}

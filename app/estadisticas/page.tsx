@@ -1,8 +1,22 @@
 import { calcularRanking } from "@/lib/estadisticas";
+import { getViewer } from "@/lib/viewer";
+import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 
 export const dynamic = "force-dynamic";
 
 export default async function EstadisticasPage() {
+  const { session } = await getViewer();
+
+  if (!session) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-10 text-center space-y-3">
+        <h1 className="font-display text-2xl">Estadísticas</h1>
+        <p className="text-chalk/60">Entra con Google para verlas.</p>
+        <BotonEntrarGoogle className="bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition inline-block" />
+      </div>
+    );
+  }
+
   const ranking = await calcularRanking();
 
   return (

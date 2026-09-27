@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { estaAlDiaDePago } from "@/lib/pagos";
 
 // No hace falta "generar" el pago de antemano: la primera vez que el admin
 // marca a un jugador en una sección, se crea aquí (upsert) con el importe
@@ -27,6 +28,16 @@ export async function PATCH(req: Request) {
     update: { pagado, fechaPago: pagado ? new Date() : null },
     create: { userId, seccionId, importe: seccion.importe, pagado, fechaPago: pagado ? new Date() : null },
   });
+
+  // "No jugador" se promociona a Socio automáticamente en cuanto se pone
+  // al día de toda su cuota de socio — Socio ya significa "paga de
+  // verdad", no algo que se autoelija (ver app/api/usuario/rol/route.ts).
+  if (pagado && seccion.destinatario === "SOCIO") {
+    const usuario = await prisma.user.findUnique({ where: { id: userId }, select: { rol: true } });
+    if (usuario?.rol === "NO_JUGADOR" && (await estaAlDiaDePago(userId, "SOCIO"))) {
+      await prisma.user.update({ where: { id: userId }, data: { rol: "SOCIO" } });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

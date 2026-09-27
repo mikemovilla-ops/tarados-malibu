@@ -6,11 +6,11 @@ const JUGADOR: PerfilReal = { esAdmin: false, rol: "JUGADOR", estado: "ACTIVO" }
 
 describe("aplicarVistaPrevia", () => {
   it("no cambia nada en producción, aunque haya cookie y seas admin", () => {
-    expect(aplicarVistaPrevia(ADMIN, "SOCIO_PAGADO", true)).toEqual({ ...ADMIN, alDiaDePago: null });
+    expect(aplicarVistaPrevia(ADMIN, "SOCIO", true)).toEqual({ ...ADMIN, alDiaDePago: null });
   });
 
   it("no cambia nada si no eres admin de verdad, aunque haya cookie", () => {
-    expect(aplicarVistaPrevia(JUGADOR, "SOCIO_PAGADO", false)).toEqual({ ...JUGADOR, alDiaDePago: null });
+    expect(aplicarVistaPrevia(JUGADOR, "SOCIO", false)).toEqual({ ...JUGADOR, alDiaDePago: null });
   });
 
   it("no cambia nada si eres admin pero no hay cookie", () => {
@@ -39,21 +39,21 @@ describe("aplicarVistaPrevia", () => {
     });
   });
 
-  it("SOCIO_PAGADO: se ve como socio al día, forzado a true", () => {
-    expect(aplicarVistaPrevia(ADMIN, "SOCIO_PAGADO", false)).toEqual({
+  it("NO_JUGADOR: se ve como no jugador, cuota forzada a pendiente", () => {
+    expect(aplicarVistaPrevia(ADMIN, "NO_JUGADOR", false)).toEqual({
+      esAdmin: false,
+      rol: "NO_JUGADOR",
+      estado: null,
+      alDiaDePago: false,
+    });
+  });
+
+  it("SOCIO: se ve como socio al día, forzado a true", () => {
+    expect(aplicarVistaPrevia(ADMIN, "SOCIO", false)).toEqual({
       esAdmin: false,
       rol: "SOCIO",
       estado: null,
       alDiaDePago: true,
-    });
-  });
-
-  it("SOCIO_PENDIENTE: se ve como socio con cuota pendiente, forzado a false", () => {
-    expect(aplicarVistaPrevia(ADMIN, "SOCIO_PENDIENTE", false)).toEqual({
-      esAdmin: false,
-      rol: "SOCIO",
-      estado: null,
-      alDiaDePago: false,
     });
   });
 });

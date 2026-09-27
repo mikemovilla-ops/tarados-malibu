@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES } from "@/lib/roles";
 
-// A diferencia de PATCH /api/jugadores/[id] (admin-only), este lo llama el
-// propio usuario para contestar "¿vienes a jugar o eres socio?" la primera
-// vez que entra (ver ElegirRolInicial en /ajustes).
+// A diferencia de PATCH /api/jugadores/[id] (admin-only, acepta cualquier
+// rol), este lo llama el propio usuario para contestar "¿eres jugador?" la
+// primera vez que entra (ver ElegirRolInicial en /ajustes). Solo admite
+// JUGADOR o NO_JUGADOR: nadie puede autoasignarse SOCIO, que ahora implica
+// tener la cuota pagada — a eso solo se llega automáticamente cuando el
+// admin marca ese pago (ver app/api/pagos/route.ts).
+const ROLES_AUTOSERVICIO = ["JUGADOR", "NO_JUGADOR"];
+
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -14,7 +18,7 @@ export async function PATCH(req: Request) {
   }
 
   const { rol } = (await req.json()) as { rol: string };
-  if (!ROLES.includes(rol as any)) {
+  if (!ROLES_AUTOSERVICIO.includes(rol)) {
     return NextResponse.json({ error: "Rol no válido." }, { status: 400 });
   }
 

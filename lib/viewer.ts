@@ -7,17 +7,17 @@ export type Viewer = {
   session: Session | null;
   userId: string | null;
   esAdmin: boolean;
-  rol: "JUGADOR" | "SOCIO" | null;
+  rol: "JUGADOR" | "SOCIO" | "NO_JUGADOR" | null;
   estado: "ACTIVO" | "AYUDA" | null;
   // Solo viene forzado (true/false) durante una vista previa de socio; en
   // cualquier otro caso es null y hay que calcularlo de verdad (ver
   // lib/pagos.ts: estaAlDiaDePago) si hace falta para lo que se esté
-  // mostrando (p.ej. quién puede escribir en /tablon).
+  // mostrando (p.ej. quién puede escribir en /foro).
   alDiaDePago: boolean | null;
   // true si el usuario real (nunca afectado por la vista previa) todavía no
-  // ha contestado "¿vienes a jugar o eres socio?" — ver ElegirRolInicial.
-  // Páginas como /tablon deben mandarlo a /ajustes en vez de dejarlo
-  // participar con el rol JUGADOR que trae por defecto.
+  // ha contestado "¿eres jugador?" — ver ElegirRolInicial. Páginas como
+  // /foro deben mandarlo a /ajustes en vez de dejarlo participar con el rol
+  // JUGADOR que trae por defecto.
   necesitaElegirRol: boolean;
 };
 
@@ -25,7 +25,7 @@ export type PerfilReal = { esAdmin: boolean; rol: Viewer["rol"]; estado: Viewer[
 export type ResultadoVistaPrevia = { esAdmin: boolean; rol: Viewer["rol"]; estado: Viewer["estado"]; alDiaDePago: boolean | null };
 
 export const COOKIE_VISTA_PREVIA = "vista_previa";
-export const PERFILES_VISTA_PREVIA = ["", "ACTIVO", "AYUDA", "SOCIO_PAGADO", "SOCIO_PENDIENTE"] as const;
+export const PERFILES_VISTA_PREVIA = ["", "ACTIVO", "AYUDA", "NO_JUGADOR", "SOCIO"] as const;
 
 // Decide qué ve el admin durante una vista previa, a partir de su perfil
 // real y del valor de la cookie — separada de getViewer() (que la envuelve
@@ -41,10 +41,10 @@ export function aplicarVistaPrevia(real: PerfilReal, cookieValor: string | undef
     case "ACTIVO":
     case "AYUDA":
       return { esAdmin: false, rol: "JUGADOR", estado: cookieValor, alDiaDePago: null };
-    case "SOCIO_PAGADO":
+    case "NO_JUGADOR":
+      return { esAdmin: false, rol: "NO_JUGADOR", estado: null, alDiaDePago: false };
+    case "SOCIO":
       return { esAdmin: false, rol: "SOCIO", estado: null, alDiaDePago: true };
-    case "SOCIO_PENDIENTE":
-      return { esAdmin: false, rol: "SOCIO", estado: null, alDiaDePago: false };
     default:
       return sinCambios;
   }

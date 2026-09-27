@@ -43,7 +43,7 @@ function IconoEstadisticas({ activo }: { activo: boolean }) {
   );
 }
 
-function IconoTablon({ activo }: { activo: boolean }) {
+function IconoForo({ activo }: { activo: boolean }) {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={activo ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 5.5h16v10H9l-4 3.5v-3.5H4z" />
@@ -119,11 +119,14 @@ export default function BottomNav() {
     { href: "/", label: "Inicio", Icono: IconoHome },
     { href: "/plantilla", label: "Plantilla", Icono: IconoPlantilla },
     { href: "/calendario", label: "Calendario", Icono: IconoCalendario },
-    { href: "/estadisticas", label: "Stats", Icono: IconoEstadisticas },
-    // El tablón, a diferencia del resto, requiere haber entrado con Google
-    // (ver app/tablon/page.tsx), así que solo se enseña la pestaña si hay
-    // sesión.
-    ...(status === "authenticated" ? [{ href: "/tablon", label: "Tablón", Icono: IconoTablon }] : []),
+    // Estadísticas y Foro, a diferencia del resto, requieren haber entrado
+    // con Google, así que solo se enseñan si hay sesión.
+    ...(status === "authenticated"
+      ? [
+          { href: "/estadisticas", label: "Stats", Icono: IconoEstadisticas },
+          { href: "/foro", label: "Foro", Icono: IconoForo },
+        ]
+      : []),
   ];
 
   return (

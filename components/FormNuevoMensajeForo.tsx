@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-export default function FormNuevoMensajeTablon({
+export default function FormNuevoMensajeForo({
   padreId,
   placeholder = "Escribe algo...",
   autoFocus = false,
@@ -23,7 +23,7 @@ export default function FormNuevoMensajeTablon({
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const res = await fetch("/api/tablon", {
+      const res = await fetch("/api/foro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texto, padreId }),

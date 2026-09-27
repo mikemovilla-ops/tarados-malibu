@@ -7,8 +7,8 @@ const OPCIONES: { valor: string; etiqueta: string }[] = [
   { valor: "", etiqueta: "Tú (admin)" },
   { valor: "ACTIVO", etiqueta: "Jugador activo" },
   { valor: "AYUDA", etiqueta: "Jugador de ayuda" },
-  { valor: "SOCIO_PAGADO", etiqueta: "Socio (cuota pagada)" },
-  { valor: "SOCIO_PENDIENTE", etiqueta: "Socio (cuota pendiente)" },
+  { valor: "NO_JUGADOR", etiqueta: "No jugador (sin pagar)" },
+  { valor: "SOCIO", etiqueta: "Socio (ya paga)" },
 ];
 
 export default function VistaPreviaSelector({ actual }: { actual: string }) {

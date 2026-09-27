@@ -11,6 +11,7 @@ import EditarDatosPartido from "@/components/EditarDatosPartido";
 import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
 import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
+import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +24,9 @@ const ETIQUETA_GRUPO: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", string
 
 export default async function PartidoPage({ params }: { params: { id: string } }) {
   const { session, esAdmin, rol, necesitaElegirRol } = await getViewer();
-  // Un socio ve el resultado del partido pero no quién va ni responde
-  // disponibilidad — eso es solo entre jugadores.
-  const esSocio = rol === "SOCIO";
+  // Un socio o "no jugador" ve el resultado del partido pero no quién va ni
+  // responde disponibilidad — eso es solo entre jugadores.
+  const noJuega = rol === "SOCIO" || rol === "NO_JUGADOR";
 
   const partido = await prisma.partido.findUnique({
     where: { id: params.id },
@@ -35,6 +36,23 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   });
 
   if (!partido) notFound();
+
+  // Las jornadas ya jugadas y cerradas son de consulta pública, como el
+  // resto del calendario; una jornada todavía abierta (con disponibilidad
+  // en juego) es solo para quien ha entrado con Google.
+  if (!session && !partido.cerrado) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-10 text-center space-y-3">
+        <h1 className="font-display text-2xl">
+          {partido.esLocal ? "Tarados Malibú" : partido.rival}
+          <span className="text-chalk/40 text-sm mx-1.5 align-middle">vs</span>
+          {partido.esLocal ? partido.rival : "Tarados Malibú"}
+        </h1>
+        <p className="text-chalk/60">Entra con Google para ver el detalle de esta jornada.</p>
+        <BotonEntrarGoogle className="bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition inline-block" />
+      </div>
+    );
+  }
 
   // Se pide siempre (activos y ayuda): el admin puede convocar a cualquiera
   // de los dos grupos, aunque el resumen de disponibilidad de más abajo solo
@@ -170,7 +188,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         </section>
       )}
 
-      {!esSocio && (
+      {!noJuega && (
       <>
       <section className="card p-4 space-y-3">
         <h2 className="font-display text-base">¿Vas?</h2>
@@ -184,7 +202,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             <Link href="/ajustes" className="underline">
               Ajustes
             </Link>{" "}
-            si vienes a jugar o eres socio.
+            si eres jugador.
           </p>
         ) : (
           <DisponibilidadSelector partidoId={partido.id} disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"} />

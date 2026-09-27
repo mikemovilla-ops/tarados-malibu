@@ -11,7 +11,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 
-  await prisma.mensajeTablon.delete({ where: { id: params.id } });
+  await prisma.mensajeForo.delete({ where: { id: params.id } });
 
   return NextResponse.json({ ok: true });
 }

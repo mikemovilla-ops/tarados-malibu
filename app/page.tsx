@@ -14,7 +14,9 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const viewer = await getViewer();
   const { session, userId, esAdmin } = viewer;
-  const esSocio = viewer.rol === "SOCIO";
+  // Socio y "no jugador" (respondió que no juega, aún sin cuota pagada) se
+  // tratan igual aquí: ninguno de los dos juega ni tiene cuota de jugador.
+  const noJuega = viewer.rol === "SOCIO" || viewer.rol === "NO_JUGADOR";
 
   const anuncio = await prisma.anuncio.findUnique({ where: { id: "actual" } });
 
@@ -40,12 +42,12 @@ export default async function HomePage() {
 
   // Partidos futuros a los que este jugador todavía no ha respondido
   // (voy/no voy/duda) — sin fila de convocatoria, o con fila pero
-  // disponibilidad todavía "sin responder". Un socio no responde
+  // disponibilidad todavía "sin responder". Quien no juega no responde
   // disponibilidad, así que no le sale nada aquí; tampoco a quien no ha
-  // contestado aún si es jugador o socio (el servidor también lo rechaza,
-  // ver /api/partidos/[id]/disponibilidad).
+  // contestado aún si es jugador (el servidor también lo rechaza, ver
+  // /api/partidos/[id]/disponibilidad).
   const partidosSinResponder =
-    userId && !esSocio && !viewer.necesitaElegirRol
+    userId && !noJuega && !viewer.necesitaElegirRol
       ? await prisma.partido.findMany({
           where: {
             fecha: { gte: new Date() },
@@ -59,11 +61,11 @@ export default async function HomePage() {
   // así que aquí solo van los demás.
   const otrosPartidosSinResponder = partidosSinResponder.filter((p) => p.id !== proximoPartido?.id);
 
-  // Un jugador activo tiene cuota de jugador; un socio tiene la suya propia
-  // (secciones con destinatario distinto, ver lib/pagos.ts).
-  const tienePagosPendientesPosibles = viewer.rol === "JUGADOR" ? viewer.estado === "ACTIVO" : esSocio;
+  // Un jugador activo tiene cuota de jugador; quien no juega tiene la suya
+  // propia (secciones con destinatario distinto, ver lib/pagos.ts).
+  const tienePagosPendientesPosibles = viewer.rol === "JUGADOR" ? viewer.estado === "ACTIVO" : noJuega;
   const misPagos = userId && tienePagosPendientesPosibles ? await prisma.pago.findMany({ where: { userId } }) : [];
-  const secciones = tienePagosPendientesPosibles ? await getSecciones(esSocio ? "SOCIO" : "JUGADOR") : [];
+  const secciones = tienePagosPendientesPosibles ? await getSecciones(noJuega ? "SOCIO" : "JUGADOR") : [];
   const seccionesPendientes = secciones.filter((s) => !misPagos.find((p) => p.seccionId === s.id)?.pagado);
 
   return (
@@ -121,24 +123,26 @@ export default async function HomePage() {
               {proximoPartido.jornada !== null && ` · Jornada ${proximoPartido.jornada}`}
               {proximoPartido.lugar && ` · ${proximoPartido.lugar}`}
             </p>
-            {session && !esSocio && !viewer.necesitaElegirRol && (
+            {session && !noJuega && !viewer.necesitaElegirRol && (
               <div className="pt-2 space-y-2">
                 <DisponibilidadSelector partidoId={proximoPartido.id} disponibilidadInicial={miDisponibilidadProximo} />
                 {miConvocatoria?.convocado && <p className="text-sm text-amarillobrillante">✓ Estás convocado</p>}
               </div>
             )}
-            {session && !esSocio && viewer.necesitaElegirRol && (
+            {session && !noJuega && viewer.necesitaElegirRol && (
               <p className="text-chalk/50 text-sm pt-2">
                 Antes contesta en{" "}
                 <Link href="/ajustes" className="underline">
                   Ajustes
                 </Link>{" "}
-                si vienes a jugar o eres socio.
+                si eres jugador.
               </p>
             )}
-            <Link href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
-              Ver detalle →
-            </Link>
+            {session && (
+              <Link href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
+                Ver detalle →
+              </Link>
+            )}
           </div>
         ) : (
           <p className="text-chalk/50 text-sm">No hay ningún partido programado todavía.</p>

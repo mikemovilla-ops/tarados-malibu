@@ -31,6 +31,7 @@ export default async function PlantillaPage() {
   const activos = jugadores.filter((j) => j.estado === "ACTIVO");
   const ayudas = jugadores.filter((j) => j.estado === "AYUDA");
   const socios = usuarios.filter((j) => j.rol === "SOCIO");
+  const noJugadores = usuarios.filter((j) => j.rol === "NO_JUGADOR");
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
@@ -40,6 +41,7 @@ export default async function PlantillaPage() {
           <p className="text-chalk/60 text-sm">
             {activos.length} activos · {ayudas.length} de ayuda
             {socios.length > 0 && ` · ${socios.length} socios`}
+            {noJugadores.length > 0 && ` · ${noJugadores.length} sin cuota`}
           </p>
         </div>
         {esAdmin && <FormNuevoJugadorManual />}
@@ -79,6 +81,16 @@ export default async function PlantillaPage() {
         <SeccionDesplegable titulo="Socios">
           <div className="space-y-2">
             {socios.map((j) => (
+              <FilaJugador key={j.id} jugador={j} esAdmin={esAdmin} />
+            ))}
+          </div>
+        </SeccionDesplegable>
+      )}
+
+      {noJugadores.length > 0 && (
+        <SeccionDesplegable titulo="Sin cuota de socio">
+          <div className="space-y-2">
+            {noJugadores.map((j) => (
               <FilaJugador key={j.id} jugador={j} esAdmin={esAdmin} />
             ))}
           </div>

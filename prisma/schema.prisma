@@ -42,14 +42,19 @@ enum Disponibilidad {
 }
 
 // JUGADOR: cualquiera que entra con Google, por defecto (ver EstadoJugador
-// para Activo/Ayuda dentro de este grupo). SOCIO: forma parte del club pero
-// no juega — no aparece en plantilla como Activo/Ayuda, no responde
-// disponibilidad, no sale en estadísticas y tiene su propia cuota en Pagos
-// (ver `SeccionPago.destinatario`). El admin pasa a alguien a SOCIO desde
-// /plantilla, igual que ya mueve a alguien entre Activo y Ayuda.
+// para Activo/Ayuda dentro de este grupo). NO_JUGADOR: ha contestado que no
+// juega (ver ElegirRolInicial) pero todavía no tiene ninguna cuota de
+// socio pagada. SOCIO: ya paga la cuota de socio — se llega aquí
+// automáticamente al marcarle un pago de socio como pagado (ver
+// app/api/pagos/route.ts), no autoeligiéndolo. Ninguno de los dos aparece
+// en plantilla como Activo/Ayuda, responde disponibilidad, ni sale en
+// estadísticas; ambos tienen la misma cuota en Pagos
+// (`SeccionPago.destinatario`). El admin puede corregir el rol de
+// cualquiera a mano desde /plantilla en cualquier momento.
 enum Rol {
   JUGADOR
   SOCIO
+  NO_JUGADOR
 }
 
 model User {
@@ -84,10 +89,10 @@ model User {
   fechaNacimiento     DateTime?
   estado              EstadoJugador @default(AYUDA)
   // Ver enum Rol. Solo tiene sentido `estado`/`dorsal`/`posicion` cuando
-  // rol = JUGADOR; para un SOCIO esos campos se ignoran en toda la app.
+  // rol = JUGADOR; para SOCIO/NO_JUGADOR esos campos se ignoran en toda la app.
   rol                 Rol           @default(JUGADOR)
-  // Si el propio usuario ya ha contestado "¿vienes a jugar o eres socio?"
-  // en Ajustes (ver ElegirRolInicial), o si el admin ya lo ha clasificado a
+  // Si el propio usuario ya ha contestado "¿eres jugador?" en Ajustes (ver
+  // ElegirRolInicial), o si el admin ya lo ha clasificado a
   // mano desde Plantilla — en ambos casos no hace falta volver a
   // preguntárselo. Los usuarios que ya existían antes de este campo se
   // marcaron como respondido con un script aparte al desplegarlo, para no
@@ -99,7 +104,7 @@ model User {
   sessions       Session[]
   convocatorias  Convocatoria[]
   pagos          Pago[]
-  mensajesTablon MensajeTablon[]
+  mensajesForo   MensajeForo[]
 
   @@map("users")
 }
@@ -252,19 +257,20 @@ model Anuncio {
   @@map("anuncios")
 }
 
-// Tablón tipo comentarios: temas (padreId null) y respuestas planas (un
-// solo nivel, sin sub-hilos). Cualquiera logueado —jugador o socio, sin
-// distinción— puede abrir un tema o responder a uno.
-model MensajeTablon {
+// Foro tipo comentarios: temas (padreId null) y respuestas planas (un solo
+// nivel, sin sub-hilos). Puede participar (abrir un tema o responder)
+// cualquier jugador (activo o ayuda) y cualquier socio al día de su cuota
+// (ver lib/foro.ts: puedeEscribirForo) — el resto solo puede leerlo.
+model MensajeForo {
   id        String   @id @default(cuid())
   autorId   String
   texto     String
   padreId   String?
   createdAt DateTime @default(now())
 
-  autor      User            @relation(fields: [autorId], references: [id], onDelete: Cascade)
-  padre      MensajeTablon?  @relation("Respuestas", fields: [padreId], references: [id], onDelete: Cascade)
-  respuestas MensajeTablon[] @relation("Respuestas")
+  autor      User          @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  padre      MensajeForo?  @relation("Respuestas", fields: [padreId], references: [id], onDelete: Cascade)
+  respuestas MensajeForo[] @relation("Respuestas")
 
-  @@map("mensajes_tablon")
+  @@map("mensajes_foro")
 }

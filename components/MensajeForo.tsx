@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { nombreMostrado } from "@/lib/jugadores";
 import { formatFechaHora } from "@/lib/fechas";
-import FormNuevoMensajeTablon from "@/components/FormNuevoMensajeTablon";
+import FormNuevoMensajeForo from "@/components/FormNuevoMensajeForo";
 
 type Autor = { name: string | null; apodo: string | null };
 type Mensaje = { id: string; texto: string; createdAt: Date; autor: Autor };
@@ -17,7 +17,7 @@ function BotonBorrar({ id }: { id: string }) {
   function borrar() {
     if (!confirm("¿Seguro que quieres borrar este mensaje? No se puede deshacer.")) return;
     startBorrar(async () => {
-      const res = await fetch(`/api/tablon/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/foro/${id}`, { method: "DELETE" });
       if (res.ok) router.refresh();
     });
   }
@@ -29,7 +29,7 @@ function BotonBorrar({ id }: { id: string }) {
   );
 }
 
-export default function MensajeTablon({
+export default function MensajeForo({
   tema,
   esAdmin,
   puedeEscribir,
@@ -58,7 +58,7 @@ export default function MensajeTablon({
         </div>
         {respondiendo && (
           <div className="pt-1">
-            <FormNuevoMensajeTablon
+            <FormNuevoMensajeForo
               padreId={tema.id}
               placeholder="Escribe una respuesta..."
               autoFocus
