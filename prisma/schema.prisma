@@ -264,6 +264,8 @@ model Anuncio {
 model MensajeForo {
   id        String   @id @default(cuid())
   autorId   String
+  // Solo los temas (padreId null) tienen título; una respuesta no.
+  titulo    String?
   texto     String
   padreId   String?
   createdAt DateTime @default(now())

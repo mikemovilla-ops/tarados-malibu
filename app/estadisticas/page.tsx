@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { calcularRanking } from "@/lib/estadisticas";
 import { getViewer } from "@/lib/viewer";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
@@ -43,10 +44,12 @@ export default async function EstadisticasPage() {
             </thead>
             <tbody className="divide-y divide-chalk/10">
               {ranking.map((fila) => (
-                <tr key={fila.userId}>
+                <tr key={fila.userId} className="hover:bg-chalk/5 transition">
                   <td className="py-2 pl-4 text-chalk">
-                    {fila.dorsal !== null && <span className="text-amarillobrillante font-display">#{fila.dorsal} </span>}
-                    {fila.nombre}
+                    <Link href={`/plantilla/${fila.userId}`} className="hover:underline">
+                      {fila.dorsal !== null && <span className="text-amarillobrillante font-display">#{fila.dorsal} </span>}
+                      {fila.nombre}
+                    </Link>
                   </td>
                   <td className="py-2 px-2 text-center text-chalk/70">{fila.partidosJugados}</td>
                   <td className="py-2 px-2 text-center text-amarillobrillante font-display">{fila.goles}</td>

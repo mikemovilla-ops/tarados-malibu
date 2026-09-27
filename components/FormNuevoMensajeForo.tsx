@@ -3,13 +3,15 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+// Solo para responder dentro de un tema — abrir un tema nuevo (con su
+// título) usa components/FormNuevoTemaForo.tsx.
 export default function FormNuevoMensajeForo({
   padreId,
   placeholder = "Escribe algo...",
   autoFocus = false,
   onEnviado,
 }: {
-  padreId?: string;
+  padreId: string;
   placeholder?: string;
   autoFocus?: boolean;
   onEnviado?: () => void;

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { texto, padreId } = (await req.json()) as { texto: string; padreId?: string };
+  const { titulo, texto, padreId } = (await req.json()) as { titulo?: string; texto: string; padreId?: string };
   if (!texto || !texto.trim()) {
     return NextResponse.json({ error: "Falta el texto." }, { status: 400 });
   }
@@ -46,10 +46,18 @@ export async function POST(req: Request) {
     if (!padre) {
       return NextResponse.json({ error: "El mensaje al que respondes ya no existe." }, { status: 404 });
     }
+  } else if (!titulo || !titulo.trim()) {
+    // Solo los temas (sin padreId) llevan título — una respuesta no.
+    return NextResponse.json({ error: "Falta el título del tema." }, { status: 400 });
   }
 
   const mensaje = await prisma.mensajeForo.create({
-    data: { texto: texto.trim(), autorId: session.user.id, padreId: padreId ?? null },
+    data: {
+      titulo: padreId ? null : titulo!.trim(),
+      texto: texto.trim(),
+      autorId: session.user.id,
+      padreId: padreId ?? null,
+    },
   });
 
   return NextResponse.json({ ok: true, mensaje });
