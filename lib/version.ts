@@ -35,6 +35,7 @@ export const HISTORIAL_VERSIONES: EntradaVersion[] = [
       "En Calendario y en cada jornada se ve también cuántos jugadores de ayuda todavía no han respondido si van.",
       "Cuando un jugador de ayuda dice \"Podría ir\" ya no cuenta como \"Van\" — sale aparte, y es el admin quien decide si cuenta con él al convocar.",
       "Al crear un partido nuevo, el lugar viene ya puesto por defecto en \"IDB Madrid Río\".",
+      "El admin ve el email de cada jugador en Plantilla.",
     ],
   },
   {

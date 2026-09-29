@@ -127,6 +127,7 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
         {esAdmin && jugador.rolElegido === false && (
           <p className="text-coral/80 text-[11px]">Sin clasificar — no ha dicho si es jugador</p>
         )}
+        {esAdmin && jugador.email && <p className="text-chalk/40 text-[11px] break-all">{jugador.email}</p>}
         {esAdmin && (jugador.dni || jugador.fechaNacimiento) && (
           <p className="text-chalk/40 text-[11px]">
             {jugador.dni && `DNI: ${jugador.dni}`}
