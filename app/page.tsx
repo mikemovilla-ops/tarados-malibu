@@ -123,7 +123,7 @@ export default async function HomePage() {
               {proximoPartido.jornada !== null && ` · Jornada ${proximoPartido.jornada}`}
               {proximoPartido.lugar && ` · ${proximoPartido.lugar}`}
             </p>
-            <p className="text-chalk/40 text-xs">
+            <p className="text-chalk/40 text-xs underline">
               Convocatoria: {formatHora(horaConvocatoria(proximoPartido.fecha))}
             </p>
             {session && !noJuega && !viewer.necesitaElegirRol && (

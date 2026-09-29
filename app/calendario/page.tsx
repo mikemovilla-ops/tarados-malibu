@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatFechaHora } from "@/lib/fechas";
+import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
 import { contarDisponibilidad, contarAyudaVan, ayudaSinResponder } from "@/lib/disponibilidad";
-import { nombreMostrado } from "@/lib/jugadores";
 import { getViewer } from "@/lib/viewer";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
@@ -20,14 +19,14 @@ export default async function CalendarioPage() {
   const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
   const jugadoresAyuda = await prisma.user.findMany({
     where: { rol: "JUGADOR", estado: "AYUDA" },
-    select: { id: true, name: true, apodo: true },
+    select: { id: true },
   });
 
   const partidos = await prisma.partido.findMany({
     orderBy: { fecha: "asc" },
     include: {
       convocatorias: {
-        select: { userId: true, disponibilidad: true, user: { select: { estado: true, name: true, apodo: true } } },
+        select: { userId: true, disponibilidad: true, user: { select: { estado: true } } },
       },
     },
   });
@@ -61,6 +60,9 @@ export default async function CalendarioPage() {
               {formatFechaHora(p.fecha)} · {p.competicion}
               {p.jornada !== null && ` · Jornada ${p.jornada}`}
             </p>
+            {!jugado && (
+              <p className="text-chalk/40 text-xs underline">Convocatoria: {formatHora(horaConvocatoria(p.fecha))}</p>
+            )}
             {mostrarDisponibilidad && !jugado && (
               <p className="text-chalk/50 text-xs pt-1">
                 <span className="text-amarillobrillante">
@@ -70,17 +72,15 @@ export default async function CalendarioPage() {
                 <span className="text-chalk/60">{conteo.DUDA} dudan</span>
                 {" · "}
                 <span className="text-coral/80">{conteo.NO_VOY} no van</span>
-                {conteo.SIN_RESPONDER > 0 && (
+                {(conteo.SIN_RESPONDER > 0 || ayudaSinContestar.length > 0) && (
                   <>
                     {" · "}
-                    <span className="text-chalk/40">{conteo.SIN_RESPONDER} sin responder</span>
+                    <span className="text-chalk/40">
+                      {conteo.SIN_RESPONDER + ayudaSinContestar.length} sin responder
+                      {ayudaSinContestar.length > 0 && ` (${ayudaSinContestar.length} de ayuda)`}
+                    </span>
                   </>
                 )}
-              </p>
-            )}
-            {mostrarDisponibilidad && !jugado && ayudaSinContestar.length > 0 && (
-              <p className="text-chalk/40 text-xs pt-0.5">
-                Ayuda sin responder: {ayudaSinContestar.map((j) => nombreMostrado(j)).join(", ")}
               </p>
             )}
           </div>

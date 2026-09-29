@@ -134,7 +134,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           {partido.jornada !== null && ` · Jornada ${partido.jornada}`}
           {partido.lugar && ` · ${partido.lugar}`}
         </p>
-        <p className="text-chalk/40 text-xs">
+        <p className="text-chalk/40 text-xs underline">
           Convocatoria: {formatHora(horaConvocatoria(partido.fecha))}
         </p>
         {jugado && (
