@@ -140,7 +140,7 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
   );
 
   return (
-    <div className="card p-4 flex items-center gap-3">
+    <div className={`card p-4 flex gap-3 ${editando ? "flex-col" : "items-center"}`}>
       {/* Solo los jugadores tienen ficha de estadísticas — los socios no
           juegan, así que su fila no es clicable. Tampoco mientras se edita
           (para no navegar sin querer al tocar los campos), ni sin sesión
@@ -160,7 +160,7 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
       )}
 
       {esAdmin && editando && (
-        <div className="flex flex-col gap-2 text-xs shrink-0 w-48">
+        <div className="flex flex-col gap-2 text-xs">
           <input
             value={apodo}
             onChange={(e) => setApodo(e.target.value)}

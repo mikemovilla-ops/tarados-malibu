@@ -36,6 +36,8 @@ export const HISTORIAL_VERSIONES: EntradaVersion[] = [
       "Cuando un jugador de ayuda dice \"Podría ir\" ya no cuenta como \"Van\" — sale aparte, y es el admin quien decide si cuenta con él al convocar.",
       "Al crear un partido nuevo, el lugar viene ya puesto por defecto en \"IDB Madrid Río\".",
       "El admin ve el email de cada jugador en Plantilla.",
+      "Corregido el editor de un jugador en móvil, que se veía apretujado.",
+      "Corregido el título de un tema del Foro en móvil, que se salía de la tarjeta si era largo.",
     ],
   },
   {
