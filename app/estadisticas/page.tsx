@@ -39,7 +39,8 @@ export default async function EstadisticasPage() {
                 <th className="py-2 px-2 font-normal text-center">Goles</th>
                 <th className="py-2 px-2 font-normal text-center">Asist.</th>
                 <th className="py-2 px-2 font-normal text-center">🟨</th>
-                <th className="py-2 pr-4 font-normal text-center">🟥</th>
+                <th className="py-2 px-2 font-normal text-center">🟥</th>
+                <th className="py-2 pr-4 font-normal text-center">🧤</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-chalk/10">
@@ -55,7 +56,8 @@ export default async function EstadisticasPage() {
                   <td className="py-2 px-2 text-center text-amarillobrillante font-display">{fila.goles}</td>
                   <td className="py-2 px-2 text-center text-chalk/70">{fila.asistencias}</td>
                   <td className="py-2 px-2 text-center text-chalk/70">{fila.tarjetasAmarillas || ""}</td>
-                  <td className="py-2 pr-4 text-center text-coral/80">{fila.tarjetasRojas || ""}</td>
+                  <td className="py-2 px-2 text-center text-coral/80">{fila.tarjetasRojas || ""}</td>
+                  <td className="py-2 pr-4 text-center text-chalk/70">{fila.golesEncajados || ""}</td>
                 </tr>
               ))}
             </tbody>

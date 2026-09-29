@@ -93,16 +93,22 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
   const rolMostrado = editando ? rol : jugador.rol;
   const dorsalCamiseta = editando ? (dorsal === "" ? null : Number(dorsal)) : jugador.dorsal;
   const nombreCamiseta = editando ? apodo.trim() || jugador.name || "Sin nombre" : nombreMostrado(jugador);
+  const posicionMostrada = editando ? posicion : jugador.posicion;
 
   const contenido = (
     <>
       {rolMostrado !== "JUGADOR" ? (
         <AvatarSocio nombre={nombreCamiseta} />
       ) : (
-        <CamisetaJugador dorsal={dorsalCamiseta} nombre={nombreCamiseta} size={72} />
+        <CamisetaJugador
+          dorsal={dorsalCamiseta}
+          nombre={nombreCamiseta}
+          size={72}
+          esPortero={posicionMostrada === "PORTERO"}
+        />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-chalk truncate">
+        <p className="text-chalk break-words">
           {jugador.rol === "JUGADOR" && jugador.dorsal !== null && (
             <span className="text-amarillobrillante font-display">#{jugador.dorsal} </span>
           )}

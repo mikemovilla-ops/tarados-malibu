@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatFechaHora, toInputDatetimeLocal } from "@/lib/fechas";
+import { formatFechaHora, formatHora, horaConvocatoria, toInputDatetimeLocal } from "@/lib/fechas";
 import { nombreMostrado } from "@/lib/jugadores";
+import { ayudaSinResponder } from "@/lib/disponibilidad";
 import { getViewer } from "@/lib/viewer";
 import ConvocatoriaEditor from "@/components/ConvocatoriaEditor";
 import ResultadoEditor from "@/components/ResultadoEditor";
@@ -72,6 +73,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       asistencias: number;
       tarjetaAmarilla: boolean;
       tarjetaRoja: boolean;
+      golesEncajados: number;
     }
   > = {};
   for (const c of partido.convocatorias) {
@@ -82,10 +84,16 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       asistencias: c.asistencias,
       tarjetaAmarilla: c.tarjetaAmarilla,
       tarjetaRoja: c.tarjetaRoja,
+      golesEncajados: c.golesEncajados,
     };
   }
 
   const miDisponibilidad = session ? convocatoriaInicial[session.user.id]?.disponibilidad ?? "SIN_RESPONDER" : null;
+
+  const ayudaSinContestar = ayudaSinResponder(
+    jugadores.filter((j) => j.estado === "AYUDA"),
+    partido.convocatorias.map((c) => ({ userId: c.userId, disponibilidad: c.disponibilidad }))
+  );
 
   const gruposDisponibilidad: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", typeof jugadores> = {
     VOY: [],
@@ -125,6 +133,9 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           {formatFechaHora(partido.fecha)} · {partido.competicion}
           {partido.jornada !== null && ` · Jornada ${partido.jornada}`}
           {partido.lugar && ` · ${partido.lugar}`}
+        </p>
+        <p className="text-chalk/40 text-xs">
+          Convocatoria: {formatHora(horaConvocatoria(partido.fecha))}
         </p>
         {jugado && (
           <p className="font-display text-3xl text-amarillobrillante pt-2">
@@ -234,6 +245,11 @@ export default async function PartidoPage({ params }: { params: { id: string } }
               </p>
             );
           })}
+          {ayudaSinContestar.length > 0 && (
+            <p className="text-chalk/40">
+              Ayuda sin responder: {ayudaSinContestar.map((j) => nombreMostrado(j)).join(", ")}
+            </p>
+          )}
         </div>
       </section>
       )}

@@ -10,6 +10,7 @@ export type FilaEstadistica = {
   asistencias: number;
   tarjetasAmarillas: number;
   tarjetasRojas: number;
+  golesEncajados: number;
 };
 
 // Ranking de la plantilla: partidos jugados (convocado=true, aunque no
@@ -40,6 +41,7 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
         asistencias: true,
         tarjetaAmarilla: true,
         tarjetaRoja: true,
+        golesEncajados: true,
         user: { select: { name: true, apodo: true, dorsal: true } },
       },
     }),
@@ -56,6 +58,7 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
       asistencias: 0,
       tarjetasAmarillas: 0,
       tarjetasRojas: 0,
+      golesEncajados: 0,
     });
   }
   for (const c of convocatorias) {
@@ -68,12 +71,14 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
       asistencias: 0,
       tarjetasAmarillas: 0,
       tarjetasRojas: 0,
+      golesEncajados: 0,
     };
     fila.partidosJugados += 1;
     fila.goles += c.goles;
     fila.asistencias += c.asistencias;
     if (c.tarjetaAmarilla) fila.tarjetasAmarillas += 1;
     if (c.tarjetaRoja) fila.tarjetasRojas += 1;
+    fila.golesEncajados += c.golesEncajados;
     porJugador.set(c.userId, fila);
   }
 
@@ -99,6 +104,7 @@ export type PartidoJugado = {
   asistencias: number;
   tarjetaAmarilla: boolean;
   tarjetaRoja: boolean;
+  golesEncajados: number;
 };
 
 export type EstadisticasJugador = {
@@ -107,6 +113,7 @@ export type EstadisticasJugador = {
   asistencias: number;
   tarjetasAmarillas: number;
   tarjetasRojas: number;
+  golesEncajados: number;
   partidos: PartidoJugado[];
 };
 
@@ -134,6 +141,7 @@ export async function calcularEstadisticasJugador(userId: string): Promise<Estad
     asistencias: c.asistencias,
     tarjetaAmarilla: c.tarjetaAmarilla,
     tarjetaRoja: c.tarjetaRoja,
+    golesEncajados: c.golesEncajados,
   }));
 
   return {
@@ -142,6 +150,7 @@ export async function calcularEstadisticasJugador(userId: string): Promise<Estad
     asistencias: partidos.reduce((suma, p) => suma + p.asistencias, 0),
     tarjetasAmarillas: partidos.filter((p) => p.tarjetaAmarilla).length,
     tarjetasRojas: partidos.filter((p) => p.tarjetaRoja).length,
+    golesEncajados: partidos.reduce((suma, p) => suma + p.golesEncajados, 0),
     partidos,
   };
 }

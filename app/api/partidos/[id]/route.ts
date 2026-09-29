@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseInputDatetimeLocalMadrid } from "@/lib/fechas";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -60,7 +61,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const partido = await prisma.partido.update({
     where: { id: params.id },
     data: {
-      ...(fecha !== undefined ? { fecha: new Date(fecha) } : {}),
+      ...(fecha !== undefined ? { fecha: parseInputDatetimeLocalMadrid(fecha) } : {}),
       ...(rival !== undefined ? { rival } : {}),
       ...(esLocal !== undefined ? { esLocal } : {}),
       ...(competicion !== undefined ? { competicion } : {}),

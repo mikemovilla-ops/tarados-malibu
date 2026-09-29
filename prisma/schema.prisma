@@ -105,6 +105,7 @@ model User {
   convocatorias  Convocatoria[]
   pagos          Pago[]
   mensajesForo   MensajeForo[]
+  lecturasForo   LecturaForo[]
 
   @@map("users")
 }
@@ -200,6 +201,11 @@ model Convocatoria {
   asistencias     Int            @default(0)
   tarjetaAmarilla Boolean        @default(false)
   tarjetaRoja     Boolean        @default(false)
+  // Goles que encaja el equipo mientras este jugador está de portero.
+  // Asignable a cualquier convocado (no solo a quien tenga posicion =
+  // PORTERO): si un día no hay portero de plantilla, otro jugador puede
+  // hacer ese puesto y hay que poder anotárselo igual.
+  golesEncajados  Int            @default(0)
 
   partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -273,6 +279,26 @@ model MensajeForo {
   autor      User          @relation(fields: [autorId], references: [id], onDelete: Cascade)
   padre      MensajeForo?  @relation("Respuestas", fields: [padreId], references: [id], onDelete: Cascade)
   respuestas MensajeForo[] @relation("Respuestas")
+  lecturas   LecturaForo[]
 
   @@map("mensajes_foro")
+}
+
+// Cuándo vio cada usuario por última vez un tema del foro (al entrar en su
+// página) — de ahí se calcula qué temas/mensajes son "nuevos" para él, tanto
+// en la lista de /foro (actividad más reciente que su última visita) como
+// dentro del propio tema (respuestas posteriores a esa visita). Una fila por
+// (usuario, tema); solo existe para temas (padreId null), nunca para una
+// respuesta suelta.
+model LecturaForo {
+  id      String   @id @default(cuid())
+  userId  String
+  temaId  String
+  leidoEn DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tema MensajeForo @relation(fields: [temaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, temaId])
+  @@map("lecturas_foro")
 }

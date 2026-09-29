@@ -13,7 +13,7 @@ export default function FormNuevoPartido() {
   const [esLocal, setEsLocal] = useState(true);
   const [competicion, setCompeticion] = useState("Liga");
   const [jornada, setJornada] = useState("");
-  const [lugar, setLugar] = useState("");
+  const [lugar, setLugar] = useState("IDB Madrid Río");
   const [error, setError] = useState<string | null>(null);
   const [guardando, startTransition] = useTransition();
 
@@ -41,7 +41,7 @@ export default function FormNuevoPartido() {
       setFecha("");
       setRival("");
       setJornada("");
-      setLugar("");
+      setLugar("IDB Madrid Río");
       setAbierto(false);
       router.refresh();
     });

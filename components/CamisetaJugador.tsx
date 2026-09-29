@@ -6,17 +6,27 @@ export default function CamisetaJugador({
   dorsal,
   nombre,
   size = 48,
+  esPortero = false,
 }: {
   dorsal: number | null;
   nombre: string;
   size?: number;
+  esPortero?: boolean;
 }) {
+  // Los porteros llevan una camiseta distinta (negra) del resto de la
+  // plantilla (amarilla) — igual que en cualquier equipo de verdad, para
+  // distinguirlos de un vistazo en /plantilla y en su ficha.
+  const gradId = esPortero ? "camisetaGradPortero" : "camisetaGrad";
   return (
     <svg width={size} height={size * 1.1} viewBox="0 0 100 110" className="shrink-0">
       <defs>
         <linearGradient id="camisetaGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFDE66" />
           <stop offset="100%" stopColor="#F2B705" />
+        </linearGradient>
+        <linearGradient id="camisetaGradPortero" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3A3A3A" />
+          <stop offset="100%" stopColor="#101010" />
         </linearGradient>
       </defs>
       <path
@@ -32,7 +42,7 @@ export default function CamisetaJugador({
            C24,36 18,38 10,40
            Q0,34 4,28
            C14,16 28,12 38,11 Z"
-        fill="url(#camisetaGrad)"
+        fill={`url(#${gradId})`}
         stroke="#5B1F1F"
         strokeWidth="3"
         strokeLinejoin="round"

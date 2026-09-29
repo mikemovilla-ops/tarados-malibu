@@ -36,3 +36,18 @@ export function contarDisponibilidad(
 export function contarAyudaVan(respuestasAyuda: { disponibilidad: Disponibilidad }[]): number {
   return respuestasAyuda.filter((r) => r.disponibilidad === "VOY").length;
 }
+
+// A diferencia del resto de este módulo (que solo cuenta), aquí interesa
+// saber quiénes son: los de AYUDA no entran en el resumen de disponibilidad
+// de los activos, así que sin esto nadie se entera de que un ayuda se ha
+// quedado sin contestar — y como no se les avisa por email de cada
+// jornada, es fácil que se les olvide sin que nadie se lo recuerde.
+export function ayudaSinResponder<T extends { id: string }>(
+  jugadoresAyuda: T[],
+  respuestasAyuda: { userId: string; disponibilidad: Disponibilidad }[]
+): T[] {
+  const respondidos = new Set(
+    respuestasAyuda.filter((r) => r.disponibilidad !== "SIN_RESPONDER").map((r) => r.userId)
+  );
+  return jugadoresAyuda.filter((j) => !respondidos.has(j.id));
+}

@@ -42,7 +42,12 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
       </Link>
 
       <div className="card p-4 flex items-center gap-4">
-        <CamisetaJugador dorsal={jugador.dorsal} nombre={nombreMostrado(jugador)} size={80} />
+        <CamisetaJugador
+          dorsal={jugador.dorsal}
+          nombre={nombreMostrado(jugador)}
+          size={80}
+          esPortero={jugador.posicion === "PORTERO"}
+        />
         <div>
           <h1 className="font-display text-2xl">
             {jugador.dorsal !== null && <span className="text-amarillobrillante">#{jugador.dorsal} </span>}
@@ -55,7 +60,7 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
       </div>
 
       <section className="card p-4">
-        <div className="grid grid-cols-5 text-center divide-x divide-chalk/10">
+        <div className="grid grid-cols-3 sm:grid-cols-6 text-center divide-x divide-y sm:divide-y-0 divide-chalk/10">
           <div>
             <p className="font-display text-2xl text-chalk">{stats.partidosJugados}</p>
             <p className="text-chalk/50 text-[11px] uppercase tracking-wide">PJ</p>
@@ -75,6 +80,10 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
           <div>
             <p className="font-display text-2xl text-coral">{stats.tarjetasRojas}</p>
             <p className="text-chalk/50 text-[11px] uppercase tracking-wide">🟥</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl text-chalk">{stats.golesEncajados}</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide">🧤</p>
           </div>
         </div>
       </section>
@@ -108,12 +117,13 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
                       {p.esLocal ? p.golesFavor : p.golesContra}-{p.esLocal ? p.golesContra : p.golesFavor}
                     </span>
                   )}
-                  {(p.goles > 0 || p.asistencias > 0 || p.tarjetaAmarilla || p.tarjetaRoja) && (
+                  {(p.goles > 0 || p.asistencias > 0 || p.tarjetaAmarilla || p.tarjetaRoja || p.golesEncajados > 0) && (
                     <span className="text-xs tracking-wide">
                       {p.goles > 0 && "⚽".repeat(p.goles)}
                       {p.asistencias > 0 && ` ${"🥾".repeat(p.asistencias)}`}
                       {p.tarjetaAmarilla && " 🟨"}
                       {p.tarjetaRoja && " 🟥"}
+                      {p.golesEncajados > 0 && ` 🧤${p.golesEncajados}`}
                     </span>
                   )}
                 </div>

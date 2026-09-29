@@ -31,6 +31,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       asistencias: number;
       tarjetaAmarilla: boolean;
       tarjetaRoja: boolean;
+      golesEncajados: number;
     }[];
   };
 
@@ -52,6 +53,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           asistencias: j.asistencias,
           tarjetaAmarilla: j.tarjetaAmarilla,
           tarjetaRoja: j.tarjetaRoja,
+          golesEncajados: j.golesEncajados,
         },
         create: {
           partidoId: params.id,
@@ -62,6 +64,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           asistencias: j.asistencias,
           tarjetaAmarilla: j.tarjetaAmarilla,
           tarjetaRoja: j.tarjetaRoja,
+          golesEncajados: j.golesEncajados,
         },
       })
     )

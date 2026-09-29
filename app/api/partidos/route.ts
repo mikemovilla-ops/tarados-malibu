@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions, ADMIN_EMAILS } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { enviarAvisoNuevoPartido } from "@/lib/email";
+import { parseInputDatetimeLocalMadrid } from "@/lib/fechas";
 
 // Vercel pone esta variable en el servidor: "production" solo en el
 // despliegue real, "preview" en ramas como develop, y no existe en local.
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
 
   const partido = await prisma.partido.create({
     data: {
-      fecha: new Date(fecha),
+      fecha: parseInputDatetimeLocalMadrid(fecha),
       rival,
       esLocal: !!esLocal,
       competicion: competicion || "Liga",

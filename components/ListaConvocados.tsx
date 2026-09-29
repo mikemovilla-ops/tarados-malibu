@@ -6,6 +6,7 @@ type Convocado = {
   asistencias: number;
   tarjetaAmarilla: boolean;
   tarjetaRoja: boolean;
+  golesEncajados: number;
   user: { name: string | null; apodo: string | null; dorsal: number | null };
 };
 
@@ -25,12 +26,13 @@ export default function ListaConvocados({ convocados }: { convocados: Convocado[
             {c.user.dorsal !== null && `#${c.user.dorsal} `}
             {nombreMostrado(c.user)}
           </span>
-          {(c.goles > 0 || c.asistencias > 0 || c.tarjetaAmarilla || c.tarjetaRoja) && (
+          {(c.goles > 0 || c.asistencias > 0 || c.tarjetaAmarilla || c.tarjetaRoja || c.golesEncajados > 0) && (
             <span className="text-xs tracking-wide">
               {c.goles > 0 && "⚽".repeat(c.goles)}
               {c.asistencias > 0 && ` ${"🥾".repeat(c.asistencias)}`}
               {c.tarjetaAmarilla && " 🟨"}
               {c.tarjetaRoja && " 🟥"}
+              {c.golesEncajados > 0 && ` 🧤${c.golesEncajados}`}
             </span>
           )}
         </div>

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora } from "@/lib/fechas";
-import { contarDisponibilidad, contarAyudaVan } from "@/lib/disponibilidad";
+import { contarDisponibilidad, contarAyudaVan, ayudaSinResponder } from "@/lib/disponibilidad";
+import { nombreMostrado } from "@/lib/jugadores";
 import { getViewer } from "@/lib/viewer";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
@@ -17,11 +18,17 @@ export default async function CalendarioPage() {
   const puedeResponder = !!session && !noJuega && !necesitaElegirRol;
 
   const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
+  const jugadoresAyuda = await prisma.user.findMany({
+    where: { rol: "JUGADOR", estado: "AYUDA" },
+    select: { id: true, name: true, apodo: true },
+  });
 
   const partidos = await prisma.partido.findMany({
     orderBy: { fecha: "asc" },
     include: {
-      convocatorias: { select: { userId: true, disponibilidad: true, user: { select: { estado: true } } } },
+      convocatorias: {
+        select: { userId: true, disponibilidad: true, user: { select: { estado: true, name: true, apodo: true } } },
+      },
     },
   });
   // Un partido pasa a "Jugados" cuando el admin cierra su jornada, no
@@ -37,6 +44,7 @@ export default async function CalendarioPage() {
     const respuestasAyuda = p.convocatorias.filter((c) => c.user.estado === "AYUDA");
     const conteo = contarDisponibilidad(respuestasActivos, totalActivos);
     const ayudaVan = contarAyudaVan(respuestasAyuda);
+    const ayudaSinContestar = ayudaSinResponder(jugadoresAyuda, respuestasAyuda);
     const miDisponibilidad = userId
       ? p.convocatorias.find((c) => c.userId === userId)?.disponibilidad ?? "SIN_RESPONDER"
       : "SIN_RESPONDER";
@@ -68,6 +76,11 @@ export default async function CalendarioPage() {
                     <span className="text-chalk/40">{conteo.SIN_RESPONDER} sin responder</span>
                   </>
                 )}
+              </p>
+            )}
+            {mostrarDisponibilidad && !jugado && ayudaSinContestar.length > 0 && (
+              <p className="text-chalk/40 text-xs pt-0.5">
+                Ayuda sin responder: {ayudaSinContestar.map((j) => nombreMostrado(j)).join(", ")}
               </p>
             )}
           </div>

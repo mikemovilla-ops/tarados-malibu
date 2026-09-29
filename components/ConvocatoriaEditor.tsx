@@ -12,6 +12,7 @@ type Fila = {
   asistencias: number;
   tarjetaAmarilla: boolean;
   tarjetaRoja: boolean;
+  golesEncajados: number;
 };
 
 const ETIQUETA_DISPONIBILIDAD: Record<string, string> = {
@@ -120,6 +121,16 @@ function FilaConvocatoria({
             />
             🟥
           </label>
+          <label className="flex items-center gap-1" title="Goles encajados de portero">
+            🧤
+            <input
+              type="number"
+              min={0}
+              value={fila.golesEncajados}
+              onChange={(e) => actualizar(jugador.id, { golesEncajados: Number(e.target.value) })}
+              className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
+            />
+          </label>
         </div>
       )}
     </div>
@@ -146,6 +157,7 @@ export default function ConvocatoriaEditor({
         asistencias: 0,
         tarjetaAmarilla: false,
         tarjetaRoja: false,
+        golesEncajados: 0,
       };
     }
     return base;

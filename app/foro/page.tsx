@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getViewer } from "@/lib/viewer";
 import { estaAlDiaDePago } from "@/lib/pagos";
-import { puedeEscribirForo } from "@/lib/foro";
+import { puedeEscribirForo, esNoLeido } from "@/lib/foro";
 import ForoTemaResumen from "@/components/ForoTemaResumen";
 import FormNuevoTemaForo from "@/components/FormNuevoTemaForo";
 import ForoAcceso from "@/components/ForoAcceso";
@@ -59,6 +59,12 @@ export default async function ForoPage() {
     .map((t) => ({ ...t, ultimaActividad: t.respuestas[0]?.createdAt ?? t.createdAt }))
     .sort((a, b) => b.ultimaActividad.getTime() - a.ultimaActividad.getTime());
 
+  const lecturas = await prisma.lecturaForo.findMany({
+    where: { userId: viewer.userId! },
+    select: { temaId: true, leidoEn: true },
+  });
+  const leidoPorTema = new Map(lecturas.map((l) => [l.temaId, l.leidoEn]));
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
       <div className="flex items-center justify-between gap-3">
@@ -95,6 +101,7 @@ export default async function ForoPage() {
               ultimaActividad={tema.ultimaActividad}
               autor={tema.autor}
               numRespuestas={tema._count.respuestas}
+              noLeido={esNoLeido(tema.ultimaActividad, leidoPorTema.get(tema.id) ?? null)}
               puedeBorrar={
                 viewer.esAdmin || (viewer.userId === tema.autorId && tema._count.respuestas === 0)
               }

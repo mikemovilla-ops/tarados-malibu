@@ -18,3 +18,10 @@ export function puedeEscribirForo({
   if (rol === "SOCIO") return alDiaDePago;
   return true;
 }
+
+// Un tema es "no leído" si nunca se ha entrado en él (leidoEn null) o si ha
+// habido actividad (tema editado, o una respuesta nueva) después de la
+// última vez que se entró — ver LecturaForo en el esquema.
+export function esNoLeido(ultimaActividad: Date, leidoEn: Date | null): boolean {
+  return !leidoEn || ultimaActividad.getTime() > leidoEn.getTime();
+}

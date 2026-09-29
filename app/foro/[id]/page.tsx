@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getViewer } from "@/lib/viewer";
 import { estaAlDiaDePago } from "@/lib/pagos";
-import { puedeEscribirForo } from "@/lib/foro";
+import { puedeEscribirForo, esNoLeido } from "@/lib/foro";
 import { nombreMostrado } from "@/lib/jugadores";
 import { formatFechaHora } from "@/lib/fechas";
 import FormNuevoMensajeForo from "@/components/FormNuevoMensajeForo";
@@ -45,6 +45,20 @@ export default async function TemaForoPage({ params }: { params: { id: string } 
   // propia para ella — el debate vive en la página de su tema.
   if (!tema || tema.padreId !== null) notFound();
 
+  // Hay que leer la última visita ANTES de marcar el tema como leído ahora
+  // mismo (más abajo), para poder saber qué respuestas son nuevas desde
+  // entonces — si se marcara primero, se perdería el dato de qué es "viejo".
+  const lecturaAnterior = await prisma.lecturaForo.findUnique({
+    where: { userId_temaId: { userId: viewer.userId!, temaId: tema.id } },
+  });
+  const leidoEnAnterior = lecturaAnterior?.leidoEn ?? null;
+
+  await prisma.lecturaForo.upsert({
+    where: { userId_temaId: { userId: viewer.userId!, temaId: tema.id } },
+    update: { leidoEn: new Date() },
+    create: { userId: viewer.userId!, temaId: tema.id, leidoEn: new Date() },
+  });
+
   const alDiaDePago =
     viewer.alDiaDePago ?? (viewer.rol === "SOCIO" ? await estaAlDiaDePago(viewer.userId!, "SOCIO") : true);
   const puedeEscribir = puedeEscribirForo({ logueado: true, rol: viewer.rol, alDiaDePago });
@@ -83,16 +97,22 @@ export default async function TemaForoPage({ params }: { params: { id: string } 
             ? "Sin respuestas"
             : `${tema.respuestas.length} respuesta${tema.respuestas.length === 1 ? "" : "s"}`}
         </h2>
-        {tema.respuestas.map((r) => (
-          <div key={r.id} className="card p-4 space-y-1">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-chalk text-sm font-display">{nombreMostrado(r.autor)}</span>
-              <span className="text-chalk/40 text-xs shrink-0">{formatFechaHora(r.createdAt)}</span>
+        {tema.respuestas.map((r) => {
+          const noLeido = r.autorId !== viewer.userId && esNoLeido(r.createdAt, leidoEnAnterior);
+          return (
+            <div key={r.id} className={`card p-4 space-y-1 ${noLeido ? "border-amarillo/50" : ""}`}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-chalk text-sm font-display flex items-center gap-2">
+                  {noLeido && <span className="w-1.5 h-1.5 rounded-full bg-amarillobrillante shrink-0" />}
+                  {nombreMostrado(r.autor)}
+                </span>
+                <span className="text-chalk/40 text-xs shrink-0">{formatFechaHora(r.createdAt)}</span>
+              </div>
+              <p className="text-chalk/80 text-sm whitespace-pre-wrap">{r.texto}</p>
+              {viewer.esAdmin && <BotonBorrarMensajeForo id={r.id} />}
             </div>
-            <p className="text-chalk/80 text-sm whitespace-pre-wrap">{r.texto}</p>
-            {viewer.esAdmin && <BotonBorrarMensajeForo id={r.id} />}
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       {puedeEscribir ? (

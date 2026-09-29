@@ -24,6 +24,19 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.1.0",
+    fecha: "2026-09-29",
+    cambios: [
+      "Corregido el huso horario: las horas (partidos, foro...) se mostraban hasta 2h antes de la hora real según la época del año — ahora siempre en hora de Madrid.",
+      "El apodo ya no se corta en móvil si es largo.",
+      "Camiseta negra para el portero en Plantilla; se puede anotar cuántos goles encaja cada partido (a cualquier convocado, no solo al portero habitual), visible en su ficha y en Estadísticas.",
+      "En el Foro, los temas y mensajes que todavía no has visto se marcan de forma distinta.",
+      "Se muestra la hora de convocatoria (media hora antes del partido) en el próximo partido y en el detalle de cada jornada.",
+      "En cada jornada se ve también qué jugadores de ayuda todavía no han respondido si van.",
+      "Al crear un partido nuevo, el lugar viene ya puesto por defecto en \"IDB Madrid Río\".",
+    ],
+  },
+  {
     version: "2.0.0",
     fecha: "2026-09-28",
     hito: true,

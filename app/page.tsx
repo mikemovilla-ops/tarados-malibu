@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { formatFechaHora } from "@/lib/fechas";
+import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
 import { getSecciones } from "@/lib/pagos";
 import { getViewer } from "@/lib/viewer";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
@@ -122,6 +122,9 @@ export default async function HomePage() {
               {proximoPartido.competicion}
               {proximoPartido.jornada !== null && ` · Jornada ${proximoPartido.jornada}`}
               {proximoPartido.lugar && ` · ${proximoPartido.lugar}`}
+            </p>
+            <p className="text-chalk/40 text-xs">
+              Convocatoria: {formatHora(horaConvocatoria(proximoPartido.fecha))}
             </p>
             {session && !noJuega && !viewer.necesitaElegirRol && (
               <div className="pt-2 space-y-2">

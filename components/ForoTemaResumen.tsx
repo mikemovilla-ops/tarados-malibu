@@ -15,6 +15,7 @@ export default function ForoTemaResumen({
   ultimaActividad,
   autor,
   numRespuestas,
+  noLeido,
   puedeBorrar,
 }: {
   id: string;
@@ -25,12 +26,20 @@ export default function ForoTemaResumen({
   ultimaActividad: Date;
   autor: Autor;
   numRespuestas: number;
+  // Sin abrir todavía, o con actividad nueva desde la última visita.
+  noLeido: boolean;
   // Admin siempre; el propio autor solo si nadie ha respondido todavía.
   puedeBorrar: boolean;
 }) {
   return (
-    <Link href={`/foro/${id}`} className="card p-4 block space-y-1 hover:border-amarillo/40 transition">
-      <p className="font-display text-chalk truncate">{titulo ?? texto}</p>
+    <Link
+      href={`/foro/${id}`}
+      className={`card p-4 block space-y-1 hover:border-amarillo/40 transition ${noLeido ? "border-amarillo/50" : ""}`}
+    >
+      <p className="font-display text-chalk truncate flex items-center gap-2">
+        {noLeido && <span className="w-2 h-2 rounded-full bg-amarillobrillante shrink-0" />}
+        {titulo ?? texto}
+      </p>
       <div className="flex items-center justify-between gap-2">
         <span className="text-chalk/60 text-xs">{nombreMostrado(autor)}</span>
         <span className="text-chalk/40 text-xs shrink-0">{formatFechaHora(createdAt)}</span>

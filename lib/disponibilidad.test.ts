@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contarDisponibilidad, contarAyudaVan } from "@/lib/disponibilidad";
+import { contarDisponibilidad, contarAyudaVan, ayudaSinResponder } from "@/lib/disponibilidad";
 
 describe("contarDisponibilidad", () => {
   it("cuenta cada respuesta en su grupo", () => {
@@ -38,5 +38,23 @@ describe("contarAyudaVan", () => {
 
   it("da 0 si nadie de ayuda ha confirmado", () => {
     expect(contarAyudaVan([{ disponibilidad: "SIN_RESPONDER" as const }])).toBe(0);
+  });
+});
+
+describe("ayudaSinResponder", () => {
+  it("da los de ayuda sin fila o con fila SIN_RESPONDER", () => {
+    const jugadores = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    const respuestas = [
+      { userId: "a", disponibilidad: "VOY" as const },
+      { userId: "b", disponibilidad: "SIN_RESPONDER" as const },
+      // "c" no tiene ni fila.
+    ];
+    expect(ayudaSinResponder(jugadores, respuestas)).toEqual([{ id: "b" }, { id: "c" }]);
+  });
+
+  it("da vacío si todos han respondido algo distinto de SIN_RESPONDER", () => {
+    const jugadores = [{ id: "a" }];
+    const respuestas = [{ userId: "a", disponibilidad: "NO_VOY" as const }];
+    expect(ayudaSinResponder(jugadores, respuestas)).toEqual([]);
   });
 });
