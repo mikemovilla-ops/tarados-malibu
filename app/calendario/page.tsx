@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
-import { contarDisponibilidad, contarAyudaVan, ayudaSinResponder } from "@/lib/disponibilidad";
+import { contarDisponibilidad, contarAyudaPodriaIr, ayudaSinResponder } from "@/lib/disponibilidad";
 import { getViewer } from "@/lib/viewer";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
@@ -42,7 +42,7 @@ export default async function CalendarioPage() {
     const respuestasActivos = p.convocatorias.filter((c) => c.user.estado === "ACTIVO");
     const respuestasAyuda = p.convocatorias.filter((c) => c.user.estado === "AYUDA");
     const conteo = contarDisponibilidad(respuestasActivos, totalActivos);
-    const ayudaVan = contarAyudaVan(respuestasAyuda);
+    const ayudaPodriaIr = contarAyudaPodriaIr(respuestasAyuda);
     const ayudaSinContestar = ayudaSinResponder(jugadoresAyuda, respuestasAyuda);
     const miDisponibilidad = userId
       ? p.convocatorias.find((c) => c.userId === userId)?.disponibilidad ?? "SIN_RESPONDER"
@@ -65,9 +65,7 @@ export default async function CalendarioPage() {
             )}
             {mostrarDisponibilidad && !jugado && (
               <p className="text-chalk/50 text-xs pt-1">
-                <span className="text-amarillobrillante">
-                  {conteo.VOY + ayudaVan} van{ayudaVan > 0 && ` (${ayudaVan} de ayuda)`}
-                </span>
+                <span className="text-amarillobrillante">{conteo.VOY} van</span>
                 {" · "}
                 <span className="text-chalk/60">{conteo.DUDA} dudan</span>
                 {" · "}
@@ -79,6 +77,12 @@ export default async function CalendarioPage() {
                       {conteo.SIN_RESPONDER + ayudaSinContestar.length} sin responder
                       {ayudaSinContestar.length > 0 && ` (${ayudaSinContestar.length} de ayuda)`}
                     </span>
+                  </>
+                )}
+                {ayudaPodriaIr > 0 && (
+                  <>
+                    {" · "}
+                    <span className="text-chalk/60">{ayudaPodriaIr} podría ir (ayuda)</span>
                   </>
                 )}
               </p>

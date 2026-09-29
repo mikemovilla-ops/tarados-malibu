@@ -29,11 +29,12 @@ export function contarDisponibilidad(
   return conteo;
 }
 
-// Cuántos jugadores de AYUDA tiene el admin marcados como "Voy" a este
-// partido (ver ConvocatoriaEditor) — se suman al recuento de "van" de fuera,
-// pero se anotan aparte ("2 van, 1 de ayuda") en vez de mezclarse sin más:
-// el equipo quiere saber cuántos de los habituales van a estar.
-export function contarAyudaVan(respuestasAyuda: { disponibilidad: Disponibilidad }[]): number {
+// Cuántos jugadores de AYUDA han dicho "Podría ir" (o el admin los ha
+// marcado como "Voy" desde ConvocatoriaEditor) — a diferencia de un activo,
+// esto no es una confirmación, así que no se suma al recuento de "van": se
+// muestra aparte, y es el admin quien decide luego si cuenta con ellos al
+// convocar.
+export function contarAyudaPodriaIr(respuestasAyuda: { disponibilidad: Disponibilidad }[]): number {
   return respuestasAyuda.filter((r) => r.disponibilidad === "VOY").length;
 }
 

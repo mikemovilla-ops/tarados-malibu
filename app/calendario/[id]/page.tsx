@@ -105,12 +105,14 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     const estado = (convocatoriaInicial[j.id]?.disponibilidad ?? "SIN_RESPONDER") as keyof typeof gruposDisponibilidad;
     gruposDisponibilidad[estado].push(j);
   }
-  // Los de ayuda que el admin ha marcado como "Voy" se suman también al
-  // grupo de "Van" (con etiqueta aparte al mostrarlos) — el resto de grupos
-  // se quedan solo con activos, como pide el resumen de fuera.
-  for (const j of jugadores.filter((j) => j.estado === "AYUDA")) {
-    if (convocatoriaInicial[j.id]?.disponibilidad === "VOY") gruposDisponibilidad.VOY.push(j);
-  }
+
+  // Un "Voy" de un jugador de ayuda es "Podría ir" (ver el botón que ve él,
+  // esAyuda en DisponibilidadSelector) — no es una confirmación como la de
+  // un activo, así que se muestra aparte, no mezclado en "Van": el admin
+  // decide luego si cuenta con él o no.
+  const ayudaPodriaIr = jugadores.filter(
+    (j) => j.estado === "AYUDA" && convocatoriaInicial[j.id]?.disponibilidad === "VOY"
+  );
 
   const convocados = partido.convocatorias.filter((c) => c.convocado);
   // Una vez cerrada la jornada, ya no importa quién dijo que iba o no —
@@ -232,19 +234,21 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           {(["VOY", "DUDA", "NO_VOY", "SIN_RESPONDER"] as const).map((estado) => {
             const grupo = gruposDisponibilidad[estado];
             if (grupo.length === 0) return null;
-            const ayudaEnGrupo = grupo.filter((j) => j.estado === "AYUDA").length;
             return (
               <p key={estado} className="text-chalk/60">
                 <span className="text-chalk/40">
-                  {ETIQUETA_GRUPO[estado]} ({grupo.length}
-                  {ayudaEnGrupo > 0 && ` · ${ayudaEnGrupo} de ayuda`}):
+                  {ETIQUETA_GRUPO[estado]} ({grupo.length}):
                 </span>{" "}
-                {grupo
-                  .map((j) => nombreMostrado(j) + (j.estado === "AYUDA" ? " (ayuda)" : ""))
-                  .join(", ")}
+                {grupo.map((j) => nombreMostrado(j)).join(", ")}
               </p>
             );
           })}
+          {ayudaPodriaIr.length > 0 && (
+            <p className="text-chalk/60">
+              <span className="text-chalk/40">Podría ir, ayuda ({ayudaPodriaIr.length}):</span>{" "}
+              {ayudaPodriaIr.map((j) => nombreMostrado(j)).join(", ")}
+            </p>
+          )}
           {ayudaSinContestar.length > 0 && (
             <p className="text-chalk/40">
               Ayuda sin responder: {ayudaSinContestar.map((j) => nombreMostrado(j)).join(", ")}

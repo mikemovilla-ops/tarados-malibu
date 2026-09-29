@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contarDisponibilidad, contarAyudaVan, ayudaSinResponder } from "@/lib/disponibilidad";
+import { contarDisponibilidad, contarAyudaPodriaIr, ayudaSinResponder } from "@/lib/disponibilidad";
 
 describe("contarDisponibilidad", () => {
   it("cuenta cada respuesta en su grupo", () => {
@@ -25,7 +25,7 @@ describe("contarDisponibilidad", () => {
   });
 });
 
-describe("contarAyudaVan", () => {
+describe("contarAyudaPodriaIr", () => {
   it("cuenta solo los que han dicho VOY", () => {
     const respuestas = [
       { disponibilidad: "VOY" as const },
@@ -33,11 +33,11 @@ describe("contarAyudaVan", () => {
       { disponibilidad: "VOY" as const },
       { disponibilidad: "NO_VOY" as const },
     ];
-    expect(contarAyudaVan(respuestas)).toBe(2);
+    expect(contarAyudaPodriaIr(respuestas)).toBe(2);
   });
 
-  it("da 0 si nadie de ayuda ha confirmado", () => {
-    expect(contarAyudaVan([{ disponibilidad: "SIN_RESPONDER" as const }])).toBe(0);
+  it("da 0 si ninguno de ayuda ha dicho que podría ir", () => {
+    expect(contarAyudaPodriaIr([{ disponibilidad: "SIN_RESPONDER" as const }])).toBe(0);
   });
 });
 
