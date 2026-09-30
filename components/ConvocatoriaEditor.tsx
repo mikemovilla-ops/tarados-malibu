@@ -29,6 +29,43 @@ const CLASE_DISPONIBILIDAD: Record<string, string> = {
   SIN_RESPONDER: "",
 };
 
+// Contador con +/- en vez de un campo numérico a mano — más rápido de
+// tocar desde el móvil mientras se van metiendo goles/asistencias durante
+// o justo después del partido. Nunca baja de 0.
+function Contador({
+  etiqueta,
+  valor,
+  onChange,
+  titulo,
+}: {
+  etiqueta: string;
+  valor: number;
+  onChange: (valor: number) => void;
+  titulo?: string;
+}) {
+  return (
+    <div className="flex items-center gap-1" title={titulo}>
+      <span>{etiqueta}</span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, valor - 1))}
+        disabled={valor === 0}
+        className="w-5 h-5 flex items-center justify-center rounded bg-pitchdark border border-chalk/20 text-chalk disabled:opacity-30"
+      >
+        −
+      </button>
+      <span className="w-4 text-center text-chalk tabular-nums">{valor}</span>
+      <button
+        type="button"
+        onClick={() => onChange(valor + 1)}
+        className="w-5 h-5 flex items-center justify-center rounded bg-pitchdark border border-chalk/20 text-chalk"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 function FilaConvocatoria({
   jugador,
   fila,
@@ -84,53 +121,35 @@ function FilaConvocatoria({
         )}
       </div>
       {fila.convocado && (
-        <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-xs text-chalk/50 pl-1">
-          <label className="flex items-center gap-1">
-            Goles
-            <input
-              type="number"
-              min={0}
-              value={fila.goles}
-              onChange={(e) => actualizar(jugador.id, { goles: Number(e.target.value) })}
-              className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
+        <div className="flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-xs text-chalk/50 pl-1">
+          <div className="flex items-center gap-3">
+            <Contador etiqueta="Goles" valor={fila.goles} onChange={(v) => actualizar(jugador.id, { goles: v })} />
+            <Contador etiqueta="Ast." valor={fila.asistencias} onChange={(v) => actualizar(jugador.id, { asistencias: v })} />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1" title="Tarjeta amarilla">
+              <input
+                type="checkbox"
+                checked={fila.tarjetaAmarilla}
+                onChange={(e) => actualizar(jugador.id, { tarjetaAmarilla: e.target.checked })}
+              />
+              🟨
+            </label>
+            <label className="flex items-center gap-1" title="Tarjeta roja">
+              <input
+                type="checkbox"
+                checked={fila.tarjetaRoja}
+                onChange={(e) => actualizar(jugador.id, { tarjetaRoja: e.target.checked })}
+              />
+              🟥
+            </label>
+            <Contador
+              etiqueta="🧤"
+              titulo="Goles encajados"
+              valor={fila.golesEncajados}
+              onChange={(v) => actualizar(jugador.id, { golesEncajados: v })}
             />
-          </label>
-          <label className="flex items-center gap-1">
-            Ast.
-            <input
-              type="number"
-              min={0}
-              value={fila.asistencias}
-              onChange={(e) => actualizar(jugador.id, { asistencias: Number(e.target.value) })}
-              className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
-            />
-          </label>
-          <label className="flex items-center gap-1" title="Tarjeta amarilla">
-            <input
-              type="checkbox"
-              checked={fila.tarjetaAmarilla}
-              onChange={(e) => actualizar(jugador.id, { tarjetaAmarilla: e.target.checked })}
-            />
-            🟨
-          </label>
-          <label className="flex items-center gap-1" title="Tarjeta roja">
-            <input
-              type="checkbox"
-              checked={fila.tarjetaRoja}
-              onChange={(e) => actualizar(jugador.id, { tarjetaRoja: e.target.checked })}
-            />
-            🟥
-          </label>
-          <label className="flex items-center gap-1" title="Goles encajados de portero">
-            🧤
-            <input
-              type="number"
-              min={0}
-              value={fila.golesEncajados}
-              onChange={(e) => actualizar(jugador.id, { golesEncajados: Number(e.target.value) })}
-              className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
-            />
-          </label>
+          </div>
         </div>
       )}
     </div>

@@ -24,6 +24,13 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.2.0",
+    fecha: "2026-09-30",
+    cambios: [
+      "En el editor de convocatoria, goles, asistencias y goles encajados se cuentan con botones \"+\"/\"-\" en vez de escribir el número a mano.",
+    ],
+  },
+  {
     version: "2.1.0",
     fecha: "2026-09-29",
     cambios: [
