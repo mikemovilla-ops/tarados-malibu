@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { nombreMostrado } from "@/lib/jugadores";
-import { formatFechaHora } from "@/lib/fechas";
+import { formatFechaHora, formatFechaCorta } from "@/lib/fechas";
 import { ETIQUETA_POSICION } from "@/lib/posiciones";
 import { ETIQUETA_ESTADO } from "@/lib/estados";
 import { calcularEstadisticasJugador } from "@/lib/estadisticas";
@@ -13,7 +13,7 @@ import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 export const dynamic = "force-dynamic";
 
 export default async function FichaJugadorPage({ params }: { params: { id: string } }) {
-  const { session } = await getViewer();
+  const { session, esAdmin } = await getViewer();
 
   if (!session) {
     return (
@@ -27,7 +27,16 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
 
   const jugador = await prisma.user.findUnique({
     where: { id: params.id },
-    select: { id: true, name: true, apodo: true, dorsal: true, posicion: true, estado: true, rol: true },
+    select: {
+      id: true,
+      name: true,
+      apodo: true,
+      dorsal: true,
+      posicion: true,
+      estado: true,
+      rol: true,
+      ...(esAdmin ? { email: true, telefono: true, dni: true, fechaNacimiento: true } : {}),
+    },
   });
 
   // Los socios no juegan, así que no tienen estadísticas que enseñar aquí.
@@ -58,6 +67,17 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
           </p>
         </div>
       </div>
+
+      {esAdmin && (jugador.email || jugador.telefono || jugador.dni || jugador.fechaNacimiento) && (
+        <section className="card p-4 space-y-1 text-sm">
+          {jugador.email && <p className="text-chalk/60 break-all">{jugador.email}</p>}
+          {jugador.telefono && <p className="text-chalk/60">{jugador.telefono}</p>}
+          {jugador.dni && <p className="text-chalk/40 text-xs">DNI: {jugador.dni}</p>}
+          {jugador.fechaNacimiento && (
+            <p className="text-chalk/40 text-xs">Nacimiento: {formatFechaCorta(jugador.fechaNacimiento)}</p>
+          )}
+        </section>
+      )}
 
       <section className="card p-4">
         <div className="grid grid-cols-3 sm:grid-cols-6 text-center divide-x divide-y sm:divide-y-0 divide-chalk/10">
@@ -91,14 +111,14 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
       <section className="space-y-2">
         <h2 className="text-chalk/60 text-sm uppercase tracking-wide">Partidos</h2>
         {stats.partidos.length === 0 ? (
-          <p className="text-chalk/50 text-sm">Todavía no hay partidos jugados (con la jornada ya cerrada).</p>
+          <p className="text-chalk/50 text-sm">Todavía no hay ninguna jornada cerrada.</p>
         ) : (
           <div className="space-y-2">
             {stats.partidos.map((p) => (
               <Link
                 key={p.partidoId}
                 href={`/calendario/${p.partidoId}`}
-                className="card p-3 flex items-center justify-between gap-3 hover:border-amarillo/40 transition"
+                className={`card p-3 flex items-center justify-between gap-3 hover:border-amarillo/40 transition ${p.jugado ? "" : "opacity-60"}`}
               >
                 <div className="min-w-0">
                   <p className="text-chalk text-sm truncate">
@@ -117,14 +137,20 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
                       {p.esLocal ? p.golesFavor : p.golesContra}-{p.esLocal ? p.golesContra : p.golesFavor}
                     </span>
                   )}
-                  {(p.goles > 0 || p.asistencias > 0 || p.tarjetaAmarilla || p.tarjetaRoja || p.golesEncajados > 0) && (
-                    <span className="text-xs tracking-wide">
-                      {p.goles > 0 && "⚽".repeat(p.goles)}
-                      {p.asistencias > 0 && ` ${"🥾".repeat(p.asistencias)}`}
-                      {p.tarjetaAmarilla && " 🟨"}
-                      {p.tarjetaRoja && " 🟥"}
-                      {p.golesEncajados > 0 && ` 🧤${p.golesEncajados}`}
-                    </span>
+                  {p.jugado ? (
+                    (p.goles > 0 || p.asistencias > 0 || p.tarjetaAmarilla || p.tarjetaRoja || p.golesEncajados > 0) ? (
+                      <span className="text-xs tracking-wide">
+                        {p.goles > 0 && "⚽".repeat(p.goles)}
+                        {p.asistencias > 0 && ` ${"🥾".repeat(p.asistencias)}`}
+                        {p.tarjetaAmarilla && " 🟨"}
+                        {p.tarjetaRoja && " 🟥"}
+                        {p.golesEncajados > 0 && ` 🧤${p.golesEncajados}`}
+                      </span>
+                    ) : (
+                      <span className="text-chalk/40 text-xs">Jugó</span>
+                    )
+                  ) : (
+                    <span className="text-chalk/30 text-xs">No jugó</span>
                   )}
                 </div>
               </Link>

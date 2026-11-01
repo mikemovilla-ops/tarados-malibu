@@ -44,7 +44,7 @@ export async function POST(req: Request) {
   });
 
   const jugadores = await prisma.user.findMany({
-    where: { email: { not: null } },
+    where: { email: { not: null }, rol: "JUGADOR" },
     select: { email: true, emailNotificaciones: true },
   });
   const destinatarios = (

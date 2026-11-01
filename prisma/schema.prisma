@@ -171,6 +171,9 @@ model Partido {
   // (ver /api/partidos/[id]).
   golesPropiaPuerta Int      @default(0)
   notas             String?
+  // Foto de equipo al acabar el partido, subida por el admin al cerrar la
+  // jornada (se guarda en Vercel Blob; aquí solo vive la URL pública).
+  fotoUrl           String?
   // El admin lo marca a mano una vez ha terminado de meter goles,
   // asistencias y tarjetas de este partido. Hasta entonces, aunque ya haya
   // datos cargados, no cuentan en /estadisticas (ver lib/estadisticas.ts) —

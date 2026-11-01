@@ -38,6 +38,14 @@ export function contarAyudaPodriaIr(respuestasAyuda: { disponibilidad: Disponibi
   return respuestasAyuda.filter((r) => r.disponibilidad === "VOY").length;
 }
 
+// Igual que contarAyudaPodriaIr pero para quien ha dicho "No puedo ir" — se
+// muestra aparte igual que los que podrían ir, en vez de desaparecer sin
+// más del resumen (antes solo contaba como "ya ha respondido" a efectos de
+// ayudaSinResponder, pero no se veía en ningún sitio).
+export function contarAyudaNoVan(respuestasAyuda: { disponibilidad: Disponibilidad }[]): number {
+  return respuestasAyuda.filter((r) => r.disponibilidad === "NO_VOY").length;
+}
+
 // A diferencia del resto de este módulo (que solo cuenta), aquí interesa
 // saber quiénes son: los de AYUDA no entran en el resumen de disponibilidad
 // de los activos, así que sin esto nadie se entera de que un ayuda se ha

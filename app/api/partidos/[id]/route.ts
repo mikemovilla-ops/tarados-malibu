@@ -11,20 +11,33 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const body = await req.json();
-  const { fecha, rival, esLocal, competicion, jornada, lugar, golesFavor, golesContra, golesPropiaPuerta, notas, cerrado } =
-    body as {
-      fecha?: string;
-      rival?: string;
-      esLocal?: boolean;
-      competicion?: string;
-      jornada?: number | null;
-      lugar?: string | null;
-      golesFavor?: number | null;
-      golesContra?: number | null;
-      golesPropiaPuerta?: number;
-      notas?: string | null;
-      cerrado?: boolean;
-    };
+  const {
+    fecha,
+    rival,
+    esLocal,
+    competicion,
+    jornada,
+    lugar,
+    golesFavor,
+    golesContra,
+    golesPropiaPuerta,
+    notas,
+    fotoUrl,
+    cerrado,
+  } = body as {
+    fecha?: string;
+    rival?: string;
+    esLocal?: boolean;
+    competicion?: string;
+    jornada?: number | null;
+    lugar?: string | null;
+    golesFavor?: number | null;
+    golesContra?: number | null;
+    golesPropiaPuerta?: number;
+    notas?: string | null;
+    fotoUrl?: string | null;
+    cerrado?: boolean;
+  };
 
   if (cerrado === true) {
     const actual = await prisma.partido.findUnique({
@@ -71,6 +84,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       ...(golesContra !== undefined ? { golesContra } : {}),
       ...(golesPropiaPuerta !== undefined ? { golesPropiaPuerta } : {}),
       ...(notas !== undefined ? { notas } : {}),
+      ...(fotoUrl !== undefined ? { fotoUrl } : {}),
       ...(cerrado !== undefined ? { cerrado } : {}),
     },
   });

@@ -74,6 +74,14 @@ export default async function HomePage() {
         <Image src="/escudo.png" alt="Escudo Tarados Malibú" width={96} height={96} className="mx-auto" priority />
         <h1 className="font-display text-3xl">Tarados Malibú</h1>
         <p className="text-chalk/60 text-sm">Fútbol 7</p>
+        <a
+          href="https://ligafutbolmadrid.es/madrid-rio-sabados-202627/resumen"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-1 bg-amarillo/10 border border-amarillo/40 text-amarillobrillante text-sm font-medium px-4 py-1.5 rounded-full hover:bg-amarillo/20 transition"
+        >
+          Enlace clasificación
+        </a>
       </div>
 
       {esAdmin ? (

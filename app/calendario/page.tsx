@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
-import { contarDisponibilidad, contarAyudaPodriaIr, ayudaSinResponder } from "@/lib/disponibilidad";
+import { contarDisponibilidad, contarAyudaPodriaIr, contarAyudaNoVan, ayudaSinResponder } from "@/lib/disponibilidad";
 import { getViewer } from "@/lib/viewer";
 import FormNuevoPartido from "@/components/FormNuevoPartido";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
@@ -43,6 +43,7 @@ export default async function CalendarioPage() {
     const respuestasAyuda = p.convocatorias.filter((c) => c.user.estado === "AYUDA");
     const conteo = contarDisponibilidad(respuestasActivos, totalActivos);
     const ayudaPodriaIr = contarAyudaPodriaIr(respuestasAyuda);
+    const ayudaNoVan = contarAyudaNoVan(respuestasAyuda);
     const ayudaSinContestar = ayudaSinResponder(jugadoresAyuda, respuestasAyuda);
     const miDisponibilidad = userId
       ? p.convocatorias.find((c) => c.userId === userId)?.disponibilidad ?? "SIN_RESPONDER"
@@ -83,6 +84,12 @@ export default async function CalendarioPage() {
                   <>
                     {" · "}
                     <span className="text-chalk/60">{ayudaPodriaIr} podría ir (ayuda)</span>
+                  </>
+                )}
+                {ayudaNoVan > 0 && (
+                  <>
+                    {" · "}
+                    <span className="text-coral/80">{ayudaNoVan} no van (ayuda)</span>
                   </>
                 )}
               </p>

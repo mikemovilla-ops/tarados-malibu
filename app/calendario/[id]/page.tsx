@@ -10,6 +10,7 @@ import ResultadoEditor from "@/components/ResultadoEditor";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
 import EditarDatosPartido from "@/components/EditarDatosPartido";
 import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
+import SubirFotoPartido from "@/components/SubirFotoPartido";
 import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
@@ -113,6 +114,9 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   const ayudaPodriaIr = jugadores.filter(
     (j) => j.estado === "AYUDA" && convocatoriaInicial[j.id]?.disponibilidad === "VOY"
   );
+  const ayudaNoVan = jugadores.filter(
+    (j) => j.estado === "AYUDA" && convocatoriaInicial[j.id]?.disponibilidad === "NO_VOY"
+  );
 
   const convocados = partido.convocatorias.filter((c) => c.convocado);
   // Una vez cerrada la jornada, ya no importa quién dijo que iba o no —
@@ -145,6 +149,10 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           </p>
         )}
         {partido.notas && <p className="text-chalk/60 text-sm pt-1">{partido.notas}</p>}
+        {partido.fotoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={partido.fotoUrl} alt="Foto del partido" className="rounded-lg max-h-96 w-full object-cover mt-2" />
+        )}
         {jugado && !partido.cerrado && (
           <p className="text-chalk/40 text-xs pt-1">
             Resultado provisional: las estadísticas se actualizarán cuando el admin cierre la jornada.
@@ -190,6 +198,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 golesPropiaPuertaInicial={partido.golesPropiaPuerta}
                 notasIniciales={partido.notas}
               />
+              <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
               <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
             </SeccionEditable>
           ) : (
@@ -201,6 +210,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 golesPropiaPuertaInicial={partido.golesPropiaPuerta}
                 notasIniciales={partido.notas}
               />
+              <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
               <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
             </>
           )}
@@ -247,6 +257,12 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             <p className="text-chalk/60">
               <span className="text-chalk/40">Podría ir, ayuda ({ayudaPodriaIr.length}):</span>{" "}
               {ayudaPodriaIr.map((j) => nombreMostrado(j)).join(", ")}
+            </p>
+          )}
+          {ayudaNoVan.length > 0 && (
+            <p className="text-chalk/60">
+              <span className="text-chalk/40">No van, ayuda ({ayudaNoVan.length}):</span>{" "}
+              {ayudaNoVan.map((j) => nombreMostrado(j)).join(", ")}
             </p>
           )}
           {ayudaSinContestar.length > 0 && (

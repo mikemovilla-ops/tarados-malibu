@@ -100,6 +100,10 @@ export type PartidoJugado = {
   jornada: number | null;
   golesFavor: number | null;
   golesContra: number | null;
+  // false si la jornada ya está cerrada pero el jugador no estaba convocado
+  // (o no tenía ni fila de Convocatoria) — el resto de campos van a 0/false
+  // en ese caso, no hay nada suyo que contar en ese partido.
+  jugado: boolean;
   goles: number;
   asistencias: number;
   tarjetaAmarilla: boolean;
@@ -119,38 +123,47 @@ export type EstadisticasJugador = {
 
 // Detalle de un jugador para su ficha en /plantilla/[id]: el mismo resumen
 // que sale en el ranking, más el partido a partido que lo compone (más
-// recientes primero). Mismo filtro que calcularRanking: solo jornadas ya
-// cerradas por el admin.
+// recientes primero). A diferencia de calcularRanking, aquí se listan TODAS
+// las jornadas ya cerradas (no solo en las que jugó) y se marca cada una con
+// `jugado` — así se ve también en qué partidos no fue convocado, en vez de
+// que esas jornadas desaparezcan sin más de su ficha.
 export async function calcularEstadisticasJugador(userId: string): Promise<EstadisticasJugador> {
-  const convocatorias = await prisma.convocatoria.findMany({
-    where: { userId, convocado: true, partido: { cerrado: true } },
-    include: { partido: true },
-    orderBy: { partido: { fecha: "desc" } },
+  const [partidosCerrados, convocatorias] = await Promise.all([
+    prisma.partido.findMany({ where: { cerrado: true }, orderBy: { fecha: "desc" } }),
+    prisma.convocatoria.findMany({ where: { userId, partido: { cerrado: true } } }),
+  ]);
+  const convocatoriaPorPartido = new Map(convocatorias.map((c) => [c.partidoId, c]));
+
+  const partidos: PartidoJugado[] = partidosCerrados.map((p) => {
+    const c = convocatoriaPorPartido.get(p.id);
+    const jugado = c?.convocado ?? false;
+    return {
+      partidoId: p.id,
+      fecha: p.fecha,
+      rival: p.rival,
+      esLocal: p.esLocal,
+      competicion: p.competicion,
+      jornada: p.jornada,
+      golesFavor: p.golesFavor,
+      golesContra: p.golesContra,
+      jugado,
+      goles: jugado ? c!.goles : 0,
+      asistencias: jugado ? c!.asistencias : 0,
+      tarjetaAmarilla: jugado ? c!.tarjetaAmarilla : false,
+      tarjetaRoja: jugado ? c!.tarjetaRoja : false,
+      golesEncajados: jugado ? c!.golesEncajados : 0,
+    };
   });
 
-  const partidos: PartidoJugado[] = convocatorias.map((c) => ({
-    partidoId: c.partido.id,
-    fecha: c.partido.fecha,
-    rival: c.partido.rival,
-    esLocal: c.partido.esLocal,
-    competicion: c.partido.competicion,
-    jornada: c.partido.jornada,
-    golesFavor: c.partido.golesFavor,
-    golesContra: c.partido.golesContra,
-    goles: c.goles,
-    asistencias: c.asistencias,
-    tarjetaAmarilla: c.tarjetaAmarilla,
-    tarjetaRoja: c.tarjetaRoja,
-    golesEncajados: c.golesEncajados,
-  }));
+  const jugados = partidos.filter((p) => p.jugado);
 
   return {
-    partidosJugados: partidos.length,
-    goles: partidos.reduce((suma, p) => suma + p.goles, 0),
-    asistencias: partidos.reduce((suma, p) => suma + p.asistencias, 0),
-    tarjetasAmarillas: partidos.filter((p) => p.tarjetaAmarilla).length,
-    tarjetasRojas: partidos.filter((p) => p.tarjetaRoja).length,
-    golesEncajados: partidos.reduce((suma, p) => suma + p.golesEncajados, 0),
+    partidosJugados: jugados.length,
+    goles: jugados.reduce((suma, p) => suma + p.goles, 0),
+    asistencias: jugados.reduce((suma, p) => suma + p.asistencias, 0),
+    tarjetasAmarillas: jugados.filter((p) => p.tarjetaAmarilla).length,
+    tarjetasRojas: jugados.filter((p) => p.tarjetaRoja).length,
+    golesEncajados: jugados.reduce((suma, p) => suma + p.golesEncajados, 0),
     partidos,
   };
 }

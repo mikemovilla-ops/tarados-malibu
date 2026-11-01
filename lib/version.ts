@@ -24,6 +24,19 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.3.0",
+    fecha: "2026-11-01",
+    cambios: [
+      "El email de partido nuevo ya solo llega a los jugadores (activos y ayuda), no a socios ni a \"no jugador\".",
+      "Enlace a la clasificación de la liga en la home.",
+      "Si pasas de \"Voy\" a \"Duda\", ya no te quedas convocado sin más — \"Duda\" también desconvoca, igual que \"No voy\".",
+      "El admin ve email, teléfono, DNI y fecha de nacimiento también en la ficha del jugador (antes solo en Plantilla).",
+      "Cuando un jugador de ayuda dice \"No puedo ir\" también sale reflejado en Calendario y en el detalle del partido, igual que cuando dice que podría ir.",
+      "La ficha de un jugador muestra todas las jornadas cerradas de la temporada, marcando \"Jugó\" o \"No jugó\" en las que no fue convocado.",
+      "El admin puede subir una foto del partido al cerrar la jornada; se ve en el detalle para todo el mundo.",
+    ],
+  },
+  {
     version: "2.2.0",
     fecha: "2026-09-30",
     cambios: [
