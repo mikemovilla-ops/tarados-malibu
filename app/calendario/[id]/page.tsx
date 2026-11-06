@@ -12,6 +12,7 @@ import EditarDatosPartido from "@/components/EditarDatosPartido";
 import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
 import SubirFotoPartido from "@/components/SubirFotoPartido";
 import PremioPartidoSelector from "@/components/PremioPartidoSelector";
+import VotarPremio from "@/components/VotarPremio";
 import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
@@ -131,6 +132,32 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   const jugado = partido.golesFavor !== null && partido.golesContra !== null;
   const convocadosOpciones = convocados.map((c) => ({ id: c.user.id, nombre: nombreMostrado(c.user) }));
 
+  // Votos de los convocados por cada premio (ver VotarPremio) — se cuentan
+  // aquí mismo en memoria, no hace falta groupBy para el puñado de votos de
+  // un partido de fútbol 7.
+  const votosPremio = await prisma.votoPremio.findMany({ where: { partidoId: partido.id } });
+  function tallyVotos(tipo: "ESSENZAL" | "VAYA_DIA") {
+    const conteo = new Map<string, number>();
+    for (const v of votosPremio) {
+      if (v.tipo === tipo) conteo.set(v.candidatoId, (conteo.get(v.candidatoId) ?? 0) + 1);
+    }
+    return [...conteo.entries()]
+      .map(([candidatoId, cantidad]) => ({
+        nombre: convocadosOpciones.find((c) => c.id === candidatoId)?.nombre ?? "?",
+        cantidad,
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad);
+  }
+  const votosEssenzal = tallyVotos("ESSENZAL");
+  const votosVayaDia = tallyVotos("VAYA_DIA");
+  const miVotoEssenzal = session
+    ? votosPremio.find((v) => v.votanteId === session.user.id && v.tipo === "ESSENZAL")?.candidatoId ?? null
+    : null;
+  const miVotoVayaDia = session
+    ? votosPremio.find((v) => v.votanteId === session.user.id && v.tipo === "VAYA_DIA")?.candidatoId ?? null
+    : null;
+  const esConvocado = session ? convocadosOpciones.some((c) => c.id === session.user.id) : false;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
       <div>
@@ -220,6 +247,10 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 notasIniciales={partido.notas}
               />
               <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
+              <p className="text-chalk/40 text-xs">
+                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados — usa esto
+                para desempatar o si nadie ha votado.
+              </p>
               <PremioPartidoSelector
                 partidoId={partido.id}
                 campoId="jugadorEssenzalId"
@@ -228,6 +259,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 convocados={convocadosOpciones}
                 valorInicial={partido.jugadorEssenzalId}
                 motivoInicial={partido.jugadorEssenzalMotivo}
+                votos={votosEssenzal}
               />
               <PremioPartidoSelector
                 partidoId={partido.id}
@@ -237,6 +269,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 convocados={convocadosOpciones}
                 valorInicial={partido.jugadorVayaDiaId}
                 motivoInicial={partido.jugadorVayaDiaMotivo}
+                votos={votosVayaDia}
               />
               <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
             </SeccionEditable>
@@ -250,6 +283,10 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 notasIniciales={partido.notas}
               />
               <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
+              <p className="text-chalk/40 text-xs">
+                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados — usa esto
+                para desempatar o si nadie ha votado.
+              </p>
               <PremioPartidoSelector
                 partidoId={partido.id}
                 campoId="jugadorEssenzalId"
@@ -258,6 +295,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 convocados={convocadosOpciones}
                 valorInicial={partido.jugadorEssenzalId}
                 motivoInicial={partido.jugadorEssenzalMotivo}
+                votos={votosEssenzal}
               />
               <PremioPartidoSelector
                 partidoId={partido.id}
@@ -267,6 +305,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 convocados={convocadosOpciones}
                 valorInicial={partido.jugadorVayaDiaId}
                 motivoInicial={partido.jugadorVayaDiaMotivo}
+                votos={votosVayaDia}
               />
               <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
             </>
@@ -365,6 +404,29 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           </>
         )}
       </section>
+
+      {esConvocado && !partido.cerrado && (
+        <section className="card p-4 space-y-3">
+          <h2 className="font-display text-base">Vota</h2>
+          <p className="text-chalk/50 text-xs">
+            Entre los convocados — se cuenta al cerrar la jornada. Puedes cambiar tu voto hasta entonces.
+          </p>
+          <VotarPremio
+            partidoId={partido.id}
+            tipo="ESSENZAL"
+            etiqueta="🏆 Jugador Essenzal"
+            candidatos={convocadosOpciones}
+            miVotoInicial={miVotoEssenzal}
+          />
+          <VotarPremio
+            partidoId={partido.id}
+            tipo="VAYA_DIA"
+            etiqueta="🙈 ¡Vaya día!"
+            candidatos={convocadosOpciones}
+            miVotoInicial={miVotoVayaDia}
+          />
+        </section>
+      )}
       </>
       )}
     </div>

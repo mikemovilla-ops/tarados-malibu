@@ -27,8 +27,10 @@ export const HISTORIAL_VERSIONES: EntradaVersion[] = [
     version: "2.4.0",
     fecha: "2026-11-06",
     cambios: [
-      "Premio \"Jugador Essenzal\" (patrocinado por Essenza) y su contrario, \"¡Vaya día!\" — el admin elige a uno de cada al cerrar la jornada, con un motivo opcional; se ven en el detalle del partido y cuentan en Estadísticas (global e individual).",
+      "Premio \"Jugador Essenzal\" (patrocinado por Essenza) y su contrario, \"¡Vaya día!\", con un motivo opcional; se ven en el detalle del partido y cuentan en Estadísticas (global e individual).",
+      "Los dos premios se deciden ahora por votación de los convocados (cada uno puede cambiar su voto hasta que se cierre la jornada) — si hay empate o nadie vota, el admin lo decide a mano.",
       "En Estadísticas y en la ficha del jugador, pasar el ratón por encima de cada icono de columna dice qué es.",
+      "En Estadísticas, los goles y asistencias se muestran con los mismos iconos (⚽🥾) que en el resto de la app, para que la tabla quepa mejor en móvil.",
     ],
   },
   {

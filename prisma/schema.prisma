@@ -108,6 +108,8 @@ model User {
   lecturasForo   LecturaForo[]
   partidosEssenzal Partido[] @relation("JugadorEssenzal")
   partidosVayaDia  Partido[] @relation("JugadorVayaDia")
+  votosEmitidos    VotoPremio[] @relation("VotosEmitidos")
+  votosRecibidos   VotoPremio[] @relation("VotosRecibidos")
 
   @@map("users")
 }
@@ -186,8 +188,7 @@ model Partido {
   // `notas` del partido en general.
   jugadorEssenzalMotivo String?
   // El premio contrario — "peor" jugador del partido, con guasa — misma
-  // mecánica que el Essenzal: un único ganador por partido, elegido por el
-  // admin al cerrar la jornada.
+  // mecánica que el Essenzal.
   jugadorVayaDiaId  String?
   jugadorVayaDia    User?    @relation("JugadorVayaDia", fields: [jugadorVayaDiaId], references: [id], onDelete: SetNull)
   jugadorVayaDiaMotivo String?
@@ -199,8 +200,36 @@ model Partido {
   createdAt         DateTime @default(now())
 
   convocatorias Convocatoria[]
+  votosPremio   VotoPremio[]
 
   @@map("partidos")
+}
+
+enum TipoPremio {
+  ESSENZAL
+  VAYA_DIA
+}
+
+// Voto de un convocado por quién se merece cada premio del partido (ver
+// Partido.jugadorEssenzalId / jugadorVayaDiaId) — uno por (partido, quien
+// vota, premio); puede cambiarlo mientras la jornada siga abierta (upsert).
+// Al cerrar la jornada se cuenta la mayoría para rellenar el premio
+// automáticamente (ver /api/partidos/[id]); si hay empate o nadie votó, lo
+// decide el admin a mano con el selector de siempre.
+model VotoPremio {
+  id          String     @id @default(cuid())
+  partidoId   String
+  votanteId   String
+  candidatoId String
+  tipo        TipoPremio
+  createdAt   DateTime   @default(now())
+
+  partido   Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  votante   User    @relation("VotosEmitidos", fields: [votanteId], references: [id], onDelete: Cascade)
+  candidato User    @relation("VotosRecibidos", fields: [candidatoId], references: [id], onDelete: Cascade)
+
+  @@unique([partidoId, votanteId, tipo])
+  @@map("votos_premio")
 }
 
 // Fila por (partido, jugador): la disponibilidad que ha respondido el propio

@@ -4,6 +4,21 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseInputDatetimeLocalMadrid } from "@/lib/fechas";
 
+// Mayoría de votos para un premio: si hay un único candidato con más votos
+// que el resto, gana; si hay empate (o nadie ha votado), se devuelve null y
+// lo decide el admin a mano con el selector.
+async function ganadorPorVotos(partidoId: string, tipo: "ESSENZAL" | "VAYA_DIA"): Promise<string | null> {
+  const votos = await prisma.votoPremio.groupBy({
+    by: ["candidatoId"],
+    where: { partidoId, tipo },
+    _count: { candidatoId: true },
+  });
+  if (votos.length === 0) return null;
+  const maxVotos = Math.max(...votos.map((v) => v._count.candidatoId));
+  const ganadores = votos.filter((v) => v._count.candidatoId === maxVotos);
+  return ganadores.length === 1 ? ganadores[0].candidatoId : null;
+}
+
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) {
@@ -47,10 +62,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     cerrado?: boolean;
   };
 
+  let essenzalIdFinal = jugadorEssenzalId;
+  let vayaDiaIdFinal = jugadorVayaDiaId;
+
   if (cerrado === true) {
     const actual = await prisma.partido.findUnique({
       where: { id: params.id },
-      select: { golesFavor: true, golesContra: true, golesPropiaPuerta: true },
+      select: {
+        golesFavor: true,
+        golesContra: true,
+        golesPropiaPuerta: true,
+        jugadorEssenzalId: true,
+        jugadorVayaDiaId: true,
+      },
     });
     const gf = golesFavor !== undefined ? golesFavor : actual?.golesFavor;
     const gc = golesContra !== undefined ? golesContra : actual?.golesContra;
@@ -77,6 +101,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         { status: 400 }
       );
     }
+
+    // Al cerrar: si el admin no ha elegido ya un premio a mano (ni en esta
+    // misma petición ni antes), se rellena con quien gane la votación de
+    // los convocados. Empate o sin votos = se queda sin ganador, para que
+    // el admin lo decida él con el selector.
+    if (essenzalIdFinal === undefined && actual?.jugadorEssenzalId == null) {
+      essenzalIdFinal = await ganadorPorVotos(params.id, "ESSENZAL");
+    }
+    if (vayaDiaIdFinal === undefined && actual?.jugadorVayaDiaId == null) {
+      vayaDiaIdFinal = await ganadorPorVotos(params.id, "VAYA_DIA");
+    }
   }
 
   const partido = await prisma.partido.update({
@@ -93,9 +128,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       ...(golesPropiaPuerta !== undefined ? { golesPropiaPuerta } : {}),
       ...(notas !== undefined ? { notas } : {}),
       ...(fotoUrl !== undefined ? { fotoUrl } : {}),
-      ...(jugadorEssenzalId !== undefined ? { jugadorEssenzalId } : {}),
+      ...(essenzalIdFinal !== undefined ? { jugadorEssenzalId: essenzalIdFinal } : {}),
       ...(jugadorEssenzalMotivo !== undefined ? { jugadorEssenzalMotivo } : {}),
-      ...(jugadorVayaDiaId !== undefined ? { jugadorVayaDiaId } : {}),
+      ...(vayaDiaIdFinal !== undefined ? { jugadorVayaDiaId: vayaDiaIdFinal } : {}),
       ...(jugadorVayaDiaMotivo !== undefined ? { jugadorVayaDiaMotivo } : {}),
       ...(cerrado !== undefined ? { cerrado } : {}),
     },

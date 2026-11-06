@@ -36,8 +36,8 @@ export default async function EstadisticasPage() {
               <tr className="text-chalk/50 text-left border-b border-chalk/10">
                 <th className="py-2 pl-4 font-normal">Jugador</th>
                 <th className="py-2 px-2 font-normal text-center" title="Partidos jugados">PJ</th>
-                <th className="py-2 px-2 font-normal text-center">Goles</th>
-                <th className="py-2 px-2 font-normal text-center" title="Asistencias">Asist.</th>
+                <th className="py-2 px-2 font-normal text-center" title="Goles">⚽</th>
+                <th className="py-2 px-2 font-normal text-center" title="Asistencias">🥾</th>
                 <th className="py-2 px-2 font-normal text-center" title="Tarjetas amarillas">🟨</th>
                 <th className="py-2 px-2 font-normal text-center" title="Tarjetas rojas">🟥</th>
                 <th className="py-2 px-2 font-normal text-center" title="Goles encajados de portero">🧤</th>

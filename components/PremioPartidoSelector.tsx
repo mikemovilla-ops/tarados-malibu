@@ -9,6 +9,11 @@ import { useRouter } from "next/navigation";
 // darle el premio a alguien que no jugó. El motivo es un campo de texto
 // aparte (como las notas del partido): se guarda al salir del campo, no en
 // cada pulsación, para no mandar un PATCH por letra.
+//
+// Desde que los convocados votan (ver VotarPremio), esto ya no es la forma
+// principal de elegir: al cerrar la jornada se rellena solo con quien gane
+// la votación, y este selector queda como desempate o para cuando nadie ha
+// votado — `votos` (si llega) se enseña al admin para que sepa cómo va.
 export default function PremioPartidoSelector({
   partidoId,
   campoId,
@@ -17,6 +22,7 @@ export default function PremioPartidoSelector({
   convocados,
   valorInicial,
   motivoInicial,
+  votos,
 }: {
   partidoId: string;
   campoId: "jugadorEssenzalId" | "jugadorVayaDiaId";
@@ -25,6 +31,7 @@ export default function PremioPartidoSelector({
   convocados: { id: string; nombre: string }[];
   valorInicial: string | null;
   motivoInicial: string | null;
+  votos?: { nombre: string; cantidad: number }[];
 }) {
   const router = useRouter();
   const [valor, setValor] = useState(valorInicial ?? "");
@@ -79,6 +86,11 @@ export default function PremioPartidoSelector({
           placeholder="¿Por qué? (opcional)"
           className="w-full bg-pitchdark border border-chalk/20 rounded px-2 py-1 text-chalk text-xs"
         />
+      )}
+      {votos && votos.length > 0 && (
+        <p className="text-chalk/40 text-xs">
+          Votos: {votos.map((v) => `${v.nombre} (${v.cantidad})`).join(", ")}
+        </p>
       )}
       {convocados.length === 0 && (
         <p className="text-chalk/40 text-xs">Convoca primero a los jugadores para poder elegirlo.</p>
