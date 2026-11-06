@@ -23,6 +23,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     golesPropiaPuerta,
     notas,
     fotoUrl,
+    jugadorEssenzalId,
+    jugadorEssenzalMotivo,
+    jugadorVayaDiaId,
+    jugadorVayaDiaMotivo,
     cerrado,
   } = body as {
     fecha?: string;
@@ -36,6 +40,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     golesPropiaPuerta?: number;
     notas?: string | null;
     fotoUrl?: string | null;
+    jugadorEssenzalId?: string | null;
+    jugadorEssenzalMotivo?: string | null;
+    jugadorVayaDiaId?: string | null;
+    jugadorVayaDiaMotivo?: string | null;
     cerrado?: boolean;
   };
 
@@ -85,6 +93,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       ...(golesPropiaPuerta !== undefined ? { golesPropiaPuerta } : {}),
       ...(notas !== undefined ? { notas } : {}),
       ...(fotoUrl !== undefined ? { fotoUrl } : {}),
+      ...(jugadorEssenzalId !== undefined ? { jugadorEssenzalId } : {}),
+      ...(jugadorEssenzalMotivo !== undefined ? { jugadorEssenzalMotivo } : {}),
+      ...(jugadorVayaDiaId !== undefined ? { jugadorVayaDiaId } : {}),
+      ...(jugadorVayaDiaMotivo !== undefined ? { jugadorVayaDiaMotivo } : {}),
       ...(cerrado !== undefined ? { cerrado } : {}),
     },
   });

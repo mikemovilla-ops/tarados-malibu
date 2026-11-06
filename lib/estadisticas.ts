@@ -11,6 +11,8 @@ export type FilaEstadistica = {
   tarjetasAmarillas: number;
   tarjetasRojas: number;
   golesEncajados: number;
+  vecesEssenzal: number;
+  vecesVayaDia: number;
 };
 
 // Ranking de la plantilla: partidos jugados (convocado=true, aunque no
@@ -28,7 +30,7 @@ export type FilaEstadistica = {
 // (p.ej. si todavía no se ha cerrado ninguna jornada) — no solo quien ya
 // tiene alguna fila de Convocatoria.
 export async function calcularRanking(): Promise<FilaEstadistica[]> {
-  const [activos, convocatorias] = await Promise.all([
+  const [activos, convocatorias, partidosCerrados] = await Promise.all([
     prisma.user.findMany({
       where: { estado: "ACTIVO", rol: "JUGADOR" },
       select: { id: true, name: true, apodo: true, dorsal: true },
@@ -45,6 +47,10 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
         user: { select: { name: true, apodo: true, dorsal: true } },
       },
     }),
+    prisma.partido.findMany({
+      where: { cerrado: true },
+      select: { jugadorEssenzalId: true, jugadorVayaDiaId: true },
+    }),
   ]);
 
   const porJugador = new Map<string, FilaEstadistica>();
@@ -59,6 +65,8 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
       tarjetasAmarillas: 0,
       tarjetasRojas: 0,
       golesEncajados: 0,
+      vecesEssenzal: 0,
+      vecesVayaDia: 0,
     });
   }
   for (const c of convocatorias) {
@@ -72,6 +80,8 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
       tarjetasAmarillas: 0,
       tarjetasRojas: 0,
       golesEncajados: 0,
+      vecesEssenzal: 0,
+      vecesVayaDia: 0,
     };
     fila.partidosJugados += 1;
     fila.goles += c.goles;
@@ -80,6 +90,16 @@ export async function calcularRanking(): Promise<FilaEstadistica[]> {
     if (c.tarjetaRoja) fila.tarjetasRojas += 1;
     fila.golesEncajados += c.golesEncajados;
     porJugador.set(c.userId, fila);
+  }
+  for (const p of partidosCerrados) {
+    if (p.jugadorEssenzalId) {
+      const fila = porJugador.get(p.jugadorEssenzalId);
+      if (fila) fila.vecesEssenzal += 1;
+    }
+    if (p.jugadorVayaDiaId) {
+      const fila = porJugador.get(p.jugadorVayaDiaId);
+      if (fila) fila.vecesVayaDia += 1;
+    }
   }
 
   return [...porJugador.values()].sort(
@@ -109,6 +129,8 @@ export type PartidoJugado = {
   tarjetaAmarilla: boolean;
   tarjetaRoja: boolean;
   golesEncajados: number;
+  esEssenzal: boolean;
+  esVayaDia: boolean;
 };
 
 export type EstadisticasJugador = {
@@ -118,6 +140,8 @@ export type EstadisticasJugador = {
   tarjetasAmarillas: number;
   tarjetasRojas: number;
   golesEncajados: number;
+  vecesEssenzal: number;
+  vecesVayaDia: number;
   partidos: PartidoJugado[];
 };
 
@@ -152,6 +176,8 @@ export async function calcularEstadisticasJugador(userId: string): Promise<Estad
       tarjetaAmarilla: jugado ? c!.tarjetaAmarilla : false,
       tarjetaRoja: jugado ? c!.tarjetaRoja : false,
       golesEncajados: jugado ? c!.golesEncajados : 0,
+      esEssenzal: p.jugadorEssenzalId === userId,
+      esVayaDia: p.jugadorVayaDiaId === userId,
     };
   });
 
@@ -164,6 +190,8 @@ export async function calcularEstadisticasJugador(userId: string): Promise<Estad
     tarjetasAmarillas: jugados.filter((p) => p.tarjetaAmarilla).length,
     tarjetasRojas: jugados.filter((p) => p.tarjetaRoja).length,
     golesEncajados: jugados.reduce((suma, p) => suma + p.golesEncajados, 0),
+    vecesEssenzal: partidos.filter((p) => p.esEssenzal).length,
+    vecesVayaDia: partidos.filter((p) => p.esVayaDia).length,
     partidos,
   };
 }

@@ -106,6 +106,8 @@ model User {
   pagos          Pago[]
   mensajesForo   MensajeForo[]
   lecturasForo   LecturaForo[]
+  partidosEssenzal Partido[] @relation("JugadorEssenzal")
+  partidosVayaDia  Partido[] @relation("JugadorVayaDia")
 
   @@map("users")
 }
@@ -174,6 +176,21 @@ model Partido {
   // Foto de equipo al acabar el partido, subida por el admin al cerrar la
   // jornada (se guarda en Vercel Blob; aquí solo vive la URL pública).
   fotoUrl           String?
+  // Premio al mejor jugador del partido, elegido por el admin al cerrar la
+  // jornada (patrocinado por Essenza) — un único ganador por partido, así
+  // que vive en Partido y no en Convocatoria. onDelete: SetNull para que
+  // borrar a ese jugador no se lleve por delante el partido entero.
+  jugadorEssenzalId String?
+  jugadorEssenzal   User?    @relation("JugadorEssenzal", fields: [jugadorEssenzalId], references: [id], onDelete: SetNull)
+  // Por qué se le ha dado el premio — texto libre y opcional, igual que
+  // `notas` del partido en general.
+  jugadorEssenzalMotivo String?
+  // El premio contrario — "peor" jugador del partido, con guasa — misma
+  // mecánica que el Essenzal: un único ganador por partido, elegido por el
+  // admin al cerrar la jornada.
+  jugadorVayaDiaId  String?
+  jugadorVayaDia    User?    @relation("JugadorVayaDia", fields: [jugadorVayaDiaId], references: [id], onDelete: SetNull)
+  jugadorVayaDiaMotivo String?
   // El admin lo marca a mano una vez ha terminado de meter goles,
   // asistencias y tarjetas de este partido. Hasta entonces, aunque ya haya
   // datos cargados, no cuentan en /estadisticas (ver lib/estadisticas.ts) —

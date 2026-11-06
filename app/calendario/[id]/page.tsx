@@ -11,6 +11,7 @@ import DisponibilidadSelector from "@/components/DisponibilidadSelector";
 import EditarDatosPartido from "@/components/EditarDatosPartido";
 import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
 import SubirFotoPartido from "@/components/SubirFotoPartido";
+import PremioPartidoSelector from "@/components/PremioPartidoSelector";
 import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
@@ -34,6 +35,8 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     where: { id: params.id },
     include: {
       convocatorias: { include: { user: { select: { id: true, name: true, apodo: true, dorsal: true, image: true } } } },
+      jugadorEssenzal: { select: { name: true, apodo: true } },
+      jugadorVayaDia: { select: { name: true, apodo: true } },
     },
   });
 
@@ -126,6 +129,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     (j) => j.estado === "ACTIVO" && !convocatoriaInicial[j.id]?.convocado
   );
   const jugado = partido.golesFavor !== null && partido.golesContra !== null;
+  const convocadosOpciones = convocados.map((c) => ({ id: c.user.id, nombre: nombreMostrado(c.user) }));
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
@@ -152,6 +156,23 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         {partido.fotoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={partido.fotoUrl} alt="Foto del partido" className="rounded-lg max-h-96 w-full object-cover mt-2" />
+        )}
+        {partido.jugadorEssenzal && (
+          <p className="text-sm pt-1">
+            🏆 Jugador Essenzal:{" "}
+            <span className="text-amarillobrillante font-display">{nombreMostrado(partido.jugadorEssenzal)}</span>
+            {partido.jugadorEssenzalMotivo && (
+              <span className="text-chalk/50"> — {partido.jugadorEssenzalMotivo}</span>
+            )}
+          </p>
+        )}
+        {partido.jugadorVayaDia && (
+          <p className="text-sm pt-1">
+            🙈 ¡Vaya día!: <span className="text-chalk/60">{nombreMostrado(partido.jugadorVayaDia)}</span>
+            {partido.jugadorVayaDiaMotivo && (
+              <span className="text-chalk/50"> — {partido.jugadorVayaDiaMotivo}</span>
+            )}
+          </p>
         )}
         {jugado && !partido.cerrado && (
           <p className="text-chalk/40 text-xs pt-1">
@@ -199,6 +220,24 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 notasIniciales={partido.notas}
               />
               <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
+              <PremioPartidoSelector
+                partidoId={partido.id}
+                campoId="jugadorEssenzalId"
+                campoMotivo="jugadorEssenzalMotivo"
+                etiqueta="🏆 Jugador Essenzal"
+                convocados={convocadosOpciones}
+                valorInicial={partido.jugadorEssenzalId}
+                motivoInicial={partido.jugadorEssenzalMotivo}
+              />
+              <PremioPartidoSelector
+                partidoId={partido.id}
+                campoId="jugadorVayaDiaId"
+                campoMotivo="jugadorVayaDiaMotivo"
+                etiqueta="🙈 ¡Vaya día!"
+                convocados={convocadosOpciones}
+                valorInicial={partido.jugadorVayaDiaId}
+                motivoInicial={partido.jugadorVayaDiaMotivo}
+              />
               <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
             </SeccionEditable>
           ) : (
@@ -211,6 +250,24 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 notasIniciales={partido.notas}
               />
               <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
+              <PremioPartidoSelector
+                partidoId={partido.id}
+                campoId="jugadorEssenzalId"
+                campoMotivo="jugadorEssenzalMotivo"
+                etiqueta="🏆 Jugador Essenzal"
+                convocados={convocadosOpciones}
+                valorInicial={partido.jugadorEssenzalId}
+                motivoInicial={partido.jugadorEssenzalMotivo}
+              />
+              <PremioPartidoSelector
+                partidoId={partido.id}
+                campoId="jugadorVayaDiaId"
+                campoMotivo="jugadorVayaDiaMotivo"
+                etiqueta="🙈 ¡Vaya día!"
+                convocados={convocadosOpciones}
+                valorInicial={partido.jugadorVayaDiaId}
+                motivoInicial={partido.jugadorVayaDiaMotivo}
+              />
               <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
             </>
           )}

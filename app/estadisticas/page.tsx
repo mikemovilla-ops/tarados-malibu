@@ -35,12 +35,14 @@ export default async function EstadisticasPage() {
             <thead>
               <tr className="text-chalk/50 text-left border-b border-chalk/10">
                 <th className="py-2 pl-4 font-normal">Jugador</th>
-                <th className="py-2 px-2 font-normal text-center">PJ</th>
+                <th className="py-2 px-2 font-normal text-center" title="Partidos jugados">PJ</th>
                 <th className="py-2 px-2 font-normal text-center">Goles</th>
-                <th className="py-2 px-2 font-normal text-center">Asist.</th>
-                <th className="py-2 px-2 font-normal text-center">🟨</th>
-                <th className="py-2 px-2 font-normal text-center">🟥</th>
-                <th className="py-2 pr-4 font-normal text-center">🧤</th>
+                <th className="py-2 px-2 font-normal text-center" title="Asistencias">Asist.</th>
+                <th className="py-2 px-2 font-normal text-center" title="Tarjetas amarillas">🟨</th>
+                <th className="py-2 px-2 font-normal text-center" title="Tarjetas rojas">🟥</th>
+                <th className="py-2 px-2 font-normal text-center" title="Goles encajados de portero">🧤</th>
+                <th className="py-2 px-2 font-normal text-center" title="Veces elegido Jugador Essenzal">🏆</th>
+                <th className="py-2 pr-4 font-normal text-center" title="Veces elegido ¡Vaya día!">🙈</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-chalk/10">
@@ -57,7 +59,9 @@ export default async function EstadisticasPage() {
                   <td className="py-2 px-2 text-center text-chalk/70">{fila.asistencias}</td>
                   <td className="py-2 px-2 text-center text-chalk/70">{fila.tarjetasAmarillas || ""}</td>
                   <td className="py-2 px-2 text-center text-coral/80">{fila.tarjetasRojas || ""}</td>
-                  <td className="py-2 pr-4 text-center text-chalk/70">{fila.golesEncajados || ""}</td>
+                  <td className="py-2 px-2 text-center text-chalk/70">{fila.golesEncajados || ""}</td>
+                  <td className="py-2 px-2 text-center text-amarillobrillante">{fila.vecesEssenzal || ""}</td>
+                  <td className="py-2 pr-4 text-center text-chalk/70">{fila.vecesVayaDia || ""}</td>
                 </tr>
               ))}
             </tbody>

@@ -24,6 +24,14 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.4.0",
+    fecha: "2026-11-06",
+    cambios: [
+      "Premio \"Jugador Essenzal\" (patrocinado por Essenza) y su contrario, \"¡Vaya día!\" — el admin elige a uno de cada al cerrar la jornada, con un motivo opcional; se ven en el detalle del partido y cuentan en Estadísticas (global e individual).",
+      "En Estadísticas y en la ficha del jugador, pasar el ratón por encima de cada icono de columna dice qué es.",
+    ],
+  },
+  {
     version: "2.3.0",
     fecha: "2026-11-01",
     cambios: [

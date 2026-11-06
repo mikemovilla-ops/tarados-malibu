@@ -80,10 +80,10 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
       )}
 
       <section className="card p-4">
-        <div className="grid grid-cols-3 sm:grid-cols-6 text-center divide-x divide-y sm:divide-y-0 divide-chalk/10">
+        <div className="grid grid-cols-4 sm:grid-cols-8 text-center divide-x divide-y sm:divide-y-0 divide-chalk/10">
           <div>
             <p className="font-display text-2xl text-chalk">{stats.partidosJugados}</p>
-            <p className="text-chalk/50 text-[11px] uppercase tracking-wide">PJ</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Partidos jugados">PJ</p>
           </div>
           <div>
             <p className="font-display text-2xl text-amarillobrillante">{stats.goles}</p>
@@ -91,19 +91,27 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
           </div>
           <div>
             <p className="font-display text-2xl text-chalk">{stats.asistencias}</p>
-            <p className="text-chalk/50 text-[11px] uppercase tracking-wide">Asist.</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Asistencias">Asist.</p>
           </div>
           <div>
             <p className="font-display text-2xl text-chalk">{stats.tarjetasAmarillas}</p>
-            <p className="text-chalk/50 text-[11px] uppercase tracking-wide">🟨</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Tarjetas amarillas">🟨</p>
           </div>
           <div>
             <p className="font-display text-2xl text-coral">{stats.tarjetasRojas}</p>
-            <p className="text-chalk/50 text-[11px] uppercase tracking-wide">🟥</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Tarjetas rojas">🟥</p>
           </div>
           <div>
             <p className="font-display text-2xl text-chalk">{stats.golesEncajados}</p>
-            <p className="text-chalk/50 text-[11px] uppercase tracking-wide">🧤</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Goles encajados de portero">🧤</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl text-amarillobrillante">{stats.vecesEssenzal}</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Veces elegido Jugador Essenzal">🏆</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl text-chalk">{stats.vecesVayaDia}</p>
+            <p className="text-chalk/50 text-[11px] uppercase tracking-wide" title="Veces elegido ¡Vaya día!">🙈</p>
           </div>
         </div>
       </section>
@@ -138,13 +146,21 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
                     </span>
                   )}
                   {p.jugado ? (
-                    (p.goles > 0 || p.asistencias > 0 || p.tarjetaAmarilla || p.tarjetaRoja || p.golesEncajados > 0) ? (
+                    (p.goles > 0 ||
+                      p.asistencias > 0 ||
+                      p.tarjetaAmarilla ||
+                      p.tarjetaRoja ||
+                      p.golesEncajados > 0 ||
+                      p.esEssenzal ||
+                      p.esVayaDia) ? (
                       <span className="text-xs tracking-wide">
                         {p.goles > 0 && "⚽".repeat(p.goles)}
                         {p.asistencias > 0 && ` ${"🥾".repeat(p.asistencias)}`}
                         {p.tarjetaAmarilla && " 🟨"}
                         {p.tarjetaRoja && " 🟥"}
                         {p.golesEncajados > 0 && ` 🧤${p.golesEncajados}`}
+                        {p.esEssenzal && " 🏆"}
+                        {p.esVayaDia && " 🙈"}
                       </span>
                     ) : (
                       <span className="text-chalk/40 text-xs">Jugó</span>
