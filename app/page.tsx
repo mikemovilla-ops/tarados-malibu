@@ -3,7 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
 import { getSecciones } from "@/lib/pagos";
-import { getViewer } from "@/lib/viewer";
+import { getViewer, puedeVerDetalles } from "@/lib/viewer";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
 import SeccionEditable from "@/components/SeccionEditable";
@@ -17,6 +17,7 @@ export default async function HomePage() {
   // Socio y "no jugador" (respondió que no juega, aún sin cuota pagada) se
   // tratan igual aquí: ninguno de los dos juega ni tiene cuota de jugador.
   const noJuega = viewer.rol === "SOCIO" || viewer.rol === "NO_JUGADOR";
+  const puedeVerDetalle = puedeVerDetalles(viewer.rol);
 
   const anuncio = await prisma.anuncio.findUnique({ where: { id: "actual" } });
 
@@ -153,7 +154,7 @@ export default async function HomePage() {
                 si eres jugador.
               </p>
             )}
-            {session && (
+            {session && puedeVerDetalle && (
               <Link href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
                 Ver detalle →
               </Link>
@@ -204,7 +205,7 @@ export default async function HomePage() {
             {ultimoPartido.esLocal ? ultimoPartido.rival : "Tarados Malibú"}
           </p>
           <p className="text-chalk/60 text-sm">{formatFechaHora(ultimoPartido.fecha)}</p>
-          {(session || ultimoPartido.cerrado) && (
+          {(session || ultimoPartido.cerrado) && puedeVerDetalle && (
             <Link href={`/calendario/${ultimoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
               Ver detalle →
             </Link>

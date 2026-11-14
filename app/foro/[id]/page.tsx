@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getViewer } from "@/lib/viewer";
 import { estaAlDiaDePago } from "@/lib/pagos";
@@ -18,10 +18,6 @@ export default async function TemaForoPage({ params }: { params: { id: string } 
 
   if (!viewer.session) {
     return <ForoAcceso logueado={false} />;
-  }
-
-  if (viewer.necesitaElegirRol) {
-    redirect("/ajustes");
   }
 
   // Un "no jugador" sin cuota pagada no puede ni leer los temas — igual que

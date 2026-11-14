@@ -15,14 +15,24 @@ export type Viewer = {
   // mostrando (p.ej. quién puede escribir en /foro).
   alDiaDePago: boolean | null;
   // true si el usuario real (nunca afectado por la vista previa) todavía no
-  // ha contestado "¿eres jugador?" — ver ElegirRolInicial. Páginas como
-  // /foro deben mandarlo a /ajustes en vez de dejarlo participar con el rol
-  // JUGADOR que trae por defecto.
+  // ha sido clasificado por el admin desde Plantilla — mientras tanto sigue
+  // en NO_JUGADOR por defecto (ver PendienteClasificar en /ajustes).
   necesitaElegirRol: boolean;
 };
 
 export type PerfilReal = { esAdmin: boolean; rol: Viewer["rol"]; estado: Viewer["estado"] };
 export type ResultadoVistaPrevia = { esAdmin: boolean; rol: Viewer["rol"]; estado: Viewer["estado"]; alDiaDePago: boolean | null };
+
+// Un "no jugador" (sin clasificar todavía, o clasificado así a propósito)
+// ve las listas (home, plantilla, calendario, estadísticas) pero no entra
+// en ningún detalle (ficha de jugador, partido) — evita que alguien ajeno
+// al equipo (p.ej. llegado por un enlace publicado fuera) vea datos reales
+// antes de que el admin lo clasifique. Cualquier otro rol, incluido no
+// haber entrado con Google (`rol === null`), pasa sin restricción extra
+// aquí — lo de exigir sesión ya lo comprueba cada página por su cuenta.
+export function puedeVerDetalles(rol: Viewer["rol"]): boolean {
+  return rol !== "NO_JUGADOR";
+}
 
 export const COOKIE_VISTA_PREVIA = "vista_previa";
 export const PERFILES_VISTA_PREVIA = ["", "ACTIVO", "AYUDA", "NO_JUGADOR", "SOCIO"] as const;

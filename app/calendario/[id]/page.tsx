@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria, toInputDatetimeLocal } from "@/lib/fechas";
 import { nombreMostrado } from "@/lib/jugadores";
 import { ayudaSinResponder } from "@/lib/disponibilidad";
-import { getViewer } from "@/lib/viewer";
+import { getViewer, puedeVerDetalles } from "@/lib/viewer";
 import ConvocatoriaEditor from "@/components/ConvocatoriaEditor";
 import ResultadoEditor from "@/components/ResultadoEditor";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
@@ -56,6 +56,19 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         </h1>
         <p className="text-chalk/60">Entra con Google para ver el detalle de esta jornada.</p>
         <BotonEntrarGoogle className="bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition inline-block" />
+      </div>
+    );
+  }
+
+  if (!puedeVerDetalles(rol)) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-10 text-center space-y-3">
+        <h1 className="font-display text-2xl">
+          {partido.esLocal ? "Tarados Malibú" : partido.rival}
+          <span className="text-chalk/40 text-sm mx-1.5 align-middle">vs</span>
+          {partido.esLocal ? partido.rival : "Tarados Malibú"}
+        </h1>
+        <p className="text-chalk/60">Todavía no puedes ver esto — pídele al admin que te clasifique primero.</p>
       </div>
     );
   }

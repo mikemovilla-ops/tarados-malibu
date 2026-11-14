@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getViewer } from "@/lib/viewer";
 import { estaAlDiaDePago } from "@/lib/pagos";
@@ -15,15 +14,6 @@ export default async function ForoPage() {
 
   if (!viewer.session) {
     return <ForoAcceso logueado={false} />;
-  }
-
-  // No dejamos entrar a nadie que todavía no haya dicho si es jugador: por
-  // defecto trae rol JUGADOR, y le dejaría escribir como tal antes de
-  // haberlo confirmado. RedireccionPrimerLogin ya intenta mandarlo a
-  // Ajustes en el cliente, pero esto lo cierra también en el servidor
-  // (entrando directo por URL, o si el JS aún no ha corrido).
-  if (viewer.necesitaElegirRol) {
-    redirect("/ajustes");
   }
 
   // Un "no jugador" sin cuota pagada no puede ni leer el foro — se trata

@@ -6,14 +6,14 @@ import { formatFechaHora, formatFechaCorta } from "@/lib/fechas";
 import { ETIQUETA_POSICION } from "@/lib/posiciones";
 import { ETIQUETA_ESTADO } from "@/lib/estados";
 import { calcularEstadisticasJugador } from "@/lib/estadisticas";
-import { getViewer } from "@/lib/viewer";
+import { getViewer, puedeVerDetalles } from "@/lib/viewer";
 import CamisetaJugador from "@/components/CamisetaJugador";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 
 export const dynamic = "force-dynamic";
 
 export default async function FichaJugadorPage({ params }: { params: { id: string } }) {
-  const { session, esAdmin } = await getViewer();
+  const { session, esAdmin, rol } = await getViewer();
 
   if (!session) {
     return (
@@ -21,6 +21,15 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
         <h1 className="font-display text-2xl">Ficha del jugador</h1>
         <p className="text-chalk/60">Entra con Google para ver sus estadísticas.</p>
         <BotonEntrarGoogle className="bg-amarillo text-pitchdark font-medium px-4 py-2 rounded-md hover:bg-amarillobrillante transition inline-block" />
+      </div>
+    );
+  }
+
+  if (!puedeVerDetalles(rol)) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-10 text-center space-y-3">
+        <h1 className="font-display text-2xl">Ficha del jugador</h1>
+        <p className="text-chalk/60">Todavía no puedes ver esto — pídele al admin que te clasifique primero.</p>
       </div>
     );
   }

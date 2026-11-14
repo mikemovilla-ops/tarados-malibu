@@ -36,10 +36,10 @@ export const authOptions: AuthOptions = {
         (session.user as any).esNuevo =
           Date.now() - new Date((user as any).createdAt).getTime() < 10_000;
         // A diferencia de `esNuevo` (que solo dura los primeros segundos),
-        // esto se mantiene en cada sesión hasta que responda "¿vienes a
-        // jugar o eres socio?" en Ajustes — para seguir mandándolo allí
-        // aunque cierre sin contestar y vuelva otro día (ver
-        // RedireccionPrimerLogin y ElegirRolInicial).
+        // esto se mantiene en cada sesión hasta que el admin lo clasifique
+        // a mano desde Plantilla — se usa en Ajustes para mostrarle el
+        // aviso de "pendiente" (ver PendienteClasificar) en vez de sus
+        // datos, mientras tanto sigue en NO_JUGADOR por defecto.
         (session.user as any).necesitaElegirRol = !(user as any).rolElegido;
       }
       return session;

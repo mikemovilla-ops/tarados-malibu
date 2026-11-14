@@ -31,7 +31,7 @@ export async function PATCH(req: Request) {
 
   // "No jugador" se promociona a Socio automáticamente en cuanto se pone
   // al día de toda su cuota de socio — Socio ya significa "paga de
-  // verdad", no algo que se autoelija (ver app/api/usuario/rol/route.ts).
+  // verdad", no algo que nadie se autoasigne.
   if (pagado && seccion.destinatario === "SOCIO") {
     const usuario = await prisma.user.findUnique({ where: { id: userId }, select: { rol: true } });
     if (usuario?.rol === "NO_JUGADOR" && (await estaAlDiaDePago(userId, "SOCIO"))) {

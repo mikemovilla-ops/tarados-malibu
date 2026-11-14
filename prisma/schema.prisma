@@ -41,15 +41,18 @@ enum Disponibilidad {
   DUDA
 }
 
-// JUGADOR: cualquiera que entra con Google, por defecto (ver EstadoJugador
-// para Activo/Ayuda dentro de este grupo). NO_JUGADOR: ha contestado que no
-// juega (ver ElegirRolInicial) pero todavía no tiene ninguna cuota de
-// socio pagada. SOCIO: ya paga la cuota de socio — se llega aquí
-// automáticamente al marcarle un pago de socio como pagado (ver
-// app/api/pagos/route.ts), no autoeligiéndolo. Ninguno de los dos aparece
-// en plantilla como Activo/Ayuda, responde disponibilidad, ni sale en
-// estadísticas; ambos tienen la misma cuota en Pagos
-// (`SeccionPago.destinatario`). El admin puede corregir el rol de
+// NO_JUGADOR: rol por defecto de cualquiera que entra por primera vez con
+// Google — nadie se autoasigna nada; hasta que el admin no lo clasifique a
+// mano desde /plantilla, un NO_JUGADOR apenas ve nada de la app (ver
+// lib/viewer.ts y PendienteClasificar), para que alguien de fuera que entre
+// por un enlace publicado (p.ej. en la web de la liga) no vea datos reales
+// del equipo. JUGADOR: el admin lo ha clasificado como jugador de verdad
+// (ver EstadoJugador para Activo/Ayuda dentro de este grupo). SOCIO: paga la
+// cuota de socio — se llega aquí automáticamente al marcarle un pago de
+// socio como pagado (ver app/api/pagos/route.ts), o a mano por el admin.
+// Ni SOCIO ni NO_JUGADOR aparecen en plantilla como Activo/Ayuda, responden
+// disponibilidad, ni salen en estadísticas; ambos tienen la misma cuota en
+// Pagos (`SeccionPago.destinatario`). El admin puede corregir el rol de
 // cualquiera a mano desde /plantilla en cualquier momento.
 enum Rol {
   JUGADOR
@@ -90,13 +93,13 @@ model User {
   estado              EstadoJugador @default(AYUDA)
   // Ver enum Rol. Solo tiene sentido `estado`/`dorsal`/`posicion` cuando
   // rol = JUGADOR; para SOCIO/NO_JUGADOR esos campos se ignoran en toda la app.
-  rol                 Rol           @default(JUGADOR)
-  // Si el propio usuario ya ha contestado "¿eres jugador?" en Ajustes (ver
-  // ElegirRolInicial), o si el admin ya lo ha clasificado a
-  // mano desde Plantilla — en ambos casos no hace falta volver a
-  // preguntárselo. Los usuarios que ya existían antes de este campo se
-  // marcaron como respondido con un script aparte al desplegarlo, para no
-  // preguntárselo de golpe a toda la plantilla ya clasificada.
+  rol                 Rol           @default(NO_JUGADOR)
+  // Si el admin ya ha clasificado a este usuario a mano desde Plantilla —
+  // mientras no lo haga, sigue en NO_JUGADOR y Ajustes solo le enseña un
+  // aviso de "pendiente" (ver PendienteClasificar), nada de autoservicio.
+  // Los usuarios que ya existían antes de este campo se marcaron como
+  // respondido con un script aparte al desplegarlo, para no preguntárselo
+  // de golpe a toda la plantilla ya clasificada.
   rolElegido          Boolean       @default(false)
   fechaAlta           DateTime      @default(now())
 

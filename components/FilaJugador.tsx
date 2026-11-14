@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { POSICIONES, ETIQUETA_POSICION } from "@/lib/posiciones";
 import { ESTADOS, ETIQUETA_ESTADO } from "@/lib/estados";
@@ -36,9 +35,18 @@ function AvatarSocio({ nombre }: { nombre: string }) {
   );
 }
 
-export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; esAdmin: boolean }) {
+export default function FilaJugador({
+  jugador,
+  esAdmin,
+  puedeVerFicha,
+}: {
+  jugador: Jugador;
+  esAdmin: boolean;
+  // Lo decide el servidor (ver app/plantilla/page.tsx): hace falta sesión
+  // Y no estar como "no jugador" sin clasificar todavía.
+  puedeVerFicha: boolean;
+}) {
   const router = useRouter();
-  const { status } = useSession();
   const [editando, setEditando] = useState(false);
   const [apodo, setApodo] = useState(jugador.apodo ?? "");
   const [dorsal, setDorsal] = useState(jugador.dorsal?.toString() ?? "");
@@ -143,9 +151,9 @@ export default function FilaJugador({ jugador, esAdmin }: { jugador: Jugador; es
     <div className={`card p-4 flex gap-3 ${editando ? "flex-col" : "items-center"}`}>
       {/* Solo los jugadores tienen ficha de estadísticas — los socios no
           juegan, así que su fila no es clicable. Tampoco mientras se edita
-          (para no navegar sin querer al tocar los campos), ni sin sesión
-          (la ficha exige haber entrado con Google). */}
-      {!editando && jugador.rol === "JUGADOR" && status === "authenticated" ? (
+          (para no navegar sin querer al tocar los campos), ni si quien mira
+          no puede ver fichas (sin sesión, o "no jugador" sin clasificar). */}
+      {!editando && jugador.rol === "JUGADOR" && puedeVerFicha ? (
         <Link href={`/plantilla/${jugador.id}`} className="flex items-center gap-3 flex-1 min-w-0">
           {contenido}
         </Link>

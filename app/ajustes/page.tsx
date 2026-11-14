@@ -9,7 +9,7 @@ import EditarApodo from "@/components/EditarApodo";
 import EditarDatosPersonales from "@/components/EditarDatosPersonales";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 import VistaPreviaSelector from "@/components/VistaPreviaSelector";
-import ElegirRolInicial from "@/components/ElegirRolInicial";
+import PendienteClasificar from "@/components/PendienteClasificar";
 
 export const dynamic = "force-dynamic";
 
@@ -51,9 +51,10 @@ export default async function AjustesPage() {
       <h1 className="font-display text-2xl">Ajustes</h1>
 
       {!usuario.rolElegido ? (
-        // Hasta que no contesta esto, no tiene sentido enseñarle apodo,
-        // posición ni contacto: no sabemos ni qué campos le corresponden.
-        <ElegirRolInicial />
+        // Hasta que el admin no lo clasifique, no tiene sentido enseñarle
+        // apodo, posición ni contacto: no sabemos ni qué campos le
+        // corresponden, y tampoco puede autoasignarse nada.
+        <PendienteClasificar />
       ) : (
         <>
           <section className="card p-5 space-y-1">

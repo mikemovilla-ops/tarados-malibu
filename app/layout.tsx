@@ -22,7 +22,7 @@ const body = Inter({
 export const metadata: Metadata = {
   title: "Tarados Malibú",
   description: "Plantilla, calendario y pagos del Tarados Malibú (fútbol 7)",
-  icons: { icon: "/favicon.png" },
+  icons: { icon: "/favicon.png", apple: "/apple-icon.png" },
 };
 
 export default function RootLayout({

@@ -24,6 +24,17 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.5.0",
+    fecha: "2026-11-14",
+    hito: true,
+    cambios: [
+      "Icono propio al guardar la web como app en el iPhone.",
+      "Quien entra por primera vez ya no puede autoasignarse Jugador — entra como \"no jugador\" hasta que el admin lo clasifique a mano desde Plantilla.",
+      "Un \"no jugador\" sin clasificar no ve fichas de jugador, el detalle de ningún partido ni Estadísticas; solo la home, la plantilla y el calendario en modo lista.",
+      "Plantilla y Calendario ya piden entrar con Google, como el resto de la app — antes se podían ver sin ninguna cuenta.",
+    ],
+  },
+  {
     version: "2.4.0",
     fecha: "2026-11-06",
     cambios: [

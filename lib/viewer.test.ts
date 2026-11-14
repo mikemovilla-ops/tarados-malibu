@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aplicarVistaPrevia, type PerfilReal } from "@/lib/viewer";
+import { aplicarVistaPrevia, puedeVerDetalles, type PerfilReal } from "@/lib/viewer";
 
 const ADMIN: PerfilReal = { esAdmin: true, rol: "JUGADOR", estado: "ACTIVO" };
 const JUGADOR: PerfilReal = { esAdmin: false, rol: "JUGADOR", estado: "ACTIVO" };
@@ -55,5 +55,17 @@ describe("aplicarVistaPrevia", () => {
       estado: null,
       alDiaDePago: true,
     });
+  });
+});
+
+describe("puedeVerDetalles", () => {
+  it("bloquea a un no jugador", () => {
+    expect(puedeVerDetalles("NO_JUGADOR")).toBe(false);
+  });
+
+  it("deja pasar a cualquier otro rol, incluido no haber entrado con Google", () => {
+    expect(puedeVerDetalles("JUGADOR")).toBe(true);
+    expect(puedeVerDetalles("SOCIO")).toBe(true);
+    expect(puedeVerDetalles(null)).toBe(true);
   });
 });
