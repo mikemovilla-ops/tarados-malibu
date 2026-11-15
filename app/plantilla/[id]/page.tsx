@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 import { prisma } from "@/lib/prisma";
 import { nombreMostrado } from "@/lib/jugadores";
 import { formatFechaHora, formatFechaCorta } from "@/lib/fechas";
@@ -55,9 +55,9 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
-      <Link href="/plantilla" className="text-chalk/50 text-sm hover:underline">
+      <EnlaceConCarga href="/plantilla" className="text-chalk/50 text-sm hover:underline">
         ← Plantilla
-      </Link>
+      </EnlaceConCarga>
 
       <div className="card p-4 flex items-center gap-4">
         <CamisetaJugador
@@ -132,7 +132,7 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
         ) : (
           <div className="space-y-2">
             {stats.partidos.map((p) => (
-              <Link
+              <EnlaceConCarga
                 key={p.partidoId}
                 href={`/calendario/${p.partidoId}`}
                 className={`card p-3 flex items-center justify-between gap-3 hover:border-amarillo/40 transition ${p.jugado ? "" : "opacity-60"}`}
@@ -178,7 +178,7 @@ export default async function FichaJugadorPage({ params }: { params: { id: strin
                     <span className="text-chalk/30 text-xs">No jugó</span>
                   )}
                 </div>
-              </Link>
+              </EnlaceConCarga>
             ))}
           </div>
         )}

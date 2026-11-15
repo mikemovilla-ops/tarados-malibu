@@ -24,6 +24,13 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.6.1",
+    fecha: "2026-11-15",
+    cambios: [
+      "Al tocar un jugador en Plantilla/Estadísticas, un partido en Calendario o un tema del Foro, el enlace se atenúa mientras carga — antes no había ningún indicio de que el toque hubiera funcionado, e invitaba a tocar otra vez.",
+    ],
+  },
+  {
     version: "2.6.0",
     fecha: "2026-11-15",
     cambios: [

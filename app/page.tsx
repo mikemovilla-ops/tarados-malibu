@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
 import { getSecciones } from "@/lib/pagos";
@@ -194,9 +195,9 @@ export default async function HomePage() {
               </div>
             )}
             {session && puedeVerDetalle && (
-              <Link href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
+              <EnlaceConCarga href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
                 Ver detalle →
-              </Link>
+              </EnlaceConCarga>
             )}
           </div>
         ) : (
@@ -215,7 +216,7 @@ export default async function HomePage() {
           <div className="space-y-4">
             {otrosPartidosSinResponder.map((p) => (
               <div key={p.id} className="space-y-2">
-                <Link href={`/calendario/${p.id}`} className="block hover:underline">
+                <EnlaceConCarga href={`/calendario/${p.id}`} className="block hover:underline">
                   <span className="text-chalk">
                     {p.esLocal ? "vs " : "@ "}
                     {p.rival}
@@ -224,7 +225,7 @@ export default async function HomePage() {
                     {formatFechaHora(p.fecha)} · {p.competicion}
                     {p.jornada !== null && ` · Jornada ${p.jornada}`}
                   </span>
-                </Link>
+                </EnlaceConCarga>
                 <DisponibilidadSelector
                   partidoId={p.id}
                   disponibilidadInicial="SIN_RESPONDER"
@@ -250,9 +251,9 @@ export default async function HomePage() {
           </p>
           <p className="text-chalk/60 text-sm">{formatFechaHora(ultimoPartido.fecha)}</p>
           {(session || ultimoPartido.cerrado) && puedeVerDetalle && (
-            <Link href={`/calendario/${ultimoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
+            <EnlaceConCarga href={`/calendario/${ultimoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
               Ver detalle →
-            </Link>
+            </EnlaceConCarga>
           )}
         </section>
       )}

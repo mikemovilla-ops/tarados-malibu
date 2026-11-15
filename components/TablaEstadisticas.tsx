@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 import type { FilaEstadistica } from "@/lib/estadisticas";
 
 type ColumnaNumerica = Exclude<keyof FilaEstadistica, "userId" | "nombre" | "dorsal">;
@@ -71,10 +71,10 @@ export default function TablaEstadisticas({ ranking }: { ranking: FilaEstadistic
           {filas.map((fila) => (
             <tr key={fila.userId} className="hover:bg-chalk/5 transition">
               <td className="py-2 pl-4 text-chalk">
-                <Link href={`/plantilla/${fila.userId}`} className="hover:underline">
+                <EnlaceConCarga href={`/plantilla/${fila.userId}`} className="hover:underline">
                   {fila.dorsal !== null && <span className="text-amarillobrillante font-display">#{fila.dorsal} </span>}
                   {fila.nombre}
-                </Link>
+                </EnlaceConCarga>
               </td>
               <td className="py-2 px-2 text-center text-chalk/70">{fila.partidosJugados}</td>
               <td className="py-2 px-2 text-center text-amarillobrillante font-display">{fila.goles}</td>

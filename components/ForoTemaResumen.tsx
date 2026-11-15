@@ -1,4 +1,4 @@
-import Link from "next/link";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 import { nombreMostrado } from "@/lib/jugadores";
 import { formatFechaHora } from "@/lib/fechas";
 import BotonBorrarMensajeForo from "@/components/BotonBorrarMensajeForo";
@@ -32,7 +32,7 @@ export default function ForoTemaResumen({
   puedeBorrar: boolean;
 }) {
   return (
-    <Link
+    <EnlaceConCarga
       href={`/foro/${id}`}
       className={`card p-4 block space-y-1 hover:border-amarillo/40 transition ${noLeido ? "border-amarillo/50" : ""}`}
     >
@@ -53,6 +53,6 @@ export default function ForoTemaResumen({
         </p>
         {puedeBorrar && <BotonBorrarMensajeForo id={id} esTema />}
       </div>
-    </Link>
+    </EnlaceConCarga>
   );
 }

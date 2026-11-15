@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 import { POSICIONES, ETIQUETA_POSICION } from "@/lib/posiciones";
 import { ESTADOS, ETIQUETA_ESTADO } from "@/lib/estados";
 import { ROLES, ETIQUETA_ROL } from "@/lib/roles";
@@ -154,9 +154,9 @@ export default function FilaJugador({
           (para no navegar sin querer al tocar los campos), ni si quien mira
           no puede ver fichas (sin sesión, o "no jugador" sin clasificar). */}
       {!editando && jugador.rol === "JUGADOR" && puedeVerFicha ? (
-        <Link href={`/plantilla/${jugador.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+        <EnlaceConCarga href={`/plantilla/${jugador.id}`} className="flex items-center gap-3 flex-1 min-w-0">
           {contenido}
-        </Link>
+        </EnlaceConCarga>
       ) : (
         <div className="flex items-center gap-3 flex-1 min-w-0">{contenido}</div>
       )}

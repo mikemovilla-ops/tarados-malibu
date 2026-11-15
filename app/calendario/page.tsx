@@ -1,4 +1,4 @@
-import Link from "next/link";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
 import { contarDisponibilidad, contarAyudaPodriaIr, contarAyudaNoVan, ayudaSinResponder } from "@/lib/disponibilidad";
@@ -147,9 +147,9 @@ export default async function CalendarioPage() {
       <div className={`card p-4 space-y-2 border-l-4 ${colorBorde}`}>
 
         {puedeVerDetalle ? (
-          <Link href={`/calendario/${p.id}`} className="flex items-center justify-between gap-3">
+          <EnlaceConCarga href={`/calendario/${p.id}`} className="flex items-center justify-between gap-3">
             {contenido}
-          </Link>
+          </EnlaceConCarga>
         ) : (
           <div className="flex items-center justify-between gap-3">{contenido}</div>
         )}
