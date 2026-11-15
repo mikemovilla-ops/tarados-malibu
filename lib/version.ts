@@ -25,7 +25,7 @@ export type EntradaVersion = {
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
     version: "2.6.0",
-    fecha: "2026-11-16",
+    fecha: "2026-11-15",
     cambios: [
       "Previsión del tiempo para el próximo partido en la home.",
       "En Calendario, cada partido jugado se ve en verde, gris o naranja según si fue victoria, empate o derrota.",
