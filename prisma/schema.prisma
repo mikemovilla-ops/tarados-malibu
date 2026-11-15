@@ -113,6 +113,8 @@ model User {
   partidosVayaDia  Partido[] @relation("JugadorVayaDia")
   votosEmitidos    VotoPremio[] @relation("VotosEmitidos")
   votosRecibidos   VotoPremio[] @relation("VotosRecibidos")
+  asistenciasSocio AsistenciaSocio[]
+  asistenciasPizza AsistenciaPizza[]
 
   @@map("users")
 }
@@ -204,8 +206,51 @@ model Partido {
 
   convocatorias Convocatoria[]
   votosPremio   VotoPremio[]
+  asistenciasSocio AsistenciaSocio[]
+  asistenciasPizza AsistenciaPizza[]
 
   @@map("partidos")
+}
+
+// Nuestro patrocinador es una pizzería y es costumbre ir después del
+// partido — esto es solo para hacerse una idea de cuánta gente va a ir
+// (jugadores, socios, parejas, hijos...), nada que el admin tenga que
+// confirmar: es un recuento aproximado, no una lista con consecuencias.
+// Autoservicio total, independiente de si al final juegas, vas a ver el
+// partido o ninguna de las dos cosas.
+model AsistenciaPizza {
+  id            String  @id @default(cuid())
+  partidoId     String
+  userId        String
+  voy           Boolean @default(false)
+  // Pareja, hijos... gente que no tiene cuenta en la app y por tanto no
+  // puede marcar nada por su cuenta.
+  acompanantes  Int     @default(0)
+
+  partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([partidoId, userId])
+  @@map("asistencias_pizza")
+}
+
+// Un socio (no juega) puede autodeclarar que fue a ver el partido, y el
+// admin lo confirma a mano — misma mecánica que disponibilidad/convocado en
+// Convocatoria, pero sin goles ni asistencias, que aquí no pintan nada.
+// Solo cuenta como "fue de verdad" (y puede votar los premios del partido,
+// ver /api/partidos/[id]/votos) una vez confirmado por el admin.
+model AsistenciaSocio {
+  id         String  @id @default(cuid())
+  partidoId  String
+  userId     String
+  declarado  Boolean @default(false)
+  confirmado Boolean @default(false)
+
+  partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([partidoId, userId])
+  @@map("asistencias_socio")
 }
 
 enum TipoPremio {

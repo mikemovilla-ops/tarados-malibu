@@ -51,8 +51,35 @@ export default async function CalendarioPage() {
 
   const puedeVerDetalle = puedeVerDetalles(rol);
 
+  // Mi pizza (ver AsistenciaPizza) para cada partido de la lista, para no
+  // perderla al recargar la página.
+  const misPizzas = userId
+    ? await prisma.asistenciaPizza.findMany({ where: { userId, partidoId: { in: proximos.map((p) => p.id) } } })
+    : [];
+  const miPizza = (partidoId: string) => misPizzas.find((pz) => pz.partidoId === partidoId) ?? null;
+
   function FilaPartido({ p, mostrarDisponibilidad }: { p: (typeof partidos)[number]; mostrarDisponibilidad: boolean }) {
     const jugado = p.golesFavor !== null && p.golesContra !== null;
+    // Victoria/empate/derrota es siempre golesFavor vs golesContra, sin
+    // importar si jugamos en casa o fuera — eso solo decide qué número va
+    // primero al escribir el resultado ("local - visitante").
+    const resultado = !jugado
+      ? null
+      : p.golesFavor! > p.golesContra!
+        ? "victoria"
+        : p.golesFavor! < p.golesContra!
+          ? "derrota"
+          : "empate";
+    const colorBorde =
+      resultado === "victoria"
+        ? "border-l-green-500"
+        : resultado === "derrota"
+          ? "border-l-coral"
+          : resultado === "empate"
+            ? "border-l-chalk/30"
+            : "border-l-transparent";
+    const colorResultado =
+      resultado === "victoria" ? "text-green-400" : resultado === "derrota" ? "text-coral" : "text-chalk/70";
     const respuestasActivos = p.convocatorias.filter((c) => c.user.estado === "ACTIVO");
     const respuestasAyuda = p.convocatorias.filter((c) => c.user.estado === "AYUDA");
     const conteo = contarDisponibilidad(respuestasActivos, totalActivos);
@@ -109,7 +136,7 @@ export default async function CalendarioPage() {
           )}
         </div>
         {jugado && (
-          <p className="font-display text-lg text-amarillobrillante shrink-0">
+          <p className={`font-display text-lg shrink-0 ${colorResultado}`}>
             {p.esLocal ? p.golesFavor : p.golesContra} - {p.esLocal ? p.golesContra : p.golesFavor}
           </p>
         )}
@@ -117,7 +144,8 @@ export default async function CalendarioPage() {
     );
 
     return (
-      <div className="card p-4 space-y-2">
+      <div className={`card p-4 space-y-2 border-l-4 ${colorBorde}`}>
+
         {puedeVerDetalle ? (
           <Link href={`/calendario/${p.id}`} className="flex items-center justify-between gap-3">
             {contenido}
@@ -126,7 +154,12 @@ export default async function CalendarioPage() {
           <div className="flex items-center justify-between gap-3">{contenido}</div>
         )}
         {mostrarDisponibilidad && !jugado && puedeResponder && (
-          <DisponibilidadSelector partidoId={p.id} disponibilidadInicial={miDisponibilidad} esAyuda={estado === "AYUDA"} />
+          <DisponibilidadSelector
+            partidoId={p.id}
+            disponibilidadInicial={miDisponibilidad}
+            esAyuda={estado === "AYUDA"}
+            pizzaInicial={miPizza(p.id)}
+          />
         )}
       </div>
     );

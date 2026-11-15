@@ -84,6 +84,19 @@ export function parseInputDatetimeLocalMadrid(valor: string): Date {
   return new Date(supuesta.getTime() - desfaseMs);
 }
 
+// YYYY-MM-DD y hora (0-23) en Madrid, para quien necesite la fecha/hora de
+// pared además de verla formateada — p.ej. para casar un partido con la
+// franja horaria correcta al pedir la previsión del tiempo (ver lib/tiempo.ts).
+export function fechaHoraMadrid(fecha: Date): { fecha: string; hora: number } {
+  const partes = partesEnMadrid(fecha, {
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+  });
+  return {
+    fecha: `${parte(partes, "year")}-${parte(partes, "month")}-${parte(partes, "day")}`,
+    hora: Number(parte(partes, "hour")),
+  };
+}
+
 // DD/MM/YYYY, para fechas sin hora asociada (p.ej. fecha de nacimiento) que
 // no pintan bien con el formato "jueves 17 de septiembre" de formatFecha.
 // Usa los getters en UTC (no locales): estas fechas se guardan como

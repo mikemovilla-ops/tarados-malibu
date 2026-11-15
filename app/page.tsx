@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { formatFechaHora, formatHora, horaConvocatoria } from "@/lib/fechas";
 import { getSecciones } from "@/lib/pagos";
 import { getViewer, puedeVerDetalles } from "@/lib/viewer";
+import { obtenerPrevisionPartido, iconoTiempo } from "@/lib/tiempo";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
+import DeclararAsistencia from "@/components/DeclararAsistencia";
 import SeccionEditable from "@/components/SeccionEditable";
 import AnuncioAdmin from "@/components/AnuncioAdmin";
 
@@ -35,6 +37,8 @@ export default async function HomePage() {
     orderBy: { fecha: "desc" },
   });
 
+  const prevision = proximoPartido ? await obtenerPrevisionPartido(proximoPartido.fecha) : null;
+
   const miConvocatoria =
     userId && proximoPartido
       ? proximoPartido.convocatorias.find((c) => c.userId === userId)
@@ -61,6 +65,25 @@ export default async function HomePage() {
   // El próximo partido ya se responde desde su propia sección (más arriba),
   // así que aquí solo van los demás.
   const otrosPartidosSinResponder = partidosSinResponder.filter((p) => p.id !== proximoPartido?.id);
+
+  // Mi pizza (ver AsistenciaPizza) para el próximo partido y los demás
+  // pendientes de responder, para no perderla al recargar la página.
+  const idsPartidosConSelector = [proximoPartido?.id, ...otrosPartidosSinResponder.map((p) => p.id)].filter(
+    (id): id is string => !!id
+  );
+  const misPizzas = userId
+    ? await prisma.asistenciaPizza.findMany({ where: { userId, partidoId: { in: idsPartidosConSelector } } })
+    : [];
+  const miPizza = (partidoId: string) => misPizzas.find((p) => p.partidoId === partidoId) ?? null;
+
+  // Un socio se autodeclara "voy a ver este partido" también desde aquí,
+  // no solo desde el detalle (ver DeclararAsistencia).
+  const miAsistenciaSocio =
+    viewer.rol === "SOCIO" && userId && proximoPartido
+      ? await prisma.asistenciaSocio.findUnique({
+          where: { partidoId_userId: { partidoId: proximoPartido.id, userId } },
+        })
+      : null;
 
   // Un jugador activo tiene cuota de jugador; quien no juega tiene la suya
   // propia (secciones con destinatario distinto, ver lib/pagos.ts).
@@ -135,12 +158,19 @@ export default async function HomePage() {
             <p className="text-chalk/40 text-xs underline">
               Convocatoria: {formatHora(horaConvocatoria(proximoPartido.fecha))}
             </p>
+            {prevision && (
+              <p className="text-chalk/60 text-sm">
+                {iconoTiempo(prevision.codigo)} {prevision.temperatura}°C
+                {prevision.probabilidadLluvia > 0 && ` · 💧 ${prevision.probabilidadLluvia}%`}
+              </p>
+            )}
             {session && !noJuega && !viewer.necesitaElegirRol && (
               <div className="pt-2 space-y-2">
                 <DisponibilidadSelector
                   partidoId={proximoPartido.id}
                   disponibilidadInicial={miDisponibilidadProximo}
                   esAyuda={viewer.estado === "AYUDA"}
+                  pizzaInicial={miPizza(proximoPartido.id)}
                 />
                 {miConvocatoria?.convocado && <p className="text-sm text-amarillobrillante">✓ Estás convocado</p>}
               </div>
@@ -153,6 +183,15 @@ export default async function HomePage() {
                 </Link>{" "}
                 si eres jugador.
               </p>
+            )}
+            {session && viewer.rol === "SOCIO" && !proximoPartido.cerrado && (
+              <div className="pt-2">
+                <DeclararAsistencia
+                  partidoId={proximoPartido.id}
+                  declaradoInicial={miAsistenciaSocio?.declarado ?? false}
+                  pizzaInicial={miPizza(proximoPartido.id)}
+                />
+              </div>
             )}
             {session && puedeVerDetalle && (
               <Link href={`/calendario/${proximoPartido.id}`} className="inline-block text-amarillobrillante text-sm hover:underline pt-1">
@@ -186,7 +225,12 @@ export default async function HomePage() {
                     {p.jornada !== null && ` · Jornada ${p.jornada}`}
                   </span>
                 </Link>
-                <DisponibilidadSelector partidoId={p.id} disponibilidadInicial="SIN_RESPONDER" esAyuda={viewer.estado === "AYUDA"} />
+                <DisponibilidadSelector
+                  partidoId={p.id}
+                  disponibilidadInicial="SIN_RESPONDER"
+                  esAyuda={viewer.estado === "AYUDA"}
+                  pizzaInicial={miPizza(p.id)}
+                />
               </div>
             ))}
           </div>

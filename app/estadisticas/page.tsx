@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { calcularRanking } from "@/lib/estadisticas";
 import { getViewer, puedeVerDetalles } from "@/lib/viewer";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
+import TablaEstadisticas from "@/components/TablaEstadisticas";
 
 export const dynamic = "force-dynamic";
 
@@ -41,43 +41,7 @@ export default async function EstadisticasPage() {
       {ranking.length === 0 ? (
         <p className="text-chalk/50 text-sm">Todavía no hay datos de partidos jugados (o ninguna jornada cerrada).</p>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-chalk/50 text-left border-b border-chalk/10">
-                <th className="py-2 pl-4 font-normal">Jugador</th>
-                <th className="py-2 px-2 font-normal text-center" title="Partidos jugados">PJ</th>
-                <th className="py-2 px-2 font-normal text-center" title="Goles">⚽</th>
-                <th className="py-2 px-2 font-normal text-center" title="Asistencias">🥾</th>
-                <th className="py-2 px-2 font-normal text-center" title="Tarjetas amarillas">🟨</th>
-                <th className="py-2 px-2 font-normal text-center" title="Tarjetas rojas">🟥</th>
-                <th className="py-2 px-2 font-normal text-center" title="Goles encajados de portero">🧤</th>
-                <th className="py-2 px-2 font-normal text-center" title="Veces elegido Jugador Essenzal">🏆</th>
-                <th className="py-2 pr-4 font-normal text-center" title="Veces elegido ¡Vaya día!">🙈</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-chalk/10">
-              {ranking.map((fila) => (
-                <tr key={fila.userId} className="hover:bg-chalk/5 transition">
-                  <td className="py-2 pl-4 text-chalk">
-                    <Link href={`/plantilla/${fila.userId}`} className="hover:underline">
-                      {fila.dorsal !== null && <span className="text-amarillobrillante font-display">#{fila.dorsal} </span>}
-                      {fila.nombre}
-                    </Link>
-                  </td>
-                  <td className="py-2 px-2 text-center text-chalk/70">{fila.partidosJugados}</td>
-                  <td className="py-2 px-2 text-center text-amarillobrillante font-display">{fila.goles}</td>
-                  <td className="py-2 px-2 text-center text-chalk/70">{fila.asistencias}</td>
-                  <td className="py-2 px-2 text-center text-chalk/70">{fila.tarjetasAmarillas || ""}</td>
-                  <td className="py-2 px-2 text-center text-coral/80">{fila.tarjetasRojas || ""}</td>
-                  <td className="py-2 px-2 text-center text-chalk/70">{fila.golesEncajados || ""}</td>
-                  <td className="py-2 px-2 text-center text-amarillobrillante">{fila.vecesEssenzal || ""}</td>
-                  <td className="py-2 pr-4 text-center text-chalk/70">{fila.vecesVayaDia || ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TablaEstadisticas ranking={ranking} />
       )}
     </div>
   );

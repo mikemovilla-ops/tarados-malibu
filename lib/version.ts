@@ -24,6 +24,18 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.6.0",
+    fecha: "2026-11-16",
+    cambios: [
+      "Previsión del tiempo para el próximo partido en la home.",
+      "En Calendario, cada partido jugado se ve en verde, gris o naranja según si fue victoria, empate o derrota.",
+      "La tabla de Estadísticas se puede ordenar por cualquier columna, tocando su cabecera.",
+      "Para votar los premios hace falta confirmar, no vale con elegir en el desplegable; y no puedes votarte a ti mismo a Jugador Essenzal (a ¡Vaya día! sí).",
+      "Un socio puede decir que va a ver el partido (desde la home o el detalle) y el admin lo confirma en una pestaña nueva de Convocatoria — solo un socio confirmado puede votar los premios.",
+      "Como nuestro patrocinador es una pizzería, al decir que vas a un partido (o que vas a verlo, si eres socio) puedes apuntarte también a la pizzería de después, con acompañantes; el admin ve quién se ha apuntado.",
+    ],
+  },
+  {
     version: "2.5.0",
     fecha: "2026-11-14",
     hito: true,

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import AsistenciaPizza from "@/components/AsistenciaPizza";
 
 // Los mismos tres valores para todos (VOY/DUDA/NO_VOY) — solo cambia el
 // texto para un jugador de ayuda, al que no se le convoca por defecto: no
@@ -16,10 +17,12 @@ export default function DisponibilidadSelector({
   partidoId,
   disponibilidadInicial,
   esAyuda = false,
+  pizzaInicial,
 }: {
   partidoId: string;
   disponibilidadInicial: string;
   esAyuda?: boolean;
+  pizzaInicial?: { voy: boolean; acompanantes: number } | null;
 }) {
   const router = useRouter();
   const [disponibilidad, setDisponibilidad] = useState(disponibilidadInicial);
@@ -63,6 +66,13 @@ export default function DisponibilidadSelector({
         ))}
       </div>
       {error && <p className="text-coral text-xs">{error}</p>}
+      {(disponibilidad === "VOY" || disponibilidad === "DUDA") && (
+        <AsistenciaPizza
+          partidoId={partidoId}
+          voyInicial={pizzaInicial?.voy ?? false}
+          acompanantesInicial={pizzaInicial?.acompanantes ?? 0}
+        />
+      )}
     </div>
   );
 }

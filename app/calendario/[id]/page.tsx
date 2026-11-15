@@ -5,7 +5,7 @@ import { formatFechaHora, formatHora, horaConvocatoria, toInputDatetimeLocal } f
 import { nombreMostrado } from "@/lib/jugadores";
 import { ayudaSinResponder } from "@/lib/disponibilidad";
 import { getViewer, puedeVerDetalles } from "@/lib/viewer";
-import ConvocatoriaEditor from "@/components/ConvocatoriaEditor";
+import ConvocatoriaTabs from "@/components/ConvocatoriaTabs";
 import ResultadoEditor from "@/components/ResultadoEditor";
 import DisponibilidadSelector from "@/components/DisponibilidadSelector";
 import EditarDatosPartido from "@/components/EditarDatosPartido";
@@ -13,6 +13,7 @@ import CerrarJornadaToggle from "@/components/CerrarJornadaToggle";
 import SubirFotoPartido from "@/components/SubirFotoPartido";
 import PremioPartidoSelector from "@/components/PremioPartidoSelector";
 import VotarPremio from "@/components/VotarPremio";
+import DeclararAsistencia from "@/components/DeclararAsistencia";
 import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
@@ -38,6 +39,8 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       convocatorias: { include: { user: { select: { id: true, name: true, apodo: true, dorsal: true, image: true } } } },
       jugadorEssenzal: { select: { name: true, apodo: true } },
       jugadorVayaDia: { select: { name: true, apodo: true } },
+      asistenciasSocio: true,
+      asistenciasPizza: { include: { user: { select: { name: true, apodo: true } } } },
     },
   });
 
@@ -145,6 +148,27 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   const jugado = partido.golesFavor !== null && partido.golesContra !== null;
   const convocadosOpciones = convocados.map((c) => ({ id: c.user.id, nombre: nombreMostrado(c.user) }));
 
+  // Socios que pueden declarar/confirmar que vinieron a ver el partido (ver
+  // DeclararAsistencia y AsistenciaSociosEditor) — y así poder votar los
+  // premios sin ser convocados.
+  const socios = await prisma.user.findMany({
+    where: { rol: "SOCIO" },
+    orderBy: [{ name: "asc" }],
+    select: { id: true, name: true, apodo: true },
+  });
+  const asistenciaInicial: Record<string, { declarado: boolean; confirmado: boolean }> = {};
+  for (const a of partido.asistenciasSocio) {
+    asistenciaInicial[a.userId] = { declarado: a.declarado, confirmado: a.confirmado };
+  }
+  const miAsistencia = session ? asistenciaInicial[session.user.id] : undefined;
+  const esAsistenteConfirmado = miAsistencia?.confirmado ?? false;
+
+  // 🍕 Recuento aproximado para la pizzería — jugadores, socios, parejas,
+  // hijos... cualquiera que haya marcado que va, más sus acompañantes.
+  const miPizza = session ? partido.asistenciasPizza.find((p) => p.userId === session.user.id) ?? null : null;
+  const vanAPizza = partido.asistenciasPizza.filter((p) => p.voy);
+  const totalPizza = vanAPizza.reduce((suma, p) => suma + 1 + p.acompanantes, 0);
+
   // Votos de los convocados por cada premio (ver VotarPremio) — se cuentan
   // aquí mismo en memoria, no hace falta groupBy para el puñado de votos de
   // un partido de fútbol 7.
@@ -170,6 +194,14 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     ? votosPremio.find((v) => v.votanteId === session.user.id && v.tipo === "VAYA_DIA")?.candidatoId ?? null
     : null;
   const esConvocado = session ? convocadosOpciones.some((c) => c.id === session.user.id) : false;
+  // Puede votar un convocado, o un socio confirmado como asistente (ver
+  // AsistenciaSociosEditor) — no hace falta jugar para opinar quién se
+  // merece el premio, si has estado ahí viéndolo.
+  const puedeVotar = esConvocado || esAsistenteConfirmado;
+  // A "mejor jugador" no puedes votarte a ti mismo — al "peor" sí.
+  const candidatosEssenzal = session
+    ? convocadosOpciones.filter((c) => c.id !== session.user.id)
+    : convocadosOpciones;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
@@ -187,6 +219,19 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         <p className="text-chalk/40 text-xs underline">
           Convocatoria: {formatHora(horaConvocatoria(partido.fecha))}
         </p>
+        {totalPizza > 0 && (
+          <p className="text-chalk/40 text-xs">
+            🍕 {totalPizza} apuntados a la pizzería
+            {esAdmin && (
+              <>
+                :{" "}
+                {vanAPizza
+                  .map((p) => nombreMostrado(p.user) + (p.acompanantes > 0 ? ` (+${p.acompanantes})` : ""))
+                  .join(", ")}
+              </>
+            )}
+          </p>
+        )}
         {jugado && (
           <p className="font-display text-3xl text-amarillobrillante pt-2">
             {partido.esLocal ? partido.golesFavor : partido.golesContra} - {partido.esLocal ? partido.golesContra : partido.golesFavor}
@@ -261,8 +306,9 @@ export default async function PartidoPage({ params }: { params: { id: string } }
               />
               <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
               <p className="text-chalk/40 text-xs">
-                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados — usa esto
-                para desempatar o si nadie ha votado.
+                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados y los socios
+                confirmados como asistentes (en la pestaña "Socios" de Convocatoria) — usa esto para desempatar o si
+                nadie ha votado.
               </p>
               <PremioPartidoSelector
                 partidoId={partido.id}
@@ -297,8 +343,9 @@ export default async function PartidoPage({ params }: { params: { id: string } }
               />
               <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
               <p className="text-chalk/40 text-xs">
-                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados — usa esto
-                para desempatar o si nadie ha votado.
+                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados y los socios
+                confirmados como asistentes (en la pestaña "Socios" de Convocatoria) — usa esto para desempatar o si
+                nadie ha votado.
               </p>
               <PremioPartidoSelector
                 partidoId={partido.id}
@@ -346,6 +393,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             partidoId={partido.id}
             disponibilidadInicial={miDisponibilidad ?? "SIN_RESPONDER"}
             esAyuda={estado === "AYUDA"}
+            pizzaInicial={miPizza}
           />
         )}
 
@@ -400,10 +448,22 @@ export default async function PartidoPage({ params }: { params: { id: string } }
                 </>
               }
             >
-              <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
+              <ConvocatoriaTabs
+                partidoId={partido.id}
+                jugadores={jugadores}
+                convocatoriaInicial={convocatoriaInicial}
+                socios={socios}
+                asistenciaInicial={asistenciaInicial}
+              />
             </SeccionEditable>
           ) : (
-            <ConvocatoriaEditor partidoId={partido.id} jugadores={jugadores} convocatoriaInicial={convocatoriaInicial} />
+            <ConvocatoriaTabs
+              partidoId={partido.id}
+              jugadores={jugadores}
+              convocatoriaInicial={convocatoriaInicial}
+              socios={socios}
+              asistenciaInicial={asistenciaInicial}
+            />
           )
         ) : (
           <>
@@ -417,18 +477,32 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           </>
         )}
       </section>
+      </>
+      )}
 
-      {esConvocado && !partido.cerrado && (
+      {rol === "SOCIO" && !partido.cerrado && (
+        <section className="card p-4 space-y-2">
+          <h2 className="font-display text-base">¿Vienes a verlo?</h2>
+          <DeclararAsistencia
+            partidoId={partido.id}
+            declaradoInicial={miAsistencia?.declarado ?? false}
+            pizzaInicial={miPizza}
+          />
+        </section>
+      )}
+
+      {puedeVotar && !partido.cerrado && (
         <section className="card p-4 space-y-3">
           <h2 className="font-display text-base">Vota</h2>
           <p className="text-chalk/50 text-xs">
-            Entre los convocados — se cuenta al cerrar la jornada. Puedes cambiar tu voto hasta entonces.
+            Entre los convocados y los socios confirmados como asistentes — se cuenta al cerrar la jornada. Puedes
+            cambiar tu voto hasta entonces.
           </p>
           <VotarPremio
             partidoId={partido.id}
             tipo="ESSENZAL"
             etiqueta="🏆 Jugador Essenzal"
-            candidatos={convocadosOpciones}
+            candidatos={candidatosEssenzal}
             miVotoInicial={miVotoEssenzal}
           />
           <VotarPremio
@@ -439,8 +513,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             miVotoInicial={miVotoVayaDia}
           />
         </section>
-      )}
-      </>
       )}
     </div>
   );

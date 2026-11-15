@@ -5,6 +5,7 @@ import {
   formatFechaCorta,
   toInputDatetimeLocal,
   parseInputDatetimeLocalMadrid,
+  fechaHoraMadrid,
 } from "@/lib/fechas";
 
 describe("formatFecha", () => {
@@ -51,6 +52,16 @@ describe("parseInputDatetimeLocalMadrid", () => {
     const original = new Date(Date.UTC(2026, 8, 17, 18, 0));
     const comoInput = toInputDatetimeLocal(original);
     expect(parseInputDatetimeLocalMadrid(comoInput).getTime()).toBe(original.getTime());
+  });
+});
+
+describe("fechaHoraMadrid", () => {
+  it("da la fecha y hora de Madrid por separado, en verano (CEST, UTC+2)", () => {
+    expect(fechaHoraMadrid(new Date(Date.UTC(2026, 8, 17, 18, 0)))).toEqual({ fecha: "2026-09-17", hora: 20 });
+  });
+
+  it("cruza de día si la hora UTC ya cae en el día siguiente en Madrid", () => {
+    expect(fechaHoraMadrid(new Date(Date.UTC(2026, 8, 16, 23, 30)))).toEqual({ fecha: "2026-09-17", hora: 1 });
   });
 });
 

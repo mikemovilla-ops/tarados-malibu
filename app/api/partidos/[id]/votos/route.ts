@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 const TIPOS = ["ESSENZAL", "VAYA_DIA"] as const;
 
-// Cualquier convocado puede votar por quién se merece cada premio del
-// partido, mientras la jornada siga abierta — puede cambiar su voto tantas
-// veces como quiera hasta entonces (upsert). Al cerrar la jornada
+// Puede votar cualquier convocado, y también un socio que el admin haya
+// confirmado como asistente al partido (ver AsistenciaSociosEditor) — en
+// los dos casos mientras la jornada siga abierta, y puede cambiar su voto
+// tantas veces como quiera hasta entonces (upsert). Al cerrar la jornada
 // (/api/partidos/[id]) se cuenta la mayoría para rellenar el premio.
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -25,6 +26,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     select: {
       cerrado: true,
       convocatorias: { where: { convocado: true }, select: { userId: true } },
+      asistenciasSocio: { where: { confirmado: true }, select: { userId: true } },
     },
   });
   if (!partido) {
@@ -35,11 +37,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 
   const convocadosIds = new Set(partido.convocatorias.map((c) => c.userId));
-  if (!convocadosIds.has(session.user.id)) {
-    return NextResponse.json({ error: "Solo pueden votar los convocados a este partido." }, { status: 403 });
+  const asistentesConfirmadosIds = new Set(partido.asistenciasSocio.map((a) => a.userId));
+  if (!convocadosIds.has(session.user.id) && !asistentesConfirmadosIds.has(session.user.id)) {
+    return NextResponse.json(
+      { error: "Solo pueden votar los convocados y los socios confirmados como asistentes." },
+      { status: 403 }
+    );
   }
   if (!convocadosIds.has(candidatoId)) {
     return NextResponse.json({ error: "Solo se puede votar a un convocado." }, { status: 400 });
+  }
+  // A "mejor jugador" no te puedes votar a ti mismo (sí al peor, que para
+  // eso tiene gracia).
+  if (tipo === "ESSENZAL" && candidatoId === session.user.id) {
+    return NextResponse.json({ error: "No puedes votarte a ti mismo a Jugador Essenzal." }, { status: 400 });
   }
 
   await prisma.votoPremio.upsert({
