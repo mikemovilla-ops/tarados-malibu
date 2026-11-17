@@ -6,6 +6,8 @@ import {
   toInputDatetimeLocal,
   parseInputDatetimeLocalMadrid,
   fechaHoraMadrid,
+  diaSemanaMadrid,
+  inicioSemanaMadrid,
 } from "@/lib/fechas";
 
 describe("formatFecha", () => {
@@ -56,12 +58,47 @@ describe("parseInputDatetimeLocalMadrid", () => {
 });
 
 describe("fechaHoraMadrid", () => {
-  it("da la fecha y hora de Madrid por separado, en verano (CEST, UTC+2)", () => {
-    expect(fechaHoraMadrid(new Date(Date.UTC(2026, 8, 17, 18, 0)))).toEqual({ fecha: "2026-09-17", hora: 20 });
+  it("da la fecha, hora y minuto de Madrid por separado, en verano (CEST, UTC+2)", () => {
+    expect(fechaHoraMadrid(new Date(Date.UTC(2026, 8, 17, 18, 5)))).toEqual({ fecha: "2026-09-17", hora: 20, minuto: 5 });
   });
 
   it("cruza de día si la hora UTC ya cae en el día siguiente en Madrid", () => {
-    expect(fechaHoraMadrid(new Date(Date.UTC(2026, 8, 16, 23, 30)))).toEqual({ fecha: "2026-09-17", hora: 1 });
+    expect(fechaHoraMadrid(new Date(Date.UTC(2026, 8, 16, 23, 30)))).toEqual({ fecha: "2026-09-17", hora: 1, minuto: 30 });
+  });
+});
+
+describe("diaSemanaMadrid", () => {
+  it("da el día de la semana de Madrid, no el de UTC, cerca de medianoche", () => {
+    // 23:30 UTC del lunes 16 de noviembre de 2026 ya son las 00:30 del
+    // martes 17 en Madrid.
+    expect(diaSemanaMadrid(new Date(Date.UTC(2026, 10, 16, 23, 30)))).toBe(2);
+  });
+
+  it("da domingo = 0 y martes = 2", () => {
+    expect(diaSemanaMadrid(new Date(Date.UTC(2026, 10, 15, 10, 0)))).toBe(0);
+    expect(diaSemanaMadrid(new Date(Date.UTC(2026, 10, 17, 10, 0)))).toBe(2);
+  });
+});
+
+describe("inicioSemanaMadrid", () => {
+  it("da el lunes de esa semana (martes 17 de noviembre de 2026 -> lunes 16)", () => {
+    expect(inicioSemanaMadrid(new Date(Date.UTC(2026, 10, 17, 10, 0)))).toBe("2026-11-16");
+  });
+
+  it("un sábado da el lunes de su misma semana, no el siguiente", () => {
+    // Sábado 28 de noviembre de 2026 -> lunes 23.
+    expect(inicioSemanaMadrid(new Date(Date.UTC(2026, 10, 28, 17, 0)))).toBe("2026-11-23");
+  });
+
+  it("un domingo cuenta en la semana que termina, no en la que empieza", () => {
+    // Domingo 15 de noviembre de 2026 -> lunes 9.
+    expect(inicioSemanaMadrid(new Date(Date.UTC(2026, 10, 15, 10, 0)))).toBe("2026-11-09");
+  });
+
+  it("dos martes de semanas distintas no coinciden", () => {
+    const esteMartes = inicioSemanaMadrid(new Date(Date.UTC(2026, 10, 17, 10, 0)));
+    const otroMartes = inicioSemanaMadrid(new Date(Date.UTC(2026, 10, 24, 10, 0)));
+    expect(esteMartes).not.toBe(otroMartes);
   });
 });
 

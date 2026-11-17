@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "schedules": {
+    "recordatorio-convocatoria": {
+      "schedule": "30 12 * * 3",
+      "timezone": "Europe/Madrid",
+      "path": "/api/cron/recordatorio-convocatoria",
+      "requestMethod": "GET"
+    }
+  }
+}

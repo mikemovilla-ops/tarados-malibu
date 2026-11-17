@@ -24,6 +24,16 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.7.0",
+    fecha: "2026-11-17",
+    cambios: [
+      "Si para el próximo partido todavía no has dicho si vas, llega un recordatorio por email los miércoles a las 12:30 (solo si el partido es esa misma semana); el admin ve en el detalle del partido cuándo se envió y a cuántos.",
+      "Apuntarse a la pizzería de después ya no desaparece al decir \"No voy\" al partido — puede que no juegues pero vayas a verlo y te apetezca igual.",
+      "En el detalle de un partido, si ya hemos jugado antes contra ese rival se ve cómo nos fue (fecha, resultado y enlace a cada partido anterior).",
+      "En la home, \"Partidos por responder\" ya no tiene botones propios de disponibilidad/pizzería — al responder desde ahí, el partido desaparecía de la lista y se llevaba por delante la pizzería recién aparecida; ahora manda a Calendario, donde se responde sin ese problema.",
+    ],
+  },
+  {
     version: "2.6.1",
     fecha: "2026-11-15",
     cambios: [

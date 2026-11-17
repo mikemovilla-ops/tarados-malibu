@@ -84,17 +84,40 @@ export function parseInputDatetimeLocalMadrid(valor: string): Date {
   return new Date(supuesta.getTime() - desfaseMs);
 }
 
-// YYYY-MM-DD y hora (0-23) en Madrid, para quien necesite la fecha/hora de
-// pared además de verla formateada — p.ej. para casar un partido con la
-// franja horaria correcta al pedir la previsión del tiempo (ver lib/tiempo.ts).
-export function fechaHoraMadrid(fecha: Date): { fecha: string; hora: number } {
+// YYYY-MM-DD, hora (0-23) y minuto (0-59) en Madrid, para quien necesite la
+// fecha/hora de pared además de verla formateada — p.ej. para casar un
+// partido con la franja horaria correcta al pedir la previsión del tiempo
+// (ver lib/tiempo.ts), o para comprobar la hora exacta en el cron de los
+// recordatorios.
+export function fechaHoraMadrid(fecha: Date): { fecha: string; hora: number; minuto: number } {
   const partes = partesEnMadrid(fecha, {
-    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
   });
   return {
     fecha: `${parte(partes, "year")}-${parte(partes, "month")}-${parte(partes, "day")}`,
     hora: Number(parte(partes, "hour")),
+    minuto: Number(parte(partes, "minute")),
   };
+}
+
+// Día de la semana en Madrid (0 = domingo ... 6 = sábado), para comprobar
+// p.ej. "es martes" sin fiarse del huso horario del servidor — se apoya en
+// fechaHoraMadrid (ya corregida a Madrid) en vez de Date.getDay(), que daría
+// el día según el reloj del servidor (UTC en Vercel).
+export function diaSemanaMadrid(fecha: Date): number {
+  return new Date(fechaHoraMadrid(fecha).fecha + "T00:00:00Z").getUTCDay();
+}
+
+// Lunes (en Madrid) de la semana a la que pertenece esa fecha, en formato
+// YYYY-MM-DD — para comprobar si dos fechas "caen en la misma semana" (ver
+// app/api/cron/recordatorio-convocatoria) sin liarse con husos horarios.
+// La semana se cuenta de lunes a domingo.
+export function inicioSemanaMadrid(fecha: Date): string {
+  const diaSemana = diaSemanaMadrid(fecha); // 0=domingo..6=sábado
+  const diasHastaLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+  const lunes = new Date(fechaHoraMadrid(fecha).fecha + "T00:00:00Z");
+  lunes.setUTCDate(lunes.getUTCDate() - diasHastaLunes);
+  return lunes.toISOString().slice(0, 10);
 }
 
 // DD/MM/YYYY, para fechas sin hora asociada (p.ej. fecha de nacimiento) que

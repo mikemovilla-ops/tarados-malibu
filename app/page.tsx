@@ -206,35 +206,28 @@ export default async function HomePage() {
       </section>
 
       {/* El próximo partido ya tiene su propio selector de disponibilidad
-          arriba — aquí solo van los demás partidos abiertos pendientes de
-          respuesta, para no repetir el mismo partido dos veces. */}
+          arriba — aquí solo se avisa de los demás partidos pendientes, sin
+          selector propio: respondiendo desde aquí mismo, al refrescar la
+          página el partido ya respondido desaparecía de esta lista y se
+          llevaba por delante la opción de pizzería recién aparecida, antes
+          de poder tocarla. Mejor mandar a Calendario, donde la lista no se
+          filtra por si has respondido y no tiene ese problema. */}
       {otrosPartidosSinResponder.length > 0 && (
-        <section className="card p-5 space-y-4 border-amarillo/30">
+        <section className="card p-5 space-y-3 border-amarillo/30">
           <h2 className="font-display text-lg">
             Partidos por responder <span className="text-amarillobrillante">({otrosPartidosSinResponder.length})</span>
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-1">
             {otrosPartidosSinResponder.map((p) => (
-              <div key={p.id} className="space-y-2">
-                <EnlaceConCarga href={`/calendario/${p.id}`} className="block hover:underline">
-                  <span className="text-chalk">
-                    {p.esLocal ? "vs " : "@ "}
-                    {p.rival}
-                  </span>{" "}
-                  <span className="text-chalk/50 text-sm">
-                    {formatFechaHora(p.fecha)} · {p.competicion}
-                    {p.jornada !== null && ` · Jornada ${p.jornada}`}
-                  </span>
-                </EnlaceConCarga>
-                <DisponibilidadSelector
-                  partidoId={p.id}
-                  disponibilidadInicial="SIN_RESPONDER"
-                  esAyuda={viewer.estado === "AYUDA"}
-                  pizzaInicial={miPizza(p.id)}
-                />
-              </div>
+              <p key={p.id} className="text-chalk/70 text-sm">
+                {p.esLocal ? "vs " : "@ "}
+                {p.rival} <span className="text-chalk/50">· {formatFechaHora(p.fecha)}</span>
+              </p>
             ))}
           </div>
+          <EnlaceConCarga href="/calendario" className="inline-block text-amarillobrillante text-sm hover:underline">
+            Ir a Calendario →
+          </EnlaceConCarga>
         </section>
       )}
 

@@ -95,3 +95,39 @@ export async function enviarAvisoNuevoPartido(
     console.error("No se pudo enviar el aviso de partido nuevo:", e);
   }
 }
+
+// Recordatorio a quien todavía no ha dicho si va al próximo partido — lo
+// manda el cron de los miércoles (ver app/api/cron/recordatorio-convocatoria).
+export async function enviarRecordatorioConvocatoria(
+  destinatarios: string[],
+  partido: {
+    id: string;
+    rival: string;
+    esLocal: boolean;
+    fecha: Date;
+    competicion: string;
+    jornada: number | null;
+  }
+) {
+  if (!transporter || destinatarios.length === 0) return;
+
+  const url = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const rivalHtml = escapeHtml(partido.rival);
+  const contra = partido.esLocal ? `vs ${partido.rival}` : `@ ${partido.rival}`;
+  const contraHtml = partido.esLocal ? `vs ${rivalHtml}` : `@ ${rivalHtml}`;
+  const detalle = `${partido.competicion}${partido.jornada !== null ? ` · Jornada ${partido.jornada}` : ""}`;
+  const detalleHtml = escapeHtml(detalle);
+  const enlace = `${url}/calendario/${partido.id}`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Tarados Malibú" <${process.env.GMAIL_USER}>`,
+      bcc: destinatarios,
+      subject: `¿Vas al partido? ${contra}`,
+      text: `Todavía no has dicho si vas al próximo partido: ${contra}\n${formatFechaHora(partido.fecha)} · ${detalle}\n\nEntra en ${enlace} y responde.`,
+      html: `<p>Todavía no has dicho si vas al próximo partido: <strong>${contraHtml}</strong></p><p>${formatFechaHora(partido.fecha)} · ${detalleHtml}</p><p><a href="${enlace}">Entra aquí</a> y responde.</p>`,
+    });
+  } catch (e) {
+    console.error("No se pudo enviar el recordatorio de convocatoria:", e);
+  }
+}

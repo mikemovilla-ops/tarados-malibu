@@ -208,8 +208,24 @@ model Partido {
   votosPremio   VotoPremio[]
   asistenciasSocio AsistenciaSocio[]
   asistenciasPizza AsistenciaPizza[]
+  recordatoriosEnviados RecordatorioEnviado[]
 
   @@map("partidos")
+}
+
+// Cada vez que el cron de los miércoles a las 12:30 (ver
+// app/api/cron/recordatorio-convocatoria) manda el email de "todavía no has
+// dicho si vas", deja aquí una fila — así el admin puede comprobar en el
+// propio partido que el aviso se mandó de verdad, y a cuántos.
+model RecordatorioEnviado {
+  id            String   @id @default(cuid())
+  partidoId     String
+  enviadoEn     DateTime @default(now())
+  destinatarios Int
+
+  partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+
+  @@map("recordatorios_enviados")
 }
 
 // Nuestro patrocinador es una pizzería y es costumbre ir después del

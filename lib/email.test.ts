@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeHtml, enviarAvisoUsuarioNuevo, enviarAvisoNuevoPartido } from "@/lib/email";
+import { escapeHtml, enviarAvisoUsuarioNuevo, enviarAvisoNuevoPartido, enviarRecordatorioConvocatoria } from "@/lib/email";
 
 describe("escapeHtml", () => {
   it("escapa las entidades HTML básicas", () => {
@@ -40,5 +40,18 @@ describe("envío de avisos sin credenciales configuradas", () => {
 
   it("no hace nada con una lista de destinatarios vacía", async () => {
     await expect(enviarAvisoUsuarioNuevo([], { name: null, email: null })).resolves.toBeUndefined();
+  });
+
+  it("enviarRecordatorioConvocatoria no lanza sin transporter", async () => {
+    await expect(
+      enviarRecordatorioConvocatoria(["admin@example.com"], {
+        id: "partido1",
+        rival: "CD Rival",
+        esLocal: true,
+        fecha: new Date(2026, 9, 1, 18, 0),
+        competicion: "Liga",
+        jornada: 3,
+      })
+    ).resolves.toBeUndefined();
   });
 });

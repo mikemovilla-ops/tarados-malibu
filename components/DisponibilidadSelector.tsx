@@ -66,7 +66,10 @@ export default function DisponibilidadSelector({
         ))}
       </div>
       {error && <p className="text-coral text-xs">{error}</p>}
-      {(disponibilidad === "VOY" || disponibilidad === "DUDA") && (
+      {/* No jugar (lesión, sanción...) no significa no ir a ver el
+          partido ni no apetecer la pizza de después — solo se oculta
+          antes de responder nada. */}
+      {disponibilidad !== "SIN_RESPONDER" && (
         <AsistenciaPizza
           partidoId={partidoId}
           voyInicial={pizzaInicial?.voy ?? false}

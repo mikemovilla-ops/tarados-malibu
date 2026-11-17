@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatFechaHora, formatHora, horaConvocatoria, toInputDatetimeLocal } from "@/lib/fechas";
+import { formatFecha, formatFechaHora, formatHora, horaConvocatoria, toInputDatetimeLocal } from "@/lib/fechas";
 import { nombreMostrado } from "@/lib/jugadores";
 import { ayudaSinResponder } from "@/lib/disponibilidad";
 import { getViewer, puedeVerDetalles } from "@/lib/viewer";
@@ -17,6 +17,7 @@ import DeclararAsistencia from "@/components/DeclararAsistencia";
 import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
+import EnlaceConCarga from "@/components/EnlaceConCarga";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       jugadorVayaDia: { select: { name: true, apodo: true } },
       asistenciasSocio: true,
       asistenciasPizza: { include: { user: { select: { name: true, apodo: true } } } },
+      recordatoriosEnviados: { orderBy: { enviadoEn: "desc" } },
     },
   });
 
@@ -75,6 +77,15 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       </div>
     );
   }
+
+  // Cómo nos ha ido contra este mismo rival en partidos anteriores ya
+  // jugados — con enlace a cada uno, para no tener que ir a buscarlos en
+  // Calendario.
+  const historialRival = await prisma.partido.findMany({
+    where: { rival: partido.rival, id: { not: partido.id }, golesFavor: { not: null }, golesContra: { not: null } },
+    orderBy: { fecha: "desc" },
+    select: { id: true, fecha: true, esLocal: true, golesFavor: true, golesContra: true },
+  });
 
   // Se pide siempre (activos y ayuda): el admin puede convocar a cualquiera
   // de los dos grupos, aunque el resumen de disponibilidad de más abajo solo
@@ -278,6 +289,44 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           </div>
         )}
       </div>
+
+      {esAdmin && partido.recordatoriosEnviados.length > 0 && (
+        <p className="text-chalk/40 text-xs">
+          📧 Recordatorio de convocatoria enviado:{" "}
+          {partido.recordatoriosEnviados
+            .map((r) => `${formatFechaHora(r.enviadoEn)} (${r.destinatarios})`)
+            .join(", ")}
+        </p>
+      )}
+
+      {historialRival.length > 0 && (
+        <section className="card p-4 space-y-2">
+          <h2 className="font-display text-base">Historial de enfrentamientos contra {partido.rival}</h2>
+          <div className="space-y-1.5 text-sm">
+            {historialRival.map((h) => {
+              // Victoria/empate/derrota es siempre golesFavor vs golesContra,
+              // sin importar si jugamos en casa o fuera (ver el mismo cálculo
+              // en app/calendario/page.tsx).
+              const resultado =
+                h.golesFavor! > h.golesContra! ? "victoria" : h.golesFavor! < h.golesContra! ? "derrota" : "empate";
+              const colorResultado =
+                resultado === "victoria" ? "text-green-400" : resultado === "derrota" ? "text-coral" : "text-chalk/70";
+              return (
+                <EnlaceConCarga
+                  key={h.id}
+                  href={`/calendario/${h.id}`}
+                  className="flex items-center justify-between gap-3 hover:underline"
+                >
+                  <span className="text-chalk/60">{formatFecha(h.fecha)}</span>
+                  <span className={`font-display ${colorResultado}`}>
+                    {h.esLocal ? h.golesFavor : h.golesContra} - {h.esLocal ? h.golesContra : h.golesFavor}
+                  </span>
+                </EnlaceConCarga>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {esAdmin && (
         <section className="card p-4 space-y-2">
