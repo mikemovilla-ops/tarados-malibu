@@ -24,6 +24,13 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.7.1",
+    fecha: "2026-11-23",
+    cambios: [
+      "Al apuntarte a la pizzería, los acompañantes se cuentan con botones −/+ en vez de escribir el número a mano — en móvil, borrar el \"0\" para escribir otro número hacía perder el cursor del campo.",
+    ],
+  },
+  {
     version: "2.7.0",
     fecha: "2026-11-17",
     cambios: [

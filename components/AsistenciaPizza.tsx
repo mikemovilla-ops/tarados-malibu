@@ -47,18 +47,27 @@ export default function AsistenciaPizza({
         🍕 {voy ? "Voy a la pizzería" : "¿Pizzería después?"}
       </button>
       {voy && (
-        <label className="flex items-center gap-1 text-xs text-chalk/50">
+        <div className="flex items-center gap-1 text-xs text-chalk/50">
           +
-          <input
-            type="number"
-            min={0}
-            value={acompanantes}
-            onChange={(e) => guardar(true, Number(e.target.value))}
+          <button
+            type="button"
+            onClick={() => guardar(true, Math.max(0, acompanantes - 1))}
+            disabled={guardando || acompanantes === 0}
+            className="w-5 h-5 flex items-center justify-center rounded bg-pitchdark border border-chalk/20 text-chalk disabled:opacity-30"
+          >
+            −
+          </button>
+          <span className="w-4 text-center text-chalk tabular-nums">{acompanantes}</span>
+          <button
+            type="button"
+            onClick={() => guardar(true, acompanantes + 1)}
             disabled={guardando}
-            className="w-12 bg-pitchdark border border-chalk/20 rounded px-1 py-0.5 text-chalk"
-          />
+            className="w-5 h-5 flex items-center justify-center rounded bg-pitchdark border border-chalk/20 text-chalk disabled:opacity-30"
+          >
+            +
+          </button>
           acompañantes
-        </label>
+        </div>
       )}
     </div>
   );
