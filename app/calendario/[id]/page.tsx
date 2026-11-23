@@ -232,15 +232,10 @@ export default async function PartidoPage({ params }: { params: { id: string } }
         </p>
         {totalPizza > 0 && (
           <p className="text-chalk/40 text-xs">
-            🍕 {totalPizza} apuntados a la pizzería
-            {esAdmin && (
-              <>
-                :{" "}
-                {vanAPizza
-                  .map((p) => nombreMostrado(p.user) + (p.acompanantes > 0 ? ` (+${p.acompanantes})` : ""))
-                  .join(", ")}
-              </>
-            )}
+            🍕 {totalPizza} apuntados a la pizzería:{" "}
+            {vanAPizza
+              .map((p) => nombreMostrado(p.user) + (p.acompanantes > 0 ? ` (+${p.acompanantes})` : ""))
+              .join(", ")}
           </p>
         )}
         {jugado && (

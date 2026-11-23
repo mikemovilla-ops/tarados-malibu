@@ -24,6 +24,13 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.7.2",
+    fecha: "2026-11-23",
+    cambios: [
+      "Quién va a la pizzería de después se ve en el detalle del partido para todo el mundo, no solo para el admin.",
+    ],
+  },
+  {
     version: "2.7.1",
     fecha: "2026-11-23",
     cambios: [
