@@ -163,6 +163,7 @@ export default async function CalendarioPage() {
             disponibilidadInicial={miDisponibilidad}
             esAyuda={estado === "AYUDA"}
             pizzaInicial={miPizza(p.id)}
+            compacto
           />
         )}
       </div>

@@ -12,10 +12,15 @@ export default function AsistenciaPizza({
   partidoId,
   voyInicial,
   acompanantesInicial,
+  compacto = false,
 }: {
   partidoId: string;
   voyInicial: boolean;
   acompanantesInicial: number;
+  // Para Calendario, donde ya va pegado en la misma línea que los botones
+  // de disponibilidad: sin el hueco de arriba y con el texto del botón más
+  // corto, para que quepa todo junto.
+  compacto?: boolean;
 }) {
   const router = useRouter();
   const [voy, setVoy] = useState(voyInicial);
@@ -36,19 +41,19 @@ export default function AsistenciaPizza({
   }
 
   return (
-    <div className="flex items-center gap-2 pt-1 flex-wrap">
+    <div className={`flex items-center gap-2 flex-wrap ${compacto ? "" : "pt-1"}`}>
       <button
         onClick={() => guardar(!voy, acompanantes)}
         disabled={guardando}
-        className={`text-xs px-2 py-1 rounded-md border transition disabled:opacity-50 ${
+        className={`text-xs rounded-md border transition disabled:opacity-50 ${compacto ? "px-1.5 py-1" : "px-2 py-1"} ${
           voy ? "bg-amarillo/10 border-amarillo/40 text-amarillobrillante" : "bg-pitchdark border-chalk/20 text-chalk/60"
         }`}
       >
-        🍕 {voy ? "Voy a la pizzería" : "¿Pizzería después?"}
+        🍕{!compacto && ` ${voy ? "Voy a la pizzería" : "¿Pizzería después?"}`}
       </button>
       {voy && (
         <div className="flex items-center gap-1 text-xs text-chalk/50">
-          +
+          {!compacto && "+"}
           <button
             type="button"
             onClick={() => guardar(true, Math.max(0, acompanantes - 1))}
@@ -66,7 +71,7 @@ export default function AsistenciaPizza({
           >
             +
           </button>
-          acompañantes
+          {!compacto && "acompañantes"}
         </div>
       )}
     </div>

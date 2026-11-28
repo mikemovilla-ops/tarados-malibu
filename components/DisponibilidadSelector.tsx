@@ -18,11 +18,16 @@ export default function DisponibilidadSelector({
   disponibilidadInicial,
   esAyuda = false,
   pizzaInicial,
+  compacto = false,
 }: {
   partidoId: string;
   disponibilidadInicial: string;
   esAyuda?: boolean;
   pizzaInicial?: { voy: boolean; acompanantes: number } | null;
+  // Para Calendario: botones más pequeños y todo en la misma línea (con
+  // la pizzería incluida), en vez de los botones a todo lo ancho y la
+  // pizzería en su propia línea debajo.
+  compacto?: boolean;
 }) {
   const router = useRouter();
   const [disponibilidad, setDisponibilidad] = useState(disponibilidadInicial);
@@ -51,25 +56,34 @@ export default function DisponibilidadSelector({
 
   return (
     <div className="space-y-1">
-      <div className="flex gap-2">
+      <div className={`flex flex-wrap items-center gap-2`}>
         {OPCIONES.map((o) => (
           <button
             key={o.valor}
             onClick={() => elegir(o.valor)}
             disabled={guardando}
-            className={`flex-1 text-sm py-2 rounded-md transition disabled:opacity-50 ${
+            className={`${compacto ? "text-xs py-1 px-2" : "flex-1 text-sm py-2"} rounded-md transition disabled:opacity-50 ${
               disponibilidad === o.valor ? o.claseActivo : "bg-pitchdark border border-chalk/20 text-chalk/60"
             }`}
           >
             {esAyuda ? o.labelAyuda : o.label}
           </button>
         ))}
+        {/* No jugar (lesión, sanción...) no significa no ir a ver el
+            partido ni no apetecer la pizza de después — solo se oculta
+            antes de responder nada. En compacto va en la misma línea que
+            los botones de arriba; si no, en su propia línea debajo. */}
+        {compacto && disponibilidad !== "SIN_RESPONDER" && (
+          <AsistenciaPizza
+            partidoId={partidoId}
+            voyInicial={pizzaInicial?.voy ?? false}
+            acompanantesInicial={pizzaInicial?.acompanantes ?? 0}
+            compacto
+          />
+        )}
       </div>
       {error && <p className="text-coral text-xs">{error}</p>}
-      {/* No jugar (lesión, sanción...) no significa no ir a ver el
-          partido ni no apetecer la pizza de después — solo se oculta
-          antes de responder nada. */}
-      {disponibilidad !== "SIN_RESPONDER" && (
+      {!compacto && disponibilidad !== "SIN_RESPONDER" && (
         <AsistenciaPizza
           partidoId={partidoId}
           voyInicial={pizzaInicial?.voy ?? false}
