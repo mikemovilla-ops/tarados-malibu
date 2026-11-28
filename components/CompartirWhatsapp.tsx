@@ -28,11 +28,16 @@ export default function CompartirWhatsapp({
       enlace,
     ];
     const texto = encodeURIComponent(lineas.join("\n\n"));
-    // window.open(..., "_blank") abre antes una pestaña nueva con la página
-    // intermedia de wa.me, y en móvil a veces se queda ahí en vez de saltar
-    // a la app — navegando en la misma pestaña, el enlace de wa.me abre
-    // WhatsApp directamente en la pantalla de elegir a quién mandárselo.
-    window.location.href = `https://wa.me/?text=${texto}`;
+    // Con la web añadida a la pantalla de inicio (modo standalone, el
+    // icono propio del iPhone), un enlace https://wa.me/ abre WhatsApp
+    // pero sin el texto — el salto de "enlace universal" no lleva la
+    // query string cuando no viene de Safari. El esquema whatsapp:// sí
+    // lo lleva bien ahí; fuera de standalone (navegador normal, o
+    // escritorio sin la app) se usa wa.me, que redirige también a
+    // WhatsApp Web si no hay app instalada.
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+    window.location.href = standalone ? `whatsapp://send?text=${texto}` : `https://wa.me/?text=${texto}`;
   }
 
   return (

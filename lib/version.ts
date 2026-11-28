@@ -24,6 +24,14 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
+    version: "2.8.1",
+    fecha: "2026-11-28",
+    cambios: [
+      "El botón de WhatsApp para preparar el mensaje ya funciona bien en móvil, también con la web añadida a la pantalla de inicio (antes abría WhatsApp pero sin el texto).",
+      "En Calendario, los botones de Voy/Duda/No voy y la pizzería (con sus −/+) van más compactos, en la misma línea.",
+    ],
+  },
+  {
     version: "2.8.0",
     fecha: "2026-11-28",
     cambios: [
