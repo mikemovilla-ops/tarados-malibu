@@ -28,7 +28,11 @@ export default function CompartirWhatsapp({
       enlace,
     ];
     const texto = encodeURIComponent(lineas.join("\n\n"));
-    window.open(`https://wa.me/?text=${texto}`, "_blank");
+    // window.open(..., "_blank") abre antes una pestaña nueva con la página
+    // intermedia de wa.me, y en móvil a veces se queda ahí en vez de saltar
+    // a la app — navegando en la misma pestaña, el enlace de wa.me abre
+    // WhatsApp directamente en la pantalla de elegir a quién mandárselo.
+    window.location.href = `https://wa.me/?text=${texto}`;
   }
 
   return (
