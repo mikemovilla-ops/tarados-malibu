@@ -136,6 +136,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     },
   });
 
+  // El registro de actividad (ver EventoPartido) solo tiene sentido
+  // mientras la jornada está abierta — una vez cerrada, ya no hay nada más
+  // que vaya a pasar, así que se vacía entero en vez de dejarlo acumulado
+  // sin utilidad.
+  if (cerrado === true) {
+    await prisma.eventoPartido.deleteMany({ where: { partidoId: params.id } });
+  }
+
   return NextResponse.json({ ok: true, partido });
 }
 

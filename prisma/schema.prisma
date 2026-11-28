@@ -209,8 +209,28 @@ model Partido {
   asistenciasSocio AsistenciaSocio[]
   asistenciasPizza AsistenciaPizza[]
   recordatoriosEnviados RecordatorioEnviado[]
+  eventos       EventoPartido[]
 
   @@map("partidos")
+}
+
+// Registro de lo que va pasando mientras la jornada está abierta (alguien
+// responde disponibilidad, cambia de opinión, se apunta a la pizzería...),
+// para que el admin lo vea sin tener que fijarse en cada sección por
+// separado. No es un historial permanente: se vacía entero al cerrar la
+// jornada (ver PATCH en app/api/partidos/[id]), así que el texto se guarda
+// ya redactado (con el nombre de quien sea) en vez de solo el userId — si
+// luego se borrara a ese jugador, la línea del registro seguiría teniendo
+// sentido mientras dure.
+model EventoPartido {
+  id        String   @id @default(cuid())
+  partidoId String
+  fecha     DateTime @default(now())
+  texto     String
+
+  partido Partido @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+
+  @@map("eventos_partido")
 }
 
 // Cada vez que el cron de los miércoles a las 12:30 (ver

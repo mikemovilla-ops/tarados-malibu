@@ -24,9 +24,14 @@ export type EntradaVersion = {
 
 export const HISTORIAL_VERSIONES: EntradaVersion[] = [
   {
-    version: "2.7.2",
-    fecha: "2026-11-23",
+    version: "2.8.0",
+    fecha: "2026-11-28",
     cambios: [
+      "El detalle de un partido se divide en dos pestañas: \"General\" (lo de siempre) y \"Zona admin\" (editar datos, resultado, premios, convocatoria y cerrar jornada), que solo ve el admin.",
+      "El admin puede preparar un mensaje de WhatsApp con el enlace al partido y quién falta por responder, para mandarlo al grupo del equipo — desde el propio partido (junto a quién falta por responder) y desde la home.",
+      "El admin tiene un registro de actividad del partido (quién responde, cambia de opinión, se apunta a la pizzería...), que se vacía solo al cerrar la jornada.",
+      "En la home y en Calendario, una flechita amarilla señala qué se puede tocar para ver el detalle de un partido.",
+      "En la home, un desplegable en \"Próximo partido\" muestra quién va, duda, no va, no ha respondido y va a la pizzería.",
       "Quién va a la pizzería de después se ve en el detalle del partido para todo el mundo, no solo para el admin.",
     ],
   },

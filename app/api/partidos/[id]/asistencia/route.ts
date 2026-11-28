@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { registrarEvento } from "@/lib/eventos";
+import { nombreMostrado } from "@/lib/jugadores";
 
 // Un socio se autodeclara "voy a ver este partido" — solo una intención,
 // igual que responder disponibilidad; el admin es quien la confirma de
@@ -12,7 +14,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  const usuario = await prisma.user.findUnique({ where: { id: session.user.id }, select: { rol: true } });
+  const usuario = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { rol: true, name: true, apodo: true },
+  });
   if (usuario?.rol !== "SOCIO") {
     return NextResponse.json({ error: "Solo los socios pueden declarar que van a ver un partido." }, { status: 403 });
   }
@@ -32,6 +37,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     update: { declarado },
     create: { partidoId: params.id, userId: session.user.id, declarado },
   });
+
+  await registrarEvento(
+    params.id,
+    declarado
+      ? `${nombreMostrado(usuario)} dice que viene a ver el partido`
+      : `${nombreMostrado(usuario)} ya no viene a ver el partido`
+  );
 
   return NextResponse.json({ ok: true });
 }

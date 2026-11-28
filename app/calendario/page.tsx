@@ -28,20 +28,23 @@ export default async function CalendarioPage() {
   const noJuega = rol === "SOCIO" || rol === "NO_JUGADOR";
   const puedeResponder = !!session && !noJuega && !necesitaElegirRol;
 
-  const totalActivos = await prisma.user.count({ where: { estado: "ACTIVO" } });
-  const jugadoresAyuda = await prisma.user.findMany({
-    where: { rol: "JUGADOR", estado: "AYUDA" },
-    select: { id: true },
-  });
-
-  const partidos = await prisma.partido.findMany({
-    orderBy: { fecha: "asc" },
-    include: {
-      convocatorias: {
-        select: { userId: true, disponibilidad: true, user: { select: { estado: true } } },
+  // Ninguna depende de las otras — en paralelo en vez de una detrás de
+  // otra, para no sumar tres idas y vueltas a la base de datos.
+  const [totalActivos, jugadoresAyuda, partidos] = await Promise.all([
+    prisma.user.count({ where: { estado: "ACTIVO" } }),
+    prisma.user.findMany({
+      where: { rol: "JUGADOR", estado: "AYUDA" },
+      select: { id: true },
+    }),
+    prisma.partido.findMany({
+      orderBy: { fecha: "asc" },
+      include: {
+        convocatorias: {
+          select: { userId: true, disponibilidad: true, user: { select: { estado: true } } },
+        },
       },
-    },
-  });
+    }),
+  ]);
   // Un partido pasa a "Jugados" cuando el admin cierra su jornada, no
   // cuando pasa su fecha — así uno ya jugado pero pendiente de cerrar
   // (o de corregir algo) se sigue viendo en "Próximos", donde se nota que
@@ -140,6 +143,7 @@ export default async function CalendarioPage() {
             {p.esLocal ? p.golesFavor : p.golesContra} - {p.esLocal ? p.golesContra : p.golesFavor}
           </p>
         )}
+        {puedeVerDetalle && <span className="text-amarillobrillante text-lg font-bold shrink-0">›</span>}
       </>
     );
 

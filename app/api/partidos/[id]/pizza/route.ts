@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { registrarEvento } from "@/lib/eventos";
+import { nombreMostrado } from "@/lib/jugadores";
 
 // Autoservicio total, sin confirmación del admin — es solo un recuento
 // aproximado para la pizzería, no una lista con consecuencias. Cualquiera
@@ -21,6 +23,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     update: { voy, acompanantes: numAcompanantes },
     create: { partidoId: params.id, userId: session.user.id, voy, acompanantes: numAcompanantes },
   });
+
+  const usuario = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, apodo: true },
+  });
+  if (usuario) {
+    const nombre = nombreMostrado(usuario);
+    await registrarEvento(
+      params.id,
+      voy
+        ? `${nombre} se apunta a la pizzería${numAcompanantes > 0 ? ` (+${numAcompanantes})` : ""}`
+        : `${nombre} se quita de la pizzería`
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

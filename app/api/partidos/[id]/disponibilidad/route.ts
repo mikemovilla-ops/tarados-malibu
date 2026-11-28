@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { registrarEvento } from "@/lib/eventos";
+import { nombreMostrado } from "@/lib/jugadores";
+import { ETIQUETA_DISPONIBILIDAD } from "@/lib/disponibilidad";
 
 const VALORES = ["VOY", "NO_VOY", "DUDA"] as const;
 
@@ -18,7 +21,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  const autor = await prisma.user.findUnique({ where: { id: session.user.id }, select: { rolElegido: true } });
+  const autor = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { rolElegido: true, name: true, apodo: true },
+  });
   if (!autor?.rolElegido) {
     return NextResponse.json(
       { error: "Antes de responder, contesta en Ajustes si eres jugador." },
@@ -48,6 +54,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       convocado,
     },
   });
+
+  await registrarEvento(
+    params.id,
+    `${nombreMostrado(autor)} ha dicho "${ETIQUETA_DISPONIBILIDAD[disponibilidad as keyof typeof ETIQUETA_DISPONIBILIDAD]}"`
+  );
 
   return NextResponse.json({ ok: true });
 }

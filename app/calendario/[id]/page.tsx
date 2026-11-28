@@ -18,6 +18,9 @@ import SeccionEditable from "@/components/SeccionEditable";
 import ListaConvocados from "@/components/ListaConvocados";
 import BotonEntrarGoogle from "@/components/BotonEntrarGoogle";
 import EnlaceConCarga from "@/components/EnlaceConCarga";
+import CompartirWhatsapp from "@/components/CompartirWhatsapp";
+import SeccionDesplegable from "@/components/SeccionDesplegable";
+import PestanasPartido from "@/components/PestanasPartido";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +46,7 @@ export default async function PartidoPage({ params }: { params: { id: string } }
       asistenciasSocio: true,
       asistenciasPizza: { include: { user: { select: { name: true, apodo: true } } } },
       recordatoriosEnviados: { orderBy: { enviadoEn: "desc" } },
+      eventos: { orderBy: { fecha: "desc" } },
     },
   });
 
@@ -78,23 +82,39 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     );
   }
 
-  // Cómo nos ha ido contra este mismo rival en partidos anteriores ya
-  // jugados — con enlace a cada uno, para no tener que ir a buscarlos en
-  // Calendario.
-  const historialRival = await prisma.partido.findMany({
-    where: { rival: partido.rival, id: { not: partido.id }, golesFavor: { not: null }, golesContra: { not: null } },
-    orderBy: { fecha: "desc" },
-    select: { id: true, fecha: true, esLocal: true, golesFavor: true, golesContra: true },
-  });
-
-  // Se pide siempre (activos y ayuda): el admin puede convocar a cualquiera
-  // de los dos grupos, aunque el resumen de disponibilidad de más abajo solo
-  // cuente a los activos.
-  const jugadores = await prisma.user.findMany({
-    where: { rol: "JUGADOR" },
-    orderBy: [{ dorsal: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, apodo: true, dorsal: true, estado: true },
-  });
+  // Estas cuatro no dependen entre sí (solo del partido ya cargado), así
+  // que van en paralelo en vez de una detrás de otra — cada ida y vuelta a
+  // la base de datos se nota, sobre todo en móvil.
+  const [historialRival, jugadores, socios, votosPremio] = await Promise.all([
+    // Cómo nos ha ido contra este mismo rival en partidos anteriores ya
+    // jugados — con enlace a cada uno, para no tener que ir a buscarlos en
+    // Calendario.
+    prisma.partido.findMany({
+      where: { rival: partido.rival, id: { not: partido.id }, golesFavor: { not: null }, golesContra: { not: null } },
+      orderBy: { fecha: "desc" },
+      select: { id: true, fecha: true, esLocal: true, golesFavor: true, golesContra: true },
+    }),
+    // Se pide siempre (activos y ayuda): el admin puede convocar a cualquiera
+    // de los dos grupos, aunque el resumen de disponibilidad de más abajo solo
+    // cuente a los activos.
+    prisma.user.findMany({
+      where: { rol: "JUGADOR" },
+      orderBy: [{ dorsal: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, apodo: true, dorsal: true, estado: true },
+    }),
+    // Socios que pueden declarar/confirmar que vinieron a ver el partido (ver
+    // DeclararAsistencia y AsistenciaSociosEditor) — y así poder votar los
+    // premios sin ser convocados.
+    prisma.user.findMany({
+      where: { rol: "SOCIO" },
+      orderBy: [{ name: "asc" }],
+      select: { id: true, name: true, apodo: true },
+    }),
+    // Votos de los convocados por cada premio (ver VotarPremio) — se cuentan
+    // más abajo en memoria, no hace falta groupBy para el puñado de votos de
+    // un partido de fútbol 7.
+    prisma.votoPremio.findMany({ where: { partidoId: partido.id } }),
+  ]);
 
   const convocatoriaInicial: Record<
     string,
@@ -126,6 +146,15 @@ export default async function PartidoPage({ params }: { params: { id: string } }
     jugadores.filter((j) => j.estado === "AYUDA"),
     partido.convocatorias.map((c) => ({ userId: c.userId, disponibilidad: c.disponibilidad }))
   );
+
+  // Para el botón de WhatsApp del admin: activos y ayuda que todavía no
+  // han dicho nada.
+  const pendientesWhatsapp = [
+    ...jugadores.filter(
+      (j) => j.estado === "ACTIVO" && (convocatoriaInicial[j.id]?.disponibilidad ?? "SIN_RESPONDER") === "SIN_RESPONDER"
+    ),
+    ...ayudaSinContestar,
+  ].map((j) => nombreMostrado(j));
 
   const gruposDisponibilidad: Record<"VOY" | "DUDA" | "NO_VOY" | "SIN_RESPONDER", typeof jugadores> = {
     VOY: [],
@@ -159,14 +188,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   const jugado = partido.golesFavor !== null && partido.golesContra !== null;
   const convocadosOpciones = convocados.map((c) => ({ id: c.user.id, nombre: nombreMostrado(c.user) }));
 
-  // Socios que pueden declarar/confirmar que vinieron a ver el partido (ver
-  // DeclararAsistencia y AsistenciaSociosEditor) — y así poder votar los
-  // premios sin ser convocados.
-  const socios = await prisma.user.findMany({
-    where: { rol: "SOCIO" },
-    orderBy: [{ name: "asc" }],
-    select: { id: true, name: true, apodo: true },
-  });
   const asistenciaInicial: Record<string, { declarado: boolean; confirmado: boolean }> = {};
   for (const a of partido.asistenciasSocio) {
     asistenciaInicial[a.userId] = { declarado: a.declarado, confirmado: a.confirmado };
@@ -180,10 +201,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
   const vanAPizza = partido.asistenciasPizza.filter((p) => p.voy);
   const totalPizza = vanAPizza.reduce((suma, p) => suma + 1 + p.acompanantes, 0);
 
-  // Votos de los convocados por cada premio (ver VotarPremio) — se cuentan
-  // aquí mismo en memoria, no hace falta groupBy para el puñado de votos de
-  // un partido de fútbol 7.
-  const votosPremio = await prisma.votoPremio.findMany({ where: { partidoId: partido.id } });
   function tallyVotos(tipo: "ESSENZAL" | "VAYA_DIA") {
     const conteo = new Map<string, number>();
     for (const v of votosPremio) {
@@ -270,30 +287,11 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             Resultado provisional: las estadísticas se actualizarán cuando el admin cierre la jornada.
           </p>
         )}
-        {esAdmin && (
-          <div className="pt-2">
-            <EditarDatosPartido
-              partidoId={partido.id}
-              fechaInicial={toInputDatetimeLocal(partido.fecha)}
-              rivalInicial={partido.rival}
-              esLocalInicial={partido.esLocal}
-              competicionInicial={partido.competicion}
-              jornadaInicial={partido.jornada?.toString() ?? ""}
-              lugarInicial={partido.lugar ?? ""}
-            />
-          </div>
-        )}
       </div>
 
-      {esAdmin && partido.recordatoriosEnviados.length > 0 && (
-        <p className="text-chalk/40 text-xs">
-          📧 Recordatorio de convocatoria enviado:{" "}
-          {partido.recordatoriosEnviados
-            .map((r) => `${formatFechaHora(r.enviadoEn)} (${r.destinatarios})`)
-            .join(", ")}
-        </p>
-      )}
-
+      <PestanasPartido
+        general={
+          <>
       {historialRival.length > 0 && (
         <section className="card p-4 space-y-2">
           <h2 className="font-display text-base">Historial de enfrentamientos contra {partido.rival}</h2>
@@ -320,100 +318,6 @@ export default async function PartidoPage({ params }: { params: { id: string } }
               );
             })}
           </div>
-        </section>
-      )}
-
-      {esAdmin && (
-        <section className="card p-4 space-y-2">
-          <h2 className="font-display text-base">Resultado</h2>
-          {partido.cerrado ? (
-            <SeccionEditable
-              resumen={
-                <p className="text-chalk/60 text-sm">
-                  Jornada cerrada ✓
-                  {jugado && (
-                    <>
-                      {" — "}
-                      {partido.golesFavor} - {partido.golesContra}
-                      {partido.golesPropiaPuerta > 0 && ` (${partido.golesPropiaPuerta} en propia)`}
-                    </>
-                  )}
-                </p>
-              }
-            >
-              <ResultadoEditor
-                partidoId={partido.id}
-                golesFavorInicial={partido.golesFavor}
-                golesContraInicial={partido.golesContra}
-                golesPropiaPuertaInicial={partido.golesPropiaPuerta}
-                notasIniciales={partido.notas}
-              />
-              <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
-              <p className="text-chalk/40 text-xs">
-                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados y los socios
-                confirmados como asistentes (en la pestaña "Socios" de Convocatoria) — usa esto para desempatar o si
-                nadie ha votado.
-              </p>
-              <PremioPartidoSelector
-                partidoId={partido.id}
-                campoId="jugadorEssenzalId"
-                campoMotivo="jugadorEssenzalMotivo"
-                etiqueta="🏆 Jugador Essenzal"
-                convocados={convocadosOpciones}
-                valorInicial={partido.jugadorEssenzalId}
-                motivoInicial={partido.jugadorEssenzalMotivo}
-                votos={votosEssenzal}
-              />
-              <PremioPartidoSelector
-                partidoId={partido.id}
-                campoId="jugadorVayaDiaId"
-                campoMotivo="jugadorVayaDiaMotivo"
-                etiqueta="🙈 ¡Vaya día!"
-                convocados={convocadosOpciones}
-                valorInicial={partido.jugadorVayaDiaId}
-                motivoInicial={partido.jugadorVayaDiaMotivo}
-                votos={votosVayaDia}
-              />
-              <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
-            </SeccionEditable>
-          ) : (
-            <>
-              <ResultadoEditor
-                partidoId={partido.id}
-                golesFavorInicial={partido.golesFavor}
-                golesContraInicial={partido.golesContra}
-                golesPropiaPuertaInicial={partido.golesPropiaPuerta}
-                notasIniciales={partido.notas}
-              />
-              <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
-              <p className="text-chalk/40 text-xs">
-                Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados y los socios
-                confirmados como asistentes (en la pestaña "Socios" de Convocatoria) — usa esto para desempatar o si
-                nadie ha votado.
-              </p>
-              <PremioPartidoSelector
-                partidoId={partido.id}
-                campoId="jugadorEssenzalId"
-                campoMotivo="jugadorEssenzalMotivo"
-                etiqueta="🏆 Jugador Essenzal"
-                convocados={convocadosOpciones}
-                valorInicial={partido.jugadorEssenzalId}
-                motivoInicial={partido.jugadorEssenzalMotivo}
-                votos={votosEssenzal}
-              />
-              <PremioPartidoSelector
-                partidoId={partido.id}
-                campoId="jugadorVayaDiaId"
-                campoMotivo="jugadorVayaDiaMotivo"
-                etiqueta="🙈 ¡Vaya día!"
-                convocados={convocadosOpciones}
-                valorInicial={partido.jugadorVayaDiaId}
-                motivoInicial={partido.jugadorVayaDiaMotivo}
-                votos={votosVayaDia}
-              />
-              <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
-            </>
-          )}
         </section>
       )}
 
@@ -472,53 +376,27 @@ export default async function PartidoPage({ params }: { params: { id: string } }
             </p>
           )}
         </div>
+
+        {esAdmin && (
+          <CompartirWhatsapp
+            partidoId={partido.id}
+            rival={partido.rival}
+            esLocal={partido.esLocal}
+            fechaTexto={formatFechaHora(partido.fecha)}
+            pendientes={pendientesWhatsapp}
+          />
+        )}
       </section>
       )}
 
       <section className="card p-4 space-y-3">
-        <h2 className="font-display text-base">Convocatoria {esAdmin && !partido.cerrado ? "" : `(${convocados.length})`}</h2>
-        {esAdmin ? (
-          partido.cerrado ? (
-            <SeccionEditable
-              resumen={
-                <>
-                  <ListaConvocados convocados={convocados} />
-                  {activosNoConvocados.length > 0 && (
-                    <p className="text-chalk/50 text-sm pt-2">
-                      <span className="text-chalk/40">No convocados ({activosNoConvocados.length}):</span>{" "}
-                      {activosNoConvocados.map((j) => nombreMostrado(j)).join(", ")}
-                    </p>
-                  )}
-                </>
-              }
-            >
-              <ConvocatoriaTabs
-                partidoId={partido.id}
-                jugadores={jugadores}
-                convocatoriaInicial={convocatoriaInicial}
-                socios={socios}
-                asistenciaInicial={asistenciaInicial}
-              />
-            </SeccionEditable>
-          ) : (
-            <ConvocatoriaTabs
-              partidoId={partido.id}
-              jugadores={jugadores}
-              convocatoriaInicial={convocatoriaInicial}
-              socios={socios}
-              asistenciaInicial={asistenciaInicial}
-            />
-          )
-        ) : (
-          <>
-            <ListaConvocados convocados={convocados} />
-            {partido.cerrado && activosNoConvocados.length > 0 && (
-              <p className="text-chalk/50 text-sm pt-2">
-                <span className="text-chalk/40">No convocados ({activosNoConvocados.length}):</span>{" "}
-                {activosNoConvocados.map((j) => nombreMostrado(j)).join(", ")}
-              </p>
-            )}
-          </>
+        <h2 className="font-display text-base">Convocatoria ({convocados.length})</h2>
+        <ListaConvocados convocados={convocados} />
+        {partido.cerrado && activosNoConvocados.length > 0 && (
+          <p className="text-chalk/50 text-sm pt-2">
+            <span className="text-chalk/40">No convocados ({activosNoConvocados.length}):</span>{" "}
+            {activosNoConvocados.map((j) => nombreMostrado(j)).join(", ")}
+          </p>
         )}
       </section>
       </>
@@ -558,6 +436,178 @@ export default async function PartidoPage({ params }: { params: { id: string } }
           />
         </section>
       )}
+          </>
+        }
+        admin={
+          esAdmin ? (
+            <>
+              <div>
+                <EditarDatosPartido
+                  partidoId={partido.id}
+                  fechaInicial={toInputDatetimeLocal(partido.fecha)}
+                  rivalInicial={partido.rival}
+                  esLocalInicial={partido.esLocal}
+                  competicionInicial={partido.competicion}
+                  jornadaInicial={partido.jornada?.toString() ?? ""}
+                  lugarInicial={partido.lugar ?? ""}
+                />
+              </div>
+
+              {partido.recordatoriosEnviados.length > 0 && (
+                <p className="text-chalk/40 text-xs">
+                  📧 Recordatorio de convocatoria enviado:{" "}
+                  {partido.recordatoriosEnviados
+                    .map((r) => `${formatFechaHora(r.enviadoEn)} (${r.destinatarios})`)
+                    .join(", ")}
+                </p>
+              )}
+
+              <section className="card p-4 space-y-2">
+                <h2 className="font-display text-base">Resultado</h2>
+                {partido.cerrado ? (
+                  <SeccionEditable
+                    resumen={
+                      <p className="text-chalk/60 text-sm">
+                        Jornada cerrada ✓
+                        {jugado && (
+                          <>
+                            {" — "}
+                            {partido.golesFavor} - {partido.golesContra}
+                            {partido.golesPropiaPuerta > 0 && ` (${partido.golesPropiaPuerta} en propia)`}
+                          </>
+                        )}
+                      </p>
+                    }
+                  >
+                    <ResultadoEditor
+                      partidoId={partido.id}
+                      golesFavorInicial={partido.golesFavor}
+                      golesContraInicial={partido.golesContra}
+                      golesPropiaPuertaInicial={partido.golesPropiaPuerta}
+                      notasIniciales={partido.notas}
+                    />
+                    <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
+                    <p className="text-chalk/40 text-xs">
+                      Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados y los
+                      socios confirmados como asistentes (en la pestaña "Socios" de Convocatoria) — usa esto para
+                      desempatar o si nadie ha votado.
+                    </p>
+                    <PremioPartidoSelector
+                      partidoId={partido.id}
+                      campoId="jugadorEssenzalId"
+                      campoMotivo="jugadorEssenzalMotivo"
+                      etiqueta="🏆 Jugador Essenzal"
+                      convocados={convocadosOpciones}
+                      valorInicial={partido.jugadorEssenzalId}
+                      motivoInicial={partido.jugadorEssenzalMotivo}
+                      votos={votosEssenzal}
+                    />
+                    <PremioPartidoSelector
+                      partidoId={partido.id}
+                      campoId="jugadorVayaDiaId"
+                      campoMotivo="jugadorVayaDiaMotivo"
+                      etiqueta="🙈 ¡Vaya día!"
+                      convocados={convocadosOpciones}
+                      valorInicial={partido.jugadorVayaDiaId}
+                      motivoInicial={partido.jugadorVayaDiaMotivo}
+                      votos={votosVayaDia}
+                    />
+                    <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
+                  </SeccionEditable>
+                ) : (
+                  <>
+                    <ResultadoEditor
+                      partidoId={partido.id}
+                      golesFavorInicial={partido.golesFavor}
+                      golesContraInicial={partido.golesContra}
+                      golesPropiaPuertaInicial={partido.golesPropiaPuerta}
+                      notasIniciales={partido.notas}
+                    />
+                    <SubirFotoPartido partidoId={partido.id} fotoUrlInicial={partido.fotoUrl} />
+                    <p className="text-chalk/40 text-xs">
+                      Al cerrar la jornada, estos premios se rellenan solos con la votación de los convocados y los
+                      socios confirmados como asistentes (en la pestaña "Socios" de Convocatoria) — usa esto para
+                      desempatar o si nadie ha votado.
+                    </p>
+                    <PremioPartidoSelector
+                      partidoId={partido.id}
+                      campoId="jugadorEssenzalId"
+                      campoMotivo="jugadorEssenzalMotivo"
+                      etiqueta="🏆 Jugador Essenzal"
+                      convocados={convocadosOpciones}
+                      valorInicial={partido.jugadorEssenzalId}
+                      motivoInicial={partido.jugadorEssenzalMotivo}
+                      votos={votosEssenzal}
+                    />
+                    <PremioPartidoSelector
+                      partidoId={partido.id}
+                      campoId="jugadorVayaDiaId"
+                      campoMotivo="jugadorVayaDiaMotivo"
+                      etiqueta="🙈 ¡Vaya día!"
+                      convocados={convocadosOpciones}
+                      valorInicial={partido.jugadorVayaDiaId}
+                      motivoInicial={partido.jugadorVayaDiaMotivo}
+                      votos={votosVayaDia}
+                    />
+                    <CerrarJornadaToggle partidoId={partido.id} cerradoInicial={partido.cerrado} />
+                  </>
+                )}
+              </section>
+
+              <section className="card p-4 space-y-3">
+                <h2 className="font-display text-base">Convocatoria</h2>
+                {partido.cerrado ? (
+                  <SeccionEditable
+                    resumen={
+                      <>
+                        <ListaConvocados convocados={convocados} />
+                        {activosNoConvocados.length > 0 && (
+                          <p className="text-chalk/50 text-sm pt-2">
+                            <span className="text-chalk/40">No convocados ({activosNoConvocados.length}):</span>{" "}
+                            {activosNoConvocados.map((j) => nombreMostrado(j)).join(", ")}
+                          </p>
+                        )}
+                      </>
+                    }
+                  >
+                    <ConvocatoriaTabs
+                      partidoId={partido.id}
+                      jugadores={jugadores}
+                      convocatoriaInicial={convocatoriaInicial}
+                      socios={socios}
+                      asistenciaInicial={asistenciaInicial}
+                    />
+                  </SeccionEditable>
+                ) : (
+                  <ConvocatoriaTabs
+                    partidoId={partido.id}
+                    jugadores={jugadores}
+                    convocatoriaInicial={convocatoriaInicial}
+                    socios={socios}
+                    asistenciaInicial={asistenciaInicial}
+                  />
+                )}
+              </section>
+
+              {!partido.cerrado && (
+                <SeccionDesplegable titulo="Actividad" abiertoInicial={false}>
+                  {partido.eventos.length === 0 ? (
+                    <p className="text-chalk/50 text-sm">Todavía no ha pasado nada.</p>
+                  ) : (
+                    <div className="space-y-1 text-sm">
+                      {partido.eventos.map((e) => (
+                        <p key={e.id} className="text-chalk/60">
+                          <span className="text-chalk/40">{formatFechaHora(e.fecha)}</span> — {e.texto}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </SeccionDesplegable>
+              )}
+            </>
+          ) : undefined
+        }
+      />
     </div>
   );
 }
